@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -14,33 +15,75 @@ import {
   Tablet,
   ChevronRight,
 } from "lucide-react";
-import { studentProfile } from "@/services/studentService";
+
+import { useAuth } from "@/context/AuthContext";
+import { getStudentProfile, getUpcomingClasses } from "@/services/studentService";
+import type { StudentProfile, ScheduleItem } from "@/lib/types/student";
 
 export function DashboardOverview() {
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [classes, setClasses] = useState<ScheduleItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const displayUser = profile || user;
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch student profile and upcoming schedule from PostgreSQL via Spring Boot
+        const [profileRes, scheduleRes] = await Promise.allSettled([
+          getStudentProfile("24081"),
+          getUpcomingClasses(),
+        ]);
+
+        if (profileRes.status === "fulfilled") {
+          setProfile(profileRes.value);
+        }
+        if (scheduleRes.status === "fulfilled") {
+          setClasses(scheduleRes.value);
+        }
+      } catch (err) {
+        console.error("Dashboard data load error:", err);
+        setError("Failed to load dashboard data from backend server.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
+
   return (
     <div className="dashboard-page-wrapper">
       {/* 1. Dark Navy Welcome Hero Banner */}
       <section className="dashboard-welcome-banner" aria-label="Welcome banner">
         <div className="welcome-banner-left">
           <p className="welcome-date-eyebrow">TUESDAY, 25 AUGUST 2026</p>
-          <h1 className="welcome-hero-title">Good morning, Sahan.</h1>
+          <h1 className="welcome-hero-title">
+            Good morning, {displayUser?.name ? displayUser.name.split(" ")[0] : "Student"}.
+          </h1>
           <p className="welcome-hero-subtitle">
-            Keep your momentum going. You have one class and two new resources waiting today.
+            Student ID: <strong>{displayUser?.studentId || "24081"}</strong> • Keep your momentum going!
           </p>
 
-          {/* Student Profile Tags */}
+          {/* Student Profile Tags from PostgreSQL */}
           <div className="welcome-tags-row">
             <span className="welcome-tag-chip">
               <GraduationCap size={15} />
-              <span>{studentProfile.exam}</span>
+              <span>{displayUser?.exam || "A/L 2026"}</span>
             </span>
             <span className="welcome-tag-chip">
               <BookOpen size={15} />
-              <span>{studentProfile.stream}</span>
+              <span>{displayUser?.stream || "Physical Science"}</span>
             </span>
             <span className="welcome-tag-chip">
               <Globe size={15} />
-              <span>{studentProfile.medium}</span>
+              <span>{displayUser?.medium || "Sinhala medium"}</span>
             </span>
           </div>
         </div>
@@ -72,7 +115,7 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">Classes this week</span>
-          <strong className="metric-card-number">06</strong>
+          <strong className="metric-card-number">{classes.length > 0 ? `0${classes.length}` : "06"}</strong>
           <span className="metric-card-subtext">2 completed</span>
         </Link>
 
@@ -124,35 +167,44 @@ export function DashboardOverview() {
           </div>
 
           <div className="upcoming-classes-list">
-            {/* Class Card 1: Today's Class */}
-            <article className="class-card-item">
-              <div className="class-date-badge">
-                <span className="date-badge-day">TODAY</span>
-                <strong className="date-badge-number">25</strong>
-                <span className="date-badge-month">AUG</span>
-              </div>
+            {classes.length === 0 ? (
+              <p className="text-sm text-gray-500 p-4">No upcoming classes found.</p>
+            ) : (
+              classes.map((cls, index) => (
+                <article key={cls.id || index} className="class-card-item">
+                  <div className="class-date-badge">
+                    <span className="date-badge-day">{cls.day?.toUpperCase() || "CLASS"}</span>
+                    <strong className="date-badge-number">{cls.date?.split(" ")[0] || "25"}</strong>
+                    <span className="date-badge-month">{cls.date?.split(" ")[1] || "AUG"}</span>
+                  </div>
 
-              <div className="class-card-body">
-                <div className="class-card-title-row">
-                  <h3 className="class-title">Pure Mathematics</h3>
-                  <span className="next-class-pill">Next class</span>
-                </div>
+                  <div className="class-card-body">
+                    <div className="class-card-title-row">
+                      <h3 className="class-title">{cls.title}</h3>
+                      {index === 0 && <span className="next-class-pill">Next class</span>}
+                    </div>
 
-                <p className="class-instructor">Combined Mathematics • Mr. K. Perera</p>
+                    <p className="class-instructor">
+                      {cls.subject} • {cls.teacher}
+                    </p>
 
-                <div className="class-meta-row">
-                  <span className="class-meta-item">
-                    <Clock3 size={15} />
-                    <span>4:30 PM – 6:30 PM</span>
-                  </span>
-                  <span className="class-meta-item">
-                    <MapPin size={15} />
-                    <span>Nugegoda Studio 2</span>
-                  </span>
-                  <span className="mode-pill mode-pill-inperson">In person</span>
-                </div>
-              </div>
-            </article>
+                    <div className="class-meta-row">
+                      <span className="class-meta-item">
+                        <Clock3 size={15} />
+                        <span>{cls.time}</span>
+                      </span>
+                      <span className="class-meta-item">
+                        <MapPin size={15} />
+                        <span>{cls.location}</span>
+                      </span>
+                      <span className={`mode-pill ${cls.mode === "Online" ? "mode-pill-online" : "mode-pill-inperson"}`}>
+                        {cls.mode}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </section>
 

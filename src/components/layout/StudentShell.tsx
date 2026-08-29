@@ -43,7 +43,14 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
       {mobileOpen && <button className="drawer-scrim" type="button" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} aria-label="Student navigation">
         <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
-        <Link className="student-chip" href="/settings" onClick={closeMenus}><div className="avatar avatar-small">{user.initials}</div><div><strong>{user.name}</strong><span>Student ID {user.studentId}</span></div><ChevronRight size={16} /></Link>
+        <Link className="student-chip" href="/settings" onClick={closeMenus}>
+          <div className="avatar avatar-small">{user?.initials || "ST"}</div>
+          <div>
+            <strong>{user.name || "Student"}</strong>
+            <span>Student ID {user?.studentId || "24081"}</span>
+          </div>
+          <ChevronRight size={16} />
+        </Link>
         <nav className="nav-group" aria-label="Main navigation">
           <p className="nav-label">Workspace</p>
           {navItems.map(({ label, href, icon: Icon }) => {
@@ -83,8 +90,88 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
         <header className="topbar">
           <div className="topbar-left"><button className="icon-button mobile-menu" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu size={22} /></button><div className="breadcrumb"><span>Student portal</span><ChevronRight size={15} /><strong>{activeLabel}</strong></div></div>
           <div className="topbar-actions">
-            <div className="popover-wrap"><button className={`icon-button notification-button ${notificationsOpen ? "is-open" : ""}`} type="button" title="Notifications" aria-label="Notifications" onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false); }}><Bell size={19} /><span className="notification-dot" /></button>{notificationsOpen && <div className="popover notification-popover"><div className="popover-heading"><div><strong>Notifications</strong><span>2 unread updates</span></div><button className="text-button" type="button">Mark read <Check size={14} /></button></div><div className="notification-item"><div className="notification-symbol coral-symbol"><CircleAlert size={16} /></div><div><strong>Paper 02 submission</strong><p>Due Friday, 29 August</p></div></div><div className="notification-item"><div className="notification-symbol green-symbol"><CalendarDays size={16} /></div><div><strong>Class time changed</strong><p>Tomorrow&apos;s class starts at 3:00 PM</p></div></div></div>}</div>
-            <div className="popover-wrap"><button className="profile-button" type="button" onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false); }} aria-expanded={profileOpen}><div className="avatar">{user.initials}</div><span>{user.name.split(" ")[0]}</span><ChevronRight className={`profile-chevron ${profileOpen ? "profile-chevron-open" : ""}`} size={15} /></button>{profileOpen && <div className="popover profile-popover"><div className="profile-popover-head"><div className="avatar avatar-medium">{user.initials}</div><div><strong>{user.name}</strong><span>Student ID {user.studentId}</span></div></div><Link className="popover-action" href="/settings" onClick={closeMenus}><Settings size={16} /> Account settings</Link><button className="popover-action" type="button" onClick={signOut}><LogOut size={16} /> Sign out</button></div>}</div>
+            <div className="popover-wrap">
+              <button
+                className={`icon-button notification-button ${notificationsOpen ? "is-open" : ""}`}
+                type="button"
+                title="Notifications"
+                aria-label="Notifications"
+                onClick={() => {
+                  setNotificationsOpen(!notificationsOpen);
+                  setProfileOpen(false);
+                }}
+              >
+                <Bell size={19} />
+                <span className="notification-dot" />
+              </button>
+              {notificationsOpen && (
+                <div className="popover notification-popover">
+                  <div className="popover-heading">
+                    <div>
+                      <strong>Notifications</strong>
+                      <span>2 unread updates</span>
+                    </div>
+                    <button className="text-button" type="button">
+                      Mark read <Check size={14} />
+                    </button>
+                  </div>
+                  <div className="notification-item">
+                    <div className="notification-symbol coral-symbol">
+                      <CircleAlert size={16} />
+                    </div>
+                    <div>
+                      <strong>Paper 02 submission</strong>
+                      <p>Due Friday, 29 August</p>
+                    </div>
+                  </div>
+                  <div className="notification-item">
+                    <div className="notification-symbol green-symbol">
+                      <CalendarDays size={16} />
+                    </div>
+                    <div>
+                      <strong>Class time changed</strong>
+                      <p>Tomorrow&apos;s class starts at 3:00 PM</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="popover-wrap">
+              <button
+                className="profile-button"
+                type="button"
+                onClick={() => {
+                  setProfileOpen(!profileOpen);
+                  setNotificationsOpen(false);
+                }}
+                aria-expanded={profileOpen}
+              >
+                <div className="avatar">{user?.initials || "ST"}</div>
+                <span>{user?.name ? user.name.split(" ")[0] : "Student"}</span>
+                <ChevronRight
+                  className={`profile-chevron ${profileOpen ? "profile-chevron-open" : ""}`}
+                  size={15}
+                />
+              </button>
+              {profileOpen && (
+                <div className="popover profile-popover">
+                  <div className="profile-popover-head">
+                    <div className="avatar avatar-medium">{user?.initials || "ST"}</div>
+                    <div>
+                      <strong>{user?.name || "Student"}</strong>
+                      <span>Student ID {user?.studentId || "24081"}</span>
+                    </div>
+                  </div>
+                  <Link className="popover-action" href="/settings" onClick={closeMenus}>
+                    <Settings size={16} /> Account settings
+                  </Link>
+                  <button className="popover-action" type="button" onClick={signOut}>
+                    <LogOut size={16} /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
         <main className="page-content">{children}</main>

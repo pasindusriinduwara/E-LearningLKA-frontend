@@ -2,6 +2,7 @@ export type DeliveryMode = "In person" | "Online";
 export type AccentTone = "coral" | "green" | "yellow";
 
 export interface ScheduleItem {
+  id?: string;
   day: string;
   date: string;
   title: string;
@@ -10,7 +11,7 @@ export interface ScheduleItem {
   time: string;
   location: string;
   mode: DeliveryMode;
-  accent: AccentTone;
+  accent?: AccentTone;
 }
 
 export interface LearningResource {

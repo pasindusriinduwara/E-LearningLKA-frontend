@@ -1,175 +1,84 @@
 "use client";
 
-import { useState } from "react";
-import { Clock3, MapPin, Video } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Clock3, MapPin, Video, Loader2 } from "lucide-react";
+import { getUpcomingClasses } from "@/services/studentService";
+import type { ScheduleItem } from "@/lib/types/student";
 
-export interface ScheduleDayItem {
+export interface ScheduleDayTab {
   id: string;
   dayShort: string;
   dateNum: number;
   monthShort: string;
   fullDateStr: string;
-  hasClasses: boolean;
-  classes: ClassScheduleItem[];
+  dayKey: string;
 }
 
-export interface ClassScheduleItem {
-  id: string;
-  title: string;
-  teacher: string;
-  time: string;
-  location: string;
-  mode: "In person" | "Online";
-  subjectColor: "blue" | "green" | "yellow";
+const WEEK_DAYS: ScheduleDayTab[] = [
+  { id: "mon-25", dayShort: "Mon", dateNum: 25, monthShort: "Aug", fullDateStr: "Mon, Aug 25", dayKey: "Mon" },
+  { id: "tue-26", dayShort: "Tue", dateNum: 26, monthShort: "Aug", fullDateStr: "Tue, Aug 26", dayKey: "Tue" },
+  { id: "wed-27", dayShort: "Wed", dateNum: 27, monthShort: "Aug", fullDateStr: "Wed, Aug 27", dayKey: "Wed" },
+  { id: "thu-28", dayShort: "Thu", dateNum: 28, monthShort: "Aug", fullDateStr: "Thu, Aug 28", dayKey: "Thu" },
+  { id: "fri-29", dayShort: "Fri", dateNum: 29, monthShort: "Aug", fullDateStr: "Fri, Aug 29", dayKey: "Fri" },
+  { id: "sat-30", dayShort: "Sat", dateNum: 30, monthShort: "Aug", fullDateStr: "Sat, Aug 30", dayKey: "Sat" },
+];
+
+function getSubjectColor(accent?: string, subject?: string): "blue" | "green" | "yellow" {
+  if (accent === "green" || accent === "yellow" || accent === "blue") {
+    return accent;
+  }
+  if (accent === "coral") return "blue";
+  if (subject?.toLowerCase().includes("chem")) return "green";
+  if (subject?.toLowerCase().includes("phys")) return "yellow";
+  return "blue";
 }
-
-const scheduleWeekData: ScheduleDayItem[] = [
-  {
-    id: "mon-25",
-    dayShort: "Mon",
-    dateNum: 25,
-    monthShort: "Aug",
-    fullDateStr: "Mon, Aug 25",
-    hasClasses: true,
-    classes: [
-      {
-        id: "cls-01",
-        title: "Pure Mathematics",
-        teacher: "Mr. K. Perera",
-        time: "4:30 – 6:30 PM",
-        location: "Nugegoda Studio 2",
-        mode: "In person",
-        subjectColor: "blue",
-      },
-    ],
-  },
-  {
-    id: "tue-26",
-    dayShort: "Tue",
-    dateNum: 26,
-    monthShort: "Aug",
-    fullDateStr: "Tue, Aug 26",
-    hasClasses: true,
-    classes: [
-      {
-        id: "cls-02",
-        title: "Organic Chemistry",
-        teacher: "Ms. A. Fernando",
-        time: "3:00 – 5:00 PM",
-        location: "Live classroom",
-        mode: "Online",
-        subjectColor: "green",
-      },
-      {
-        id: "cls-03",
-        title: "Combined Maths",
-        teacher: "Mr. K. Perera",
-        time: "6:00 – 8:00 PM",
-        location: "Nugegoda Studio 1",
-        mode: "In person",
-        subjectColor: "blue",
-      },
-    ],
-  },
-  {
-    id: "wed-27",
-    dayShort: "Wed",
-    dateNum: 27,
-    monthShort: "Aug",
-    fullDateStr: "Wed, Aug 27",
-    hasClasses: true,
-    classes: [
-      {
-        id: "cls-04",
-        title: "Physics",
-        teacher: "Mr. R. Silva",
-        time: "10:00 AM – 12:00 PM",
-        location: "Nugegoda Studio 1",
-        mode: "In person",
-        subjectColor: "yellow",
-      },
-    ],
-  },
-  {
-    id: "thu-28",
-    dayShort: "Thu",
-    dateNum: 28,
-    monthShort: "Aug",
-    fullDateStr: "Thu, Aug 28",
-    hasClasses: false,
-    classes: [],
-  },
-  {
-    id: "fri-29",
-    dayShort: "Fri",
-    dateNum: 29,
-    monthShort: "Aug",
-    fullDateStr: "Fri, Aug 29",
-    hasClasses: true,
-    classes: [
-      {
-        id: "cls-05",
-        title: "Pure Mathematics",
-        teacher: "Mr. K. Perera",
-        time: "4:30 – 6:30 PM",
-        location: "Nugegoda Studio 2",
-        mode: "In person",
-        subjectColor: "blue",
-      },
-      {
-        id: "cls-06",
-        title: "Physics",
-        teacher: "Mr. R. Silva",
-        time: "2:00 – 4:00 PM",
-        location: "Live classroom",
-        mode: "Online",
-        subjectColor: "yellow",
-      },
-    ],
-  },
-  {
-    id: "sat-30",
-    dayShort: "Sat",
-    dateNum: 30,
-    monthShort: "Aug",
-    fullDateStr: "Sat, Aug 30",
-    hasClasses: true,
-    classes: [
-      {
-        id: "cls-07",
-        title: "Organic Chemistry",
-        teacher: "Ms. A. Fernando",
-        time: "9:00 – 11:00 AM",
-        location: "Nugegoda Studio 1",
-        mode: "In person",
-        subjectColor: "green",
-      },
-    ],
-  },
-];
-
-const weekAtAGlanceList = [
-  { title: "Pure Mathematics", time: "Mon 25 • 4:30 – 6:30 PM", color: "blue" },
-  { title: "Organic Chemistry", time: "Tue 26 • 3:00 – 5:00 PM", color: "green" },
-  { title: "Combined Maths", time: "Tue 26 • 6:00 – 8:00 PM", color: "blue" },
-  { title: "Physics", time: "Wed 27 • 10:00 AM – 12:00 PM", color: "yellow" },
-  { title: "Pure Mathematics", time: "Fri 29 • 4:30 – 6:30 PM", color: "blue" },
-  { title: "Physics", time: "Fri 29 • 2:00 – 4:00 PM", color: "yellow" },
-  { title: "Organic Chemistry", time: "Sat 30 • 9:00 – 11:00 AM", color: "green" },
-];
 
 export function SchedulePage() {
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [selectedDayId, setSelectedDayId] = useState<string>("mon-25");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeDayData =
-    scheduleWeekData.find((day) => day.id === selectedDayId) || scheduleWeekData[0];
+  useEffect(() => {
+    async function loadSchedule() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getUpcomingClasses();
+        setSchedules(data || []);
+      } catch (err) {
+        console.error("Failed to load schedules:", err);
+        setError("Failed to load schedule from server.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSchedule();
+  }, []);
+
+  const activeDay = WEEK_DAYS.find((d) => d.id === selectedDayId) || WEEK_DAYS[0];
+
+  // Filter classes belonging to the selected day
+  const activeDayClasses = schedules.filter((item) => {
+    const dayMatch = item.day?.toLowerCase() === activeDay.dayKey.toLowerCase();
+    const dateMatch = item.date?.toLowerCase().includes(String(activeDay.dateNum));
+    return dayMatch || dateMatch;
+  });
 
   return (
     <div className="schedule-page-wrapper">
       {/* Top Horizontal Week Days Calendar Strip */}
       <div className="schedule-calendar-strip" role="tablist" aria-label="Select day of the week">
-        {scheduleWeekData.map((day) => {
+        {WEEK_DAYS.map((day) => {
           const isSelected = day.id === selectedDayId;
+          const dayClassesCount = schedules.filter((item) => {
+            const dayMatch = item.day?.toLowerCase() === day.dayKey.toLowerCase();
+            const dateMatch = item.date?.toLowerCase().includes(String(day.dateNum));
+            return dayMatch || dateMatch;
+          }).length;
+          const hasClasses = dayClassesCount > 0;
+
           return (
             <button
               key={day.id}
@@ -182,7 +91,7 @@ export function SchedulePage() {
               <span className="calendar-day-name">{day.dayShort}</span>
               <strong className="calendar-day-number">{day.dateNum}</strong>
               <span className="calendar-day-dot-wrap">
-                {day.hasClasses && (
+                {hasClasses && (
                   <span className={`calendar-day-dot ${isSelected ? "dot-white" : "dot-blue"}`} />
                 )}
               </span>
@@ -197,59 +106,71 @@ export function SchedulePage() {
         <section className="schedule-left-column">
           {/* Day Header Row */}
           <div className="selected-day-header">
-            <h2 className="selected-day-title">{activeDayData.fullDateStr}</h2>
+            <h2 className="selected-day-title">{activeDay.fullDateStr}</h2>
             <span className="classes-count-pill">
-              {activeDayData.classes.length === 1
+              {activeDayClasses.length === 1
                 ? "1 class"
-                : `${activeDayData.classes.length} classes`}
+                : `${activeDayClasses.length} classes`}
             </span>
           </div>
 
-          {/* Classes Cards List */}
-          <div className="schedule-cards-list">
-            {activeDayData.classes.map((cls) => (
-              <article
-                className={`schedule-class-card class-card-accent-${cls.subjectColor}`}
-                key={cls.id}
-              >
-                <div className="class-card-inner">
-                  <div className="class-card-top-line">
-                    <h3 className="class-card-title">{cls.title}</h3>
-                    <span
-                      className={`schedule-mode-pill ${
-                        cls.mode === "In person"
-                          ? "mode-pill-inperson"
-                          : "mode-pill-online"
-                      }`}
-                    >
-                      {cls.mode === "Online" && <Video size={12} style={{ marginRight: 4 }} />}
-                      {cls.mode}
-                    </span>
-                  </div>
+          {/* Loading or Classes Cards List */}
+          {loading ? (
+            <div className="schedule-no-classes-card">
+              <Loader2 className="animate-spin text-blue-600 mb-2" size={24} />
+              <p>Loading schedule from server...</p>
+            </div>
+          ) : (
+            <div className="schedule-cards-list">
+              {activeDayClasses.map((cls, index) => {
+                const color = getSubjectColor(cls.accent, cls.subject);
+                return (
+                  <article
+                    className={`schedule-class-card class-card-accent-${color}`}
+                    key={cls.id || `${cls.title}-${index}`}
+                  >
+                    <div className="class-card-inner">
+                      <div className="class-card-top-line">
+                        <h3 className="class-card-title">{cls.title}</h3>
+                        <span
+                          className={`schedule-mode-pill ${
+                            cls.mode === "In person"
+                              ? "mode-pill-inperson"
+                              : "mode-pill-online"
+                          }`}
+                        >
+                          {cls.mode === "Online" && <Video size={12} style={{ marginRight: 4 }} />}
+                          {cls.mode}
+                        </span>
+                      </div>
 
-                  <p className="class-card-instructor">{cls.teacher}</p>
+                      <p className="class-card-instructor">
+                        {cls.subject ? `${cls.subject} • ` : ""}{cls.teacher}
+                      </p>
 
-                  <div className="class-card-meta-line">
-                    <span className="meta-item">
-                      <Clock3 size={15} />
-                      <span>{cls.time}</span>
-                    </span>
-                    <span className="meta-item">
-                      <MapPin size={15} />
-                      <span>{cls.location}</span>
-                    </span>
-                  </div>
+                      <div className="class-card-meta-line">
+                        <span className="meta-item">
+                          <Clock3 size={15} />
+                          <span>{cls.time}</span>
+                        </span>
+                        <span className="meta-item">
+                          <MapPin size={15} />
+                          <span>{cls.location}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {activeDayClasses.length === 0 && (
+                <div className="schedule-no-classes-card">
+                  <p>No classes scheduled for this day.</p>
+                  <span>Enjoy your self-study time!</span>
                 </div>
-              </article>
-            ))}
-
-            {activeDayData.classes.length === 0 && (
-              <div className="schedule-no-classes-card">
-                <p>No classes scheduled for this day.</p>
-                <span>Enjoy your self-study time!</span>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Right Column: Week at a Glance & This Week Count */}
@@ -258,22 +179,33 @@ export function SchedulePage() {
           <div className="week-glance-card">
             <h3 className="week-glance-title">Week at a glance</h3>
             <div className="week-glance-list">
-              {weekAtAGlanceList.map((item, idx) => (
-                <div className="glance-item" key={idx}>
-                  <span className={`glance-color-bar bar-${item.color}`} />
-                  <div className="glance-info">
-                    <strong className="glance-item-title">{item.title}</strong>
-                    <span className="glance-item-time">{item.time}</span>
-                  </div>
-                </div>
-              ))}
+              {schedules.length === 0 && !loading ? (
+                <p className="text-xs text-gray-400 p-2">No weekly classes scheduled.</p>
+              ) : (
+                schedules.map((item, idx) => {
+                  const color = getSubjectColor(item.accent, item.subject);
+                  return (
+                    <div className="glance-item" key={item.id || idx}>
+                      <span className={`glance-color-bar bar-${color}`} />
+                      <div className="glance-info">
+                        <strong className="glance-item-title">{item.title}</strong>
+                        <span className="glance-item-time">
+                          {item.day} {item.date ? `${item.date.split(" ")[0]} • ` : "• "}{item.time}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
           {/* Widget 2: This Week Summary */}
           <div className="this-week-summary-card">
             <span className="this-week-label">THIS WEEK</span>
-            <strong className="this-week-number">6</strong>
+            <strong className="this-week-number">
+              {loading ? "..." : schedules.length > 0 ? (schedules.length < 10 ? `0${schedules.length}` : schedules.length) : "0"}
+            </strong>
             <p className="this-week-subtext">classes scheduled</p>
           </div>
         </aside>
