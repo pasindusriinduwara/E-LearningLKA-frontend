@@ -8,6 +8,7 @@ export interface Material {
   subject: string;
   date: string;
   size?: string;
+  fileUrl?: string;
   downloads?: number;
   isRestricted: boolean;
 }

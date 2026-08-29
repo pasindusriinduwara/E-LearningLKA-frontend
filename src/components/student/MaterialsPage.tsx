@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   FileText,
   Video,
@@ -8,11 +8,12 @@ import {
   Tablet,
   Search,
   Download,
-  ExternalLink,
   CheckCircle2,
   X,
   FileCode,
 } from "lucide-react";
+import { getRecentMaterials } from "@/services/studentService";
+import type { LearningResource } from "@/lib/types/student";
 
 export interface MaterialItem {
   id: string;
@@ -98,16 +99,60 @@ const initialMaterials: MaterialItem[] = [
   },
 ];
 
+function mapBackendMaterial(resource: LearningResource, index: number): MaterialItem {
+  const normalizedType = resource.type.toLowerCase();
+  const type: MaterialItem["type"] = normalizedType.includes("video")
+    ? "VIDEO"
+    : normalizedType.includes("link")
+      ? "LINK"
+      : "PDF";
+  const subject = ["Mathematics", "Chemistry", "Physics"].includes(resource.subject)
+    ? resource.subject as MaterialItem["subject"]
+    : "Mathematics";
+
+  return {
+    id: resource.id || `backend-material-${index}`,
+    title: resource.title,
+    subject,
+    teacher: "Teacher",
+    type,
+    isNew: true,
+    hasAction: Boolean(resource.fileUrl),
+    date: resource.time || "Recently uploaded",
+    size: resource.size || "File",
+    downloadUrl: resource.fileUrl,
+    description: "Material uploaded by your teacher.",
+  };
+}
+
 export function MaterialsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
   const [selectedType, setSelectedType] = useState<string>("All");
   const [previewMaterial, setPreviewMaterial] = useState<MaterialItem | null>(null);
   const [downloadToast, setDownloadToast] = useState<string | null>(null);
+  const [backendMaterials, setBackendMaterials] = useState<MaterialItem[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    getRecentMaterials()
+      .then((resources) => {
+        if (active) setBackendMaterials(resources.map(mapBackendMaterial));
+      })
+      .catch((error: unknown) => {
+        // Keep the existing page usable when the Backend is unavailable.
+        console.error("Failed to load student materials:", error);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const materials = useMemo(() => [...backendMaterials, ...initialMaterials], [backendMaterials]);
 
   // Filtered list based on Search, Subject tab, and Type card selection
   const filteredMaterials = useMemo(() => {
-    return initialMaterials.filter((item) => {
+    return materials.filter((item) => {
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.teacher.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -121,17 +166,20 @@ export function MaterialsPage() {
 
       return matchesSearch && matchesSubject && matchesType;
     });
-  }, [searchQuery, selectedSubject, selectedType]);
+  }, [materials, searchQuery, selectedSubject, selectedType]);
 
   const stats = useMemo(() => {
-    const total = 24;
-    const pdfs = 16;
-    const videos = 5;
-    const links = 3;
+    const total = materials.length;
+    const pdfs = materials.filter((item) => item.type === "PDF").length;
+    const videos = materials.filter((item) => item.type === "VIDEO").length;
+    const links = materials.filter((item) => item.type === "LINK").length;
     return { total, pdfs, videos, links };
-  }, []);
+  }, [materials]);
 
   function handleDownload(item: MaterialItem) {
+    if (item.downloadUrl) {
+      window.open(item.downloadUrl, "_blank", "noopener,noreferrer");
+    }
     setDownloadToast(`Downloading "${item.title}" (${item.size})...`);
     setTimeout(() => {
       setDownloadToast(null);

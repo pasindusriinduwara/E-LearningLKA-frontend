@@ -3,10 +3,25 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getStudentProfile } from "@/services/studentService";
-import type { StudentProfile } from "@/lib/types/student";
+import { getTeacherProfile } from "@/services/teacherService";
+
+export interface AuthUser {
+  role: "STUDENT" | "TEACHER";
+  id?: string;
+  userId?: string;
+  title?: string;
+  name?: string;
+  initials?: string;
+  studentId?: string;
+  exam?: string;
+  stream?: string;
+  medium?: string;
+  qualification?: string;
+  bio?: string;
+}
 
 interface AuthContextValue {
-  user: StudentProfile | null; // User කෙනෙක් නැති වෙලාවට null වෙන්න පුළුවන්
+  user: AuthUser | null;
   loading: boolean;
   isAuthenticated: boolean;
   signOut: () => void;
@@ -15,31 +30,37 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<StudentProfile | null>(null); // Hardcoded data අයින් කළා
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
   useEffect(() => {
     async function loadUser() {
-      // 1. LocalStorage එකෙන් Token එක ගන්නවා
       const token = localStorage.getItem("token");
 
       if (!token) {
-        setLoading(false); // Token එකක් නැත්නම් කෙලින්ම loading false කරනවා
+        setLoading(false);
         return;
       }
 
       try {
-        // 2. Token එක තියෙනවා නම් Backend එකෙන් User Profile එක ගන්නවා.
-        // (සටහන: මෙතන ID එකක් pass කරන්න එපා. Backend එක Token එකෙන් User ව අඳුරගන්න ඕනේ)
-        const student = await getStudentProfile();
-
-        if (student) {
-          setUser(student);
+        try {
+          const student = await getStudentProfile();
+          setUser({ ...student, role: "STUDENT" });
+        } catch {
+          const teacher = await getTeacherProfile();
+          const name = teacher.name?.trim() || "Teacher";
+          const initials = name
+            .split(/\s+/)
+            .map((part) => part[0])
+            .filter(Boolean)
+            .join("")
+            .slice(0, 2)
+            .toUpperCase();
+          setUser({ ...teacher, role: "TEACHER", initials: initials || "TC" });
         }
       } catch (err) {
         console.error("Auth context load error:", err);
-        // Token එක Expire වෙලා හෝ වැරදි නම්, ඒක අයින් කරනවා
         localStorage.removeItem("token");
       } finally {
         setLoading(false);
@@ -50,7 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   function signOut() {
-    // Sign out වෙද්දී Token එක අයින් කරලා Login page එකට යවනවා
     localStorage.removeItem("token");
     setUser(null);
     router.push("/login");
@@ -61,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        isAuthenticated: !!user, // User Object එකක් තියෙනවා නම් විතරක් true වෙනවා
+        isAuthenticated: !!user, 
         signOut
       }}
     >

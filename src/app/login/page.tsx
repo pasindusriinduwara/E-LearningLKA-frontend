@@ -23,9 +23,9 @@ export default function LoginPage() {
         try {
             const data = await loginUser({ email, password });
             localStorage.setItem("token", data.token);
-            router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message || "Failed to login. Please try again.");
+            router.push(role === "teacher" ? "/teacher/dashboard" : "/dashboard");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to login. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -144,7 +144,7 @@ export default function LoginPage() {
                     </form>
 
                     <p className="text-center mt-8 text-sm text-gray-500">
-                        Don't have an account? <Link href="/register" className="text-[#4F46E5] font-semibold hover:underline">Register</Link>
+                        Don&apos;t have an account? <Link href="/register" className="text-[#4F46E5] font-semibold hover:underline">Register</Link>
                     </p>
                 </div>
             </div>

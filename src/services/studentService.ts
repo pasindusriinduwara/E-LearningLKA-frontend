@@ -9,7 +9,6 @@ export interface AnnouncementItem {
   time: string;
 }
 
-// 1. Fetch Student Profile (Hardcoded ID එක සහ Query Parameter එක ඉවත් කර ඇත)
 export async function getStudentProfile(): Promise<StudentProfile> {
   return fetchApi<StudentProfile>("/students/profile");
 }

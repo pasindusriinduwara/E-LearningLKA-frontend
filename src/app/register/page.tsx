@@ -10,7 +10,7 @@ import { AcademicDetailsStep } from "@/components/auth/AcademicDetailsStep";
 import { TeacherDetailsStep } from "@/components/auth/TeacherDetailsStep";
 import { AccountDetailsStep } from "@/components/auth/AccountDetailsStep";
 import type { RegisterFormData } from "@/lib/types/auth";
-import { registerUser } from "@/services/authService";
+import { registerUser, type RegisterPayload } from "@/services/authService";
 
 export default function MultiStepRegister() {
     const router = useRouter();
@@ -30,11 +30,11 @@ export default function MultiStepRegister() {
         setLoading(true);
         setError("");
         try {
-            const payload = {
+            const payload: RegisterPayload = {
                 email: formData.email,
                 password: formData.password,
                 phoneNumber: formData.phone,
-                userType: formData.role.toUpperCase(),
+                userType: formData.role === "teacher" ? "TEACHER" : "STUDENT",
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 dob: formData.dob,
@@ -49,9 +49,9 @@ export default function MultiStepRegister() {
             };
             const res = await registerUser(payload);
             localStorage.setItem("token", res.token);
-            router.push("/dashboard");
-        } catch (err: any) {
-            setError(err.message || "Registration failed. Please try again.");
+            router.push(formData.role === "teacher" ? "/teacher/dashboard" : "/dashboard");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -122,7 +122,7 @@ export default function MultiStepRegister() {
                                 return (
                                     <div key={s.num} className="flex items-center gap-4">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${isCompleted ? "bg-emerald-500 text-white" :
-                                                isActive ? "bg-[#4F46E5] text-white" : "bg-[#1E293B] text-gray-500"
+                                            isActive ? "bg-[#4F46E5] text-white" : "bg-[#1E293B] text-gray-500"
                                             }`}>
                                             {isCompleted ? <Check size={16} strokeWidth={3} /> : s.num}
                                         </div>
@@ -206,6 +206,8 @@ export default function MultiStepRegister() {
                             onSelect={handleSelectChange}
                             onBack={handleBack}
                             onNext={handleNext}
+                            loading={loading}
+                            error={error}
                         />
                     )}
 
@@ -216,6 +218,8 @@ export default function MultiStepRegister() {
                             onToggleSubject={handleToggleSubject}
                             onBack={handleBack}
                             onNext={handleNext}
+                            loading={loading}
+                            error={error}
                         />
                     )}
 

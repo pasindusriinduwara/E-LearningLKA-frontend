@@ -3,14 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, WalletCards, X } from "lucide-react";
+import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, UserPlus, WalletCards, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My schedule", href: "/schedule", icon: CalendarDays },
-  { label: "Attendance", href: "/attendance", icon: CircleCheck },
-  { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
+{ label: "Enroll Classes", href: "/enrollment", icon: UserPlus },  { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
   { label: "Materials", href: "/materials", icon: BookOpen },
   { label: "Fees & payments", href: "/fees", icon: WalletCards },
 ];
@@ -46,7 +45,6 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
         <Link className="student-chip" href="/settings" onClick={closeMenus}>
           <div className="avatar avatar-small">{user?.initials || "ST"}</div>
           <div>
-            {/* මෙහි user?.name ලෙස වෙනස් කර ඇත */}
             <strong>{user?.name || "Student"}</strong>
             <span>Student ID {user?.studentId || "Unavailable"}</span>
           </div>

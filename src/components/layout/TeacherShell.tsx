@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { 
   LayoutDashboard, Calendar, CheckSquare, BookOpen, 
   ClipboardList, LineChart, MessageCircle, Settings, 
-  LogOut, Bell, ChevronRight, Menu, X, GraduationCap 
+  LogOut, Bell, ChevronRight, Menu, GraduationCap 
 } from "lucide-react";
 
 const navItems = [
@@ -22,7 +23,11 @@ const navItems = [
 
 export function TeacherShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const teacherName = user?.name || "Teacher";
+  const teacherInitials = user?.initials || teacherName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "TC";
+  const teacherRole = user?.qualification || "Teacher";
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
@@ -36,10 +41,10 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
         
         <div className="p-4">
           <div className="flex items-center p-3 bg-gray-800/50 rounded-xl mb-6">
-            <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">KP</div>
+            <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">{teacherInitials}</div>
             <div className="ml-3 flex-1 overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">Mr. K. Perera</p>
-              <p className="text-xs text-gray-400 truncate">Mathematics Teacher</p>
+              <p className="text-sm font-semibold text-white truncate">{teacherName}</p>
+              <p className="text-xs text-gray-400 truncate">{teacherRole}</p>
             </div>
             <ChevronRight size={16} className="text-gray-500" />
           </div>
@@ -64,7 +69,7 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="absolute bottom-0 w-full p-4">
-          <button className="flex items-center px-3 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors w-full">
+          <button onClick={signOut} className="flex items-center px-3 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors w-full">
             <LogOut size={18} className="mr-3" /> Sign out
           </button>
         </div>
@@ -87,8 +92,8 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
             </button>
             <div className="flex items-center gap-2 cursor-pointer border border-gray-200 rounded-full pl-1 pr-3 py-1">
-              <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">KP</div>
-              <span className="text-sm font-medium text-gray-700">Mr. Perera</span>
+              <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">{teacherInitials}</div>
+              <span className="text-sm font-medium text-gray-700">{teacherName}</span>
               <ChevronRight size={14} className="text-gray-400" />
             </div>
           </div>

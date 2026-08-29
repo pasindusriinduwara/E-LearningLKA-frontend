@@ -15,11 +15,15 @@ export interface ScheduleItem {
 }
 
 export interface LearningResource {
+  id?: string;
+  batchId?: string;
   title: string;
   subject: string;
-  type: "PDF" | "Video";
+  type: string;
   time: string;
   size: string;
+  fileUrl?: string;
+  cloudinaryPublicId?: string;
 }
 
 export interface StudentInvoice {

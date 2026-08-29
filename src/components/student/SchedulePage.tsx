@@ -120,6 +120,10 @@ export function SchedulePage() {
               <Loader2 className="animate-spin text-blue-600 mb-2" size={24} />
               <p>Loading schedule from server...</p>
             </div>
+          ) : error ? (
+            <div className="schedule-no-classes-card">
+              <p className="text-red-500">{error}</p>
+            </div>
           ) : (
             <div className="schedule-cards-list">
               {activeDayClasses.map((cls, index) => {
