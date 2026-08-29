@@ -9,9 +9,9 @@ export interface AnnouncementItem {
   time: string;
 }
 
-// 1. Fetch Student Profile
-export async function getStudentProfile(studentId = "24081"): Promise<StudentProfile> {
-  return fetchApi<StudentProfile>(`/students/profile?studentId=${studentId}`);
+// 1. Fetch Student Profile (Hardcoded ID එක සහ Query Parameter එක ඉවත් කර ඇත)
+export async function getStudentProfile(): Promise<StudentProfile> {
+  return fetchApi<StudentProfile>("/students/profile");
 }
 
 // 2. Fetch Upcoming Classes

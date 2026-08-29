@@ -17,17 +17,18 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
-import { getStudentProfile, getUpcomingClasses } from "@/services/studentService";
-import type { StudentProfile, ScheduleItem } from "@/lib/types/student";
+import { getAnnouncements, getRecentMaterials, getUpcomingClasses, type AnnouncementItem } from "@/services/studentService";
+import type { ScheduleItem } from "@/lib/types/student";
 
 export function DashboardOverview() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [classes, setClasses] = useState<ScheduleItem[]>([]);
+  const [materialsCount, setMaterialsCount] = useState(0);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const displayUser = profile || user;
+  const displayUser = user;
 
   useEffect(() => {
     async function loadDashboardData() {
@@ -36,17 +37,14 @@ export function DashboardOverview() {
         setError(null);
 
         // Fetch student profile and upcoming schedule from PostgreSQL via Spring Boot
-        const [profileRes, scheduleRes] = await Promise.allSettled([
-          getStudentProfile("24081"),
+        const [schedule, materials, notices] = await Promise.all([
           getUpcomingClasses(),
+          getRecentMaterials(),
+          getAnnouncements(),
         ]);
-
-        if (profileRes.status === "fulfilled") {
-          setProfile(profileRes.value);
-        }
-        if (scheduleRes.status === "fulfilled") {
-          setClasses(scheduleRes.value);
-        }
+        setClasses(schedule);
+        setMaterialsCount(materials.length);
+        setAnnouncements(notices);
       } catch (err) {
         console.error("Dashboard data load error:", err);
         setError("Failed to load dashboard data from backend server.");
@@ -58,32 +56,37 @@ export function DashboardOverview() {
     loadDashboardData();
   }, []);
 
+  const formatCount = (count: number) => String(count).padStart(2, "0");
+  const today = new Intl.DateTimeFormat("en-US", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  }).format(new Date()).toUpperCase();
+
   return (
     <div className="dashboard-page-wrapper">
       {/* 1. Dark Navy Welcome Hero Banner */}
       <section className="dashboard-welcome-banner" aria-label="Welcome banner">
         <div className="welcome-banner-left">
-          <p className="welcome-date-eyebrow">TUESDAY, 25 AUGUST 2026</p>
+          <p className="welcome-date-eyebrow">{today}</p>
           <h1 className="welcome-hero-title">
             Good morning, {displayUser?.name ? displayUser.name.split(" ")[0] : "Student"}.
           </h1>
           <p className="welcome-hero-subtitle">
-            Student ID: <strong>{displayUser?.studentId || "24081"}</strong> • Keep your momentum going!
+            Student ID: <strong>{displayUser?.studentId || "Unavailable"}</strong> • Keep your momentum going!
           </p>
 
           {/* Student Profile Tags from PostgreSQL */}
           <div className="welcome-tags-row">
             <span className="welcome-tag-chip">
               <GraduationCap size={15} />
-              <span>{displayUser?.exam || "A/L 2026"}</span>
+              <span>{displayUser?.exam || "Not specified"}</span>
             </span>
             <span className="welcome-tag-chip">
               <BookOpen size={15} />
-              <span>{displayUser?.stream || "Physical Science"}</span>
+              <span>{displayUser?.stream || "Not specified"}</span>
             </span>
             <span className="welcome-tag-chip">
               <Globe size={15} />
-              <span>{displayUser?.medium || "Sinhala medium"}</span>
+              <span>{displayUser?.medium || "Not specified"}</span>
             </span>
           </div>
         </div>
@@ -115,8 +118,8 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">Classes this week</span>
-          <strong className="metric-card-number">{classes.length > 0 ? `0${classes.length}` : "06"}</strong>
-          <span className="metric-card-subtext">2 completed</span>
+          <strong className="metric-card-number">{formatCount(classes.length)}</strong>
+          <span className="metric-card-subtext">Upcoming classes</span>
         </Link>
 
         {/* Metric 2: Attendance rate */}
@@ -128,11 +131,11 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">Attendance rate</span>
-          <strong className="metric-card-number">92%</strong>
+          <strong className="metric-card-number">N/A</strong>
           <div className="attendance-progress-track">
-            <div className="attendance-progress-fill" style={{ width: "92%" }} />
+            <div className="attendance-progress-fill" style={{ width: "0%" }} />
           </div>
-          <span className="attendance-status-text">Excellent consistency</span>
+          <span className="attendance-status-text">No attendance data</span>
         </Link>
 
         {/* Metric 3: New materials */}
@@ -144,7 +147,7 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">New materials</span>
-          <strong className="metric-card-number">03</strong>
+          <strong className="metric-card-number">{formatCount(materialsCount)}</strong>
           <span className="metric-card-subtext">Since your last visit</span>
         </Link>
       </section>
@@ -167,7 +170,11 @@ export function DashboardOverview() {
           </div>
 
           <div className="upcoming-classes-list">
-            {classes.length === 0 ? (
+            {loading ? (
+              <p className="text-sm text-gray-500 p-4">Loading classes...</p>
+            ) : error ? (
+              <p className="text-sm text-red-500 p-4">{error}</p>
+            ) : classes.length === 0 ? (
               <p className="text-sm text-gray-500 p-4">No upcoming classes found.</p>
             ) : (
               classes.map((cls, index) => (
@@ -223,20 +230,19 @@ export function DashboardOverview() {
           </div>
 
           <div className="notices-list">
-            {/* Notice Card 1: Term Test */}
-            <article className="notice-card-item">
+            {loading ? <p className="text-sm text-gray-500 p-4">Loading notices...</p> : announcements.length === 0 ? (
+              <p className="text-sm text-gray-500 p-4">No announcements found.</p>
+            ) : announcements.slice(0, 3).map((notice) => <article key={notice.id || notice.title} className="notice-card-item">
               <div className="notice-icon-box">
                 <CircleAlert size={20} />
               </div>
               <div className="notice-card-content">
-                <span className="notice-type-tag">IMPORTANT</span>
-                <h3 className="notice-card-title">Term test paper 02</h3>
-                <p className="notice-card-desc">
-                  Submit your answer script by Friday, 29 August.
-                </p>
-                <span className="notice-card-time">1 hour ago</span>
+                <span className="notice-type-tag">{notice.type}</span>
+                <h3 className="notice-card-title">{notice.title}</h3>
+                <p className="notice-card-desc">{notice.description}</p>
+                <span className="notice-card-time">{notice.time}</span>
               </div>
-            </article>
+            </article>)}
           </div>
         </section>
       </div>

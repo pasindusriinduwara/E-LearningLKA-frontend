@@ -46,8 +46,9 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
         <Link className="student-chip" href="/settings" onClick={closeMenus}>
           <div className="avatar avatar-small">{user?.initials || "ST"}</div>
           <div>
-            <strong>{user.name || "Student"}</strong>
-            <span>Student ID {user?.studentId || "24081"}</span>
+            {/* මෙහි user?.name ලෙස වෙනස් කර ඇත */}
+            <strong>{user?.name || "Student"}</strong>
+            <span>Student ID {user?.studentId || "Unavailable"}</span>
           </div>
           <ChevronRight size={16} />
         </Link>
@@ -84,7 +85,6 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       </aside>
-
 
       <div className="main-area">
         <header className="topbar">
@@ -160,7 +160,7 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
                     <div className="avatar avatar-medium">{user?.initials || "ST"}</div>
                     <div>
                       <strong>{user?.name || "Student"}</strong>
-                      <span>Student ID {user?.studentId || "24081"}</span>
+                      <span>Student ID {user?.studentId || "Unavailable"}</span>
                     </div>
                   </div>
                   <Link className="popover-action" href="/settings" onClick={closeMenus}>
