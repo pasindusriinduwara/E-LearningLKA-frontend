@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, WalletCards, X } from "lucide-react";
+import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, WalletCards, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My schedule", href: "/schedule", icon: CalendarDays },
   { label: "Attendance", href: "/attendance", icon: CircleCheck },
+  { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
   { label: "Materials", href: "/materials", icon: BookOpen },
   { label: "Fees & payments", href: "/fees", icon: WalletCards },
 ];
@@ -43,10 +44,40 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} aria-label="Student navigation">
         <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
         <Link className="student-chip" href="/settings" onClick={closeMenus}><div className="avatar avatar-small">{user.initials}</div><div><strong>{user.name}</strong><span>Student ID {user.studentId}</span></div><ChevronRight size={16} /></Link>
-        <nav className="nav-group" aria-label="Main navigation"><p className="nav-label">Workspace</p>{navItems.map(({ label, href, icon: Icon }) => { const active = isActivePath(pathname, href); return <Link key={href} className={`nav-item ${active ? "nav-item-active" : ""}`} href={href} onClick={closeMenus} aria-current={active ? "page" : undefined}><Icon size={18} /><span>{label}</span>{label === "Materials" && <span className="nav-count">3</span>}</Link>; })}</nav>
+        <nav className="nav-group" aria-label="Main navigation">
+          <p className="nav-label">Workspace</p>
+          {navItems.map(({ label, href, icon: Icon }) => {
+            const active = isActivePath(pathname, href);
+            return (
+              <Link
+                key={href}
+                className={`nav-item ${active ? "nav-item-active" : ""}`}
+                href={href}
+                onClick={closeMenus}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon size={18} />
+                <span>{label}</span>
+                {label === "Materials" && !active && <span className="nav-count">3</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
         <nav className="nav-group nav-group-secondary" aria-label="Support navigation"><p className="nav-label">Support</p>{supportItems.map(({ label, href, icon: Icon }) => { const active = isActivePath(pathname, href); return <Link key={href} className={`nav-item ${active ? "nav-item-active" : ""}`} href={href} onClick={closeMenus} aria-current={active ? "page" : undefined}><Icon size={18} /><span>{label}</span></Link>; })}</nav>
-        <div className="sidebar-footer"><Link className="help-box" href="/messages" onClick={closeMenus}><span className="help-icon"><MessageCircle size={17} /></span><span><strong>Need help?</strong><span>Message the office</span></span><ArrowUpRight size={16} /></Link><button className="logout-button" type="button" onClick={signOut}><LogOut size={17} /><span>Sign out</span></button></div>
+        <div className="sidebar-footer">
+          <Link className="help-box" href="/messages" onClick={closeMenus}>
+            <span className="help-icon"><MessageCircle size={17} /></span>
+            <span><strong>Need help?</strong><span>Message the office</span></span>
+            <ArrowUpRight size={16} />
+          </Link>
+          <button className="logout-button" type="button" onClick={signOut}>
+            <span className="avatar avatar-tiny">N</span>
+            <span>Sign out</span>
+          </button>
+        </div>
       </aside>
+
 
       <div className="main-area">
         <header className="topbar">

@@ -1,21 +1,193 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, ChevronRight, CircleAlert, CircleCheck, GraduationCap, MessageCircle } from "lucide-react";
-import { SectionHeading } from "@/components/ui/SectionHeading";
-import { StatusPill } from "@/components/ui/StatusPill";
-import { ResourceRow } from "@/components/student/ResourceRow";
-import { ScheduleRow } from "@/components/student/ScheduleRow";
-import { recentMaterials, studentInvoices, studentProfile, upcomingClasses } from "@/services/studentService";
+import {
+  ArrowUpRight,
+  BookOpen,
+  CalendarDays,
+  CircleAlert,
+  CircleCheck,
+  Clock3,
+  Globe,
+  GraduationCap,
+  MapPin,
+  Tablet,
+  ChevronRight,
+} from "lucide-react";
+import { studentProfile } from "@/services/studentService";
 
 export function DashboardOverview() {
   return (
-    <>
-      <section className="welcome-band"><div className="welcome-copy"><p className="section-eyebrow">Tuesday, 25 August 2026</p><h1>Good morning, Sahan.</h1><p className="welcome-description">Keep your momentum going. You have one class and two new resources waiting today.</p><div className="welcome-tags"><span><GraduationCap size={16} /> {studentProfile.exam}</span><span><BookOpen size={16} /> {studentProfile.stream}</span><span>{studentProfile.medium}</span></div></div><div className="focus-meter" aria-label="Your weekly focus is 78 percent"><div className="focus-meter-top"><span>Weekly focus</span><strong>78%</strong></div><div className="meter-track"><span style={{ width: "78%" }} /></div><p>Up 12% from last week</p></div></section>
+    <div className="dashboard-page-wrapper">
+      {/* 1. Dark Navy Welcome Hero Banner */}
+      <section className="dashboard-welcome-banner" aria-label="Welcome banner">
+        <div className="welcome-banner-left">
+          <p className="welcome-date-eyebrow">TUESDAY, 25 AUGUST 2026</p>
+          <h1 className="welcome-hero-title">Good morning, Sahan.</h1>
+          <p className="welcome-hero-subtitle">
+            Keep your momentum going. You have one class and two new resources waiting today.
+          </p>
 
-      <section className="metric-grid" aria-label="Learning summary"><article className="metric-card metric-card-coral"><div className="metric-icon"><CalendarDays size={19} /></div><div><p>Classes this week</p><strong>06</strong><span>2 completed</span></div><ArrowUpRight className="metric-arrow" size={17} /></article><article className="metric-card metric-card-green"><div className="metric-icon"><CircleCheck size={19} /></div><div><p>Attendance rate</p><strong>92%</strong><span>Excellent consistency</span></div><ArrowUpRight className="metric-arrow" size={17} /></article><article className="metric-card metric-card-yellow"><div className="metric-icon"><BookOpen size={19} /></div><div><p>New materials</p><strong>03</strong><span>Since your last visit</span></div><ArrowUpRight className="metric-arrow" size={17} /></article></section>
+          {/* Student Profile Tags */}
+          <div className="welcome-tags-row">
+            <span className="welcome-tag-chip">
+              <GraduationCap size={15} />
+              <span>{studentProfile.exam}</span>
+            </span>
+            <span className="welcome-tag-chip">
+              <BookOpen size={15} />
+              <span>{studentProfile.stream}</span>
+            </span>
+            <span className="welcome-tag-chip">
+              <Globe size={15} />
+              <span>{studentProfile.medium}</span>
+            </span>
+          </div>
+        </div>
 
-      <div className="dashboard-grid"><section className="section-block schedule-block"><SectionHeading eyebrow="Your week" title="Upcoming classes" action={<Link className="text-button" href="/schedule">Full schedule <ChevronRight size={16} /></Link>} /><div className="schedule-list"><ScheduleRow item={upcomingClasses[0]} featured /><ScheduleRow item={upcomingClasses[1]} /><ScheduleRow item={upcomingClasses[2]} /></div></section><aside className="section-block announcement-block"><SectionHeading eyebrow="From your institute" title="Notice board" action={<button className="icon-button subtle" type="button" title="View all announcements" aria-label="View all announcements"><ArrowUpRight size={17} /></button>} /><div className="notice-item notice-important"><div className="notice-mark"><CircleAlert size={17} /></div><div><span className="notice-label">Important</span><h3>Term test paper 02</h3><p>Submit your answer script by Friday, 29 August.</p><span className="notice-time">Posted 1 hour ago</span></div></div><div className="notice-item notice-reminder"><div className="notice-mark notice-mark-neutral"><Bell size={17} /></div><div><span className="notice-label">Reminder</span><h3>August fee deadline</h3><p>Your mathematics fee is due in 5 days.</p><span className="notice-time">Posted yesterday</span></div></div><div className="notice-item notice-update"><div className="notice-mark"><CircleCheck size={17} /></div><div><span className="notice-label">Update</span><h3>New study materials added</h3><p>3 new PDFs uploaded for Combined Mathematics.</p><span className="notice-time">Posted 3 hours ago</span></div></div><Link className="outline-button notice-button" href="/messages">Open messages <MessageCircle size={16} /></Link></aside></div>
+        {/* Weekly Focus Metric Widget */}
+        <div className="weekly-focus-card" aria-label="Weekly focus 78 percent">
+          <div className="focus-card-top">
+            <span className="focus-label">WEEKLY FOCUS</span>
+            <strong className="focus-percentage">78%</strong>
+          </div>
+          <div className="focus-meter-track">
+            <div className="focus-meter-fill" style={{ width: "78%" }} />
+          </div>
+          <div className="focus-card-bottom">
+            <span className="focus-trend">↑ 12%</span>
+            <span className="focus-trend-label">from last week</span>
+          </div>
+        </div>
+      </section>
 
-      <div className="dashboard-grid bottom-grid"><section className="section-block"><SectionHeading eyebrow="Keep learning" title="Recent materials" action={<Link className="text-button" href="/materials">View library <ChevronRight size={16} /></Link>} /><div className="resource-list">{recentMaterials.slice(0, 2).map((resource) => <ResourceRow key={resource.title} resource={resource} />)}</div></section><section className="section-block fees-block"><SectionHeading eyebrow="Account" title="Fee overview" action={<Link className="text-button" href="/fees">View fees <ChevronRight size={16} /></Link>} /><div className="fee-overview"><div><span>Outstanding</span><strong>{studentInvoices[0].amount}</strong></div><StatusPill tone="warning">{studentInvoices[0].status}</StatusPill></div><div className="fee-progress"><span style={{ width: "62%" }} /></div><p className="fee-caption">1 of 2 August invoices paid</p></section></div>
-    </>
+      {/* 2. Top Summary Metric Cards (Row of 3 Cards) */}
+      <section className="dashboard-metrics-grid" aria-label="Quick metrics">
+        {/* Metric 1: Classes this week */}
+        <Link href="/schedule" className="dashboard-metric-card">
+          <div className="metric-card-top-row">
+            <div className="metric-icon-box metric-icon-blue">
+              <CalendarDays size={22} />
+            </div>
+            <ArrowUpRight size={18} className="metric-card-arrow" />
+          </div>
+          <span className="metric-card-label">Classes this week</span>
+          <strong className="metric-card-number">06</strong>
+          <span className="metric-card-subtext">2 completed</span>
+        </Link>
+
+        {/* Metric 2: Attendance rate */}
+        <Link href="/attendance" className="dashboard-metric-card">
+          <div className="metric-card-top-row">
+            <div className="metric-icon-box metric-icon-green">
+              <CircleCheck size={22} />
+            </div>
+            <ArrowUpRight size={18} className="metric-card-arrow" />
+          </div>
+          <span className="metric-card-label">Attendance rate</span>
+          <strong className="metric-card-number">92%</strong>
+          <div className="attendance-progress-track">
+            <div className="attendance-progress-fill" style={{ width: "92%" }} />
+          </div>
+          <span className="attendance-status-text">Excellent consistency</span>
+        </Link>
+
+        {/* Metric 3: New materials */}
+        <Link href="/materials" className="dashboard-metric-card">
+          <div className="metric-card-top-row">
+            <div className="metric-icon-box metric-icon-yellow">
+              <Tablet size={22} />
+            </div>
+            <ArrowUpRight size={18} className="metric-card-arrow" />
+          </div>
+          <span className="metric-card-label">New materials</span>
+          <strong className="metric-card-number">03</strong>
+          <span className="metric-card-subtext">Since your last visit</span>
+        </Link>
+      </section>
+
+      {/* 3. Bottom Grid: Upcoming Classes & Notice Board */}
+      <div className="dashboard-bottom-grid">
+        {/* Left: Upcoming Classes */}
+        <section className="dashboard-section" aria-labelledby="upcoming-classes-heading">
+          <div className="dashboard-section-header">
+            <div>
+              <p className="dashboard-section-eyebrow">YOUR WEEK</p>
+              <h2 id="upcoming-classes-heading" className="dashboard-section-title">
+                Upcoming classes
+              </h2>
+            </div>
+            <Link href="/schedule" className="dashboard-section-action">
+              <span>Full schedule</span>
+              <ChevronRight size={16} />
+            </Link>
+          </div>
+
+          <div className="upcoming-classes-list">
+            {/* Class Card 1: Today's Class */}
+            <article className="class-card-item">
+              <div className="class-date-badge">
+                <span className="date-badge-day">TODAY</span>
+                <strong className="date-badge-number">25</strong>
+                <span className="date-badge-month">AUG</span>
+              </div>
+
+              <div className="class-card-body">
+                <div className="class-card-title-row">
+                  <h3 className="class-title">Pure Mathematics</h3>
+                  <span className="next-class-pill">Next class</span>
+                </div>
+
+                <p className="class-instructor">Combined Mathematics • Mr. K. Perera</p>
+
+                <div className="class-meta-row">
+                  <span className="class-meta-item">
+                    <Clock3 size={15} />
+                    <span>4:30 PM – 6:30 PM</span>
+                  </span>
+                  <span className="class-meta-item">
+                    <MapPin size={15} />
+                    <span>Nugegoda Studio 2</span>
+                  </span>
+                  <span className="mode-pill mode-pill-inperson">In person</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* Right: Notice Board */}
+        <section className="dashboard-section" aria-labelledby="notice-board-heading">
+          <div className="dashboard-section-header">
+            <div>
+              <p className="dashboard-section-eyebrow">FROM YOUR INSTITUTE</p>
+              <h2 id="notice-board-heading" className="dashboard-section-title">
+                Notice board
+              </h2>
+            </div>
+            <Link href="/messages" className="dashboard-section-arrow-btn" aria-label="View notice board">
+              <ArrowUpRight size={18} />
+            </Link>
+          </div>
+
+          <div className="notices-list">
+            {/* Notice Card 1: Term Test */}
+            <article className="notice-card-item">
+              <div className="notice-icon-box">
+                <CircleAlert size={20} />
+              </div>
+              <div className="notice-card-content">
+                <span className="notice-type-tag">IMPORTANT</span>
+                <h3 className="notice-card-title">Term test paper 02</h3>
+                <p className="notice-card-desc">
+                  Submit your answer script by Friday, 29 August.
+                </p>
+                <span className="notice-card-time">1 hour ago</span>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
