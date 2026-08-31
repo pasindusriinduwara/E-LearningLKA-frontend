@@ -14,12 +14,10 @@ interface AcademicDetailsStepProps {
 
 export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBack, onSubmit, loading, error }: AcademicDetailsStepProps) {
 
-    // UI එකට අවශ්‍ය Options ටික
     const grades = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10 (O/L)", "Grade 11 (O/L)", "Grade 12 (A/L)", "Grade 13 (A/L)"];
     const streams = ["Physical Science", "Biological Science", "Commerce", "Arts", "Technology"];
     const mediums = ["Sinhala", "Tamil", "English"];
 
-    // Button එකක Style එක තීරණය කරන helper function එකක්
     const getPillStyle = (isSelected: boolean) =>
         `px-4 py-2 text-sm font-medium rounded-lg border transition-all ${isSelected
             ? "bg-[#4F46E5] text-white border-[#4F46E5]"
@@ -47,7 +45,6 @@ export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBa
 
             <div className="space-y-6">
 
-                {/* Grade Selection */}
                 <div>
                     <label className="block text-xs font-bold text-gray-400 tracking-wider uppercase mb-3">Grade</label>
                     <div className="flex flex-wrap gap-2.5">
@@ -64,7 +61,6 @@ export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBa
                     </div>
                 </div>
 
-                {/* Stream Selection (A/L ළමයින්ට විතරක් අදාළ වෙන්න පුළුවන්, ඒත් UI එකේ තියෙන නිසා දාමු) */}
                 <div>
                     <label className="block text-xs font-bold text-gray-400 tracking-wider uppercase mb-3">Stream</label>
                     <div className="flex flex-wrap gap-2.5">
@@ -81,7 +77,6 @@ export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBa
                     </div>
                 </div>
 
-                {/* Medium Selection */}
                 <div>
                     <label className="block text-xs font-bold text-gray-400 tracking-wider uppercase mb-3">Teaching Medium</label>
                     <div className="flex gap-2.5">
@@ -98,7 +93,6 @@ export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBa
                     </div>
                 </div>
 
-                {/* Institute Name */}
                 <div>
                     <label className="block text-xs font-bold text-gray-400 tracking-wider uppercase mb-1.5">Institute / School Name</label>
                     <input
@@ -123,7 +117,7 @@ export function AcademicDetailsStep({ formData, onChange, onSelect, onNext, onBa
                 </button>
                 <button
                     onClick={handleAction}
-                    disabled={!formData.grade || !formData.medium || loading} // අනිවාර්ය fields
+                    disabled={!formData.grade || !formData.medium || loading} 
                     className="w-2/3 bg-[#4F46E5] hover:bg-indigo-600 disabled:bg-indigo-300 text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-[0_4px_14px_0_rgba(79,70,229,0.39)]"
                 >
                     {loading ? "Creating..." : onSubmit ? "Create account" : "Continue →"}

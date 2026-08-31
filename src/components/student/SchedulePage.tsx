@@ -59,7 +59,6 @@ export function SchedulePage() {
 
   const activeDay = WEEK_DAYS.find((d) => d.id === selectedDayId) || WEEK_DAYS[0];
 
-  // Filter classes belonging to the selected day
   const activeDayClasses = schedules.filter((item) => {
     const dayMatch = item.day?.toLowerCase() === activeDay.dayKey.toLowerCase();
     const dateMatch = item.date?.toLowerCase().includes(String(activeDay.dateNum));
@@ -68,7 +67,7 @@ export function SchedulePage() {
 
   return (
     <div className="schedule-page-wrapper">
-      {/* Top Horizontal Week Days Calendar Strip */}
+      
       <div className="schedule-calendar-strip" role="tablist" aria-label="Select day of the week">
         {WEEK_DAYS.map((day) => {
           const isSelected = day.id === selectedDayId;
@@ -100,11 +99,10 @@ export function SchedulePage() {
         })}
       </div>
 
-      {/* Main Grid: Left classes list + Right glance sidebar */}
       <div className="schedule-main-layout">
-        {/* Left Column: Selected Day Classes */}
+        
         <section className="schedule-left-column">
-          {/* Day Header Row */}
+          
           <div className="selected-day-header">
             <h2 className="selected-day-title">{activeDay.fullDateStr}</h2>
             <span className="classes-count-pill">
@@ -114,7 +112,6 @@ export function SchedulePage() {
             </span>
           </div>
 
-          {/* Loading or Classes Cards List */}
           {loading ? (
             <div className="schedule-no-classes-card">
               <Loader2 className="animate-spin text-blue-600 mb-2" size={24} />
@@ -177,9 +174,8 @@ export function SchedulePage() {
           )}
         </section>
 
-        {/* Right Column: Week at a Glance & This Week Count */}
         <aside className="schedule-right-column">
-          {/* Widget 1: Week at a glance */}
+          
           <div className="week-glance-card">
             <h3 className="week-glance-title">Week at a glance</h3>
             <div className="week-glance-list">
@@ -204,7 +200,6 @@ export function SchedulePage() {
             </div>
           </div>
 
-          {/* Widget 2: This Week Summary */}
           <div className="this-week-summary-card">
             <span className="this-week-label">THIS WEEK</span>
             <strong className="this-week-number">

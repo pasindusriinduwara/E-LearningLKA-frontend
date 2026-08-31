@@ -1,15 +1,14 @@
 "use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, UserPlus, WalletCards, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My schedule", href: "/schedule", icon: CalendarDays },
-{ label: "Enroll Classes", href: "/enrollment", icon: UserPlus },  { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
+  { label: "Enroll Classes", href: "/enrollment", icon: UserPlus }, { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
   { label: "Materials", href: "/materials", icon: BookOpen },
   { label: "Fees & payments", href: "/fees", icon: WalletCards },
 ];
@@ -25,7 +24,9 @@ function isActivePath(pathname: string, href: string) {
 
 export function StudentShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const router = useRouter();
+
+  const { user, loading, signOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -36,6 +37,11 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
     setNotificationsOpen(false);
     setProfileOpen(false);
   }
+  useEffect(() => {
+    if (!loading && user && user.role === "TEACHER") {
+      router.replace("/teacher/dashboard");
+    }
+  }, [user, loading, router]);
 
   return (
     <div className="app-shell">

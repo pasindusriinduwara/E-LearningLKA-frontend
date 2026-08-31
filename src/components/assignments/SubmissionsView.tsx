@@ -8,7 +8,7 @@ interface SubmissionsViewProps {
 export function SubmissionsView({ assignment, submissions }: SubmissionsViewProps) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Header */}
+      
       <div className="p-6 md:p-8 border-b border-gray-100">
         <p className="text-[10px] font-bold text-[#2D9F75] uppercase tracking-widest mb-2">
           {assignment.batch}
@@ -18,7 +18,6 @@ export function SubmissionsView({ assignment, submissions }: SubmissionsViewProp
         </h2>
       </div>
 
-      {/* Table Content */}
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>

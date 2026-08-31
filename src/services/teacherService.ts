@@ -109,9 +109,6 @@ export function rejectEnrollment(requestId: string) {
   );
 }
 
-/**
- * Upload a learning material for a teacher batch.
- */
 export function uploadTeacherMaterial(data: {
   batchId: string;
   title: string;

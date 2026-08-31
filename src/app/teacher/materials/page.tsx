@@ -58,8 +58,7 @@ export default function MaterialsPage() {
   }, []);
 
   useEffect(() => {
-    // Initial API synchronization intentionally updates loading/data state.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
     void loadMaterials();
   }, [loadMaterials]);
 

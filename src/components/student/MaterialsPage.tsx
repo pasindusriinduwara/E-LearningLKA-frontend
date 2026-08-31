@@ -140,7 +140,7 @@ export function MaterialsPage() {
         if (active) setBackendMaterials(resources.map(mapBackendMaterial));
       })
       .catch((error: unknown) => {
-        // Keep the existing page usable when the Backend is unavailable.
+        
         console.error("Failed to load student materials:", error);
       });
     return () => {
@@ -150,7 +150,6 @@ export function MaterialsPage() {
 
   const materials = useMemo(() => [...backendMaterials, ...initialMaterials], [backendMaterials]);
 
-  // Filtered list based on Search, Subject tab, and Type card selection
   const filteredMaterials = useMemo(() => {
     return materials.filter((item) => {
       const matchesSearch =
@@ -188,7 +187,7 @@ export function MaterialsPage() {
 
   return (
     <div className="materials-page-wrapper">
-      {/* Page Header */}
+      
       <header className="materials-header">
         <div>
           <p className="materials-eyebrow">STUDY RESOURCES</p>
@@ -199,9 +198,8 @@ export function MaterialsPage() {
         </div>
       </header>
 
-      {/* Top 4 Stat Metric Cards */}
       <div className="materials-stats-grid">
-        {/* Total Files */}
+        
         <button
           type="button"
           className="stat-card"
@@ -216,7 +214,6 @@ export function MaterialsPage() {
           </div>
         </button>
 
-        {/* PDFs */}
         <button
           type="button"
           className={`stat-card ${selectedType === "PDF" ? "stat-card-active" : ""}`}
@@ -231,7 +228,6 @@ export function MaterialsPage() {
           </div>
         </button>
 
-        {/* Videos */}
         <button
           type="button"
           className={`stat-card ${selectedType === "VIDEO" ? "stat-card-active" : ""}`}
@@ -246,7 +242,6 @@ export function MaterialsPage() {
           </div>
         </button>
 
-        {/* Links */}
         <button
           type="button"
           className={`stat-card ${selectedType === "LINK" ? "stat-card-active" : ""}`}
@@ -262,7 +257,6 @@ export function MaterialsPage() {
         </button>
       </div>
 
-      {/* Search & Subject Filter Bar */}
       <div className="materials-controls-bar">
         <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
@@ -302,13 +296,12 @@ export function MaterialsPage() {
         </div>
       </div>
 
-      {/* Materials Cards Grid (2 Columns) */}
       <div className="materials-grid">
         {filteredMaterials.map((item) => {
           return (
             <article className="material-card" key={item.id}>
               <div className="material-card-top">
-                {/* Type Icon */}
+                
                 <div
                   className={`material-type-icon ${
                     item.type === "PDF"
@@ -323,7 +316,6 @@ export function MaterialsPage() {
                   {item.type === "LINK" && <Link2 size={22} />}
                 </div>
 
-                {/* Meta details */}
                 <div className="material-meta-info">
                   <div className="subject-badge-line">
                     <span
@@ -342,7 +334,6 @@ export function MaterialsPage() {
                   <span className="type-sublabel">{item.type}</span>
                 </div>
 
-                {/* Top Right Quick Action (only if item hasAction) */}
                 {item.hasAction && (
                   <button
                     type="button"
@@ -356,7 +347,6 @@ export function MaterialsPage() {
                 )}
               </div>
 
-              {/* Title and Instructor */}
               <div
                 className="material-card-content"
                 onClick={() => setPreviewMaterial(item)}
@@ -365,7 +355,6 @@ export function MaterialsPage() {
                 <p className="material-teacher">{item.teacher}</p>
               </div>
 
-              {/* Card Footer */}
               <div className="material-card-footer">
                 <span className="material-date">{item.date}</span>
                 <span className="material-size">{item.size}</span>
@@ -373,8 +362,6 @@ export function MaterialsPage() {
             </article>
           );
         })}
-
-
 
         {filteredMaterials.length === 0 && (
           <div className="materials-empty-state">
@@ -396,7 +383,6 @@ export function MaterialsPage() {
         )}
       </div>
 
-      {/* Download Notification Toast */}
       {downloadToast && (
         <div className="download-toast">
           <CheckCircle2 size={18} />
@@ -404,7 +390,6 @@ export function MaterialsPage() {
         </div>
       )}
 
-      {/* Resource Detail Modal */}
       {previewMaterial && (
         <div
           className="payment-modal-backdrop"

@@ -1,16 +1,17 @@
-// src/app/(student)/enrollment/page.tsx
+
 "use client";
 
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { ClassCard } from "@/components/enrollment/ClassCard";
+import type { AvailableBatch } from "@/services/batchService";
 
 export default function EnrollmentPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const availableBatches = [
-    { id: "b1", name: "A/L Batch A", subject: "Combined Mathematics", teacher: "Mr. K. Perera", schedule: "Tue & Fri • 6:00 – 8:00 PM", status: "AVAILABLE" },
-    { id: "b2", name: "A/L Batch B", subject: "Pure Mathematics", teacher: "Mr. K. Perera", schedule: "Mon & Thu • 4:30 – 6:30 PM", status: "PENDING" }
+  const availableBatches: AvailableBatch[] = [
+    { id: "b1", name: "A/L Batch A", subject: "Combined Mathematics", teacher: "Mr. K. Perera", schedule: "Tue & Fri • 6:00 – 8:00 PM", status: "AVAILABLE", examYear: "2026", monthlyFee: 3500, deliveryMode: "HYBRID" },
+    { id: "b2", name: "A/L Batch B", subject: "Pure Mathematics", teacher: "Mr. K. Perera", schedule: "Mon & Thu • 4:30 – 6:30 PM", status: "PENDING", examYear: "2026", monthlyFee: 3500, deliveryMode: "ONLINE" }
   ];
 
   return (

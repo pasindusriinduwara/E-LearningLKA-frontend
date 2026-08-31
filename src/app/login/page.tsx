@@ -23,14 +23,14 @@ export default function LoginPage() {
         try {
             const data = await loginUser({ email, password });
             localStorage.setItem("token", data.token);
-            router.push(role === "teacher" ? "/teacher/dashboard" : "/dashboard");
+            const userRole = (data.role || (role === "teacher" ? "TEACHER" : "STUDENT")).toUpperCase();
+            router.push(userRole === "TEACHER" ? "/teacher/dashboard" : "/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to login. Please try again.");
         } finally {
             setLoading(false);
         }
     };
-
     return (
         <div className="flex min-h-screen font-sans">
             <div className="hidden lg:flex flex-col w-[40%] bg-[#0B132B] text-white p-12 relative overflow-hidden">

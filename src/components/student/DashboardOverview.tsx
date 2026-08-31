@@ -36,15 +36,25 @@ export function DashboardOverview() {
         setLoading(true);
         setError(null);
 
-        // Fetch student profile and upcoming schedule from PostgreSQL via Spring Boot
-        const [schedule, materials, notices] = await Promise.all([
+        const [scheduleRes, materialsRes, noticesRes] = await Promise.allSettled([
           getUpcomingClasses(),
           getRecentMaterials(),
           getAnnouncements(),
         ]);
-        setClasses(schedule);
-        setMaterialsCount(materials.length);
-        setAnnouncements(notices);
+
+        if (scheduleRes.status === "fulfilled") {
+          setClasses(scheduleRes.value);
+        }
+        if (materialsRes.status === "fulfilled") {
+          setMaterialsCount(materialsRes.value.length);
+        }
+        if (noticesRes.status === "fulfilled") {
+          setAnnouncements(noticesRes.value);
+        }
+        
+        if (scheduleRes.status === "rejected" && noticesRes.status === "rejected") {
+          setError("Failed to load dashboard data from backend server.");
+        }
       } catch (err) {
         console.error("Dashboard data load error:", err);
         setError("Failed to load dashboard data from backend server.");
@@ -52,7 +62,6 @@ export function DashboardOverview() {
         setLoading(false);
       }
     }
-
     loadDashboardData();
   }, []);
 
@@ -63,7 +72,7 @@ export function DashboardOverview() {
 
   return (
     <div className="dashboard-page-wrapper">
-      {/* 1. Dark Navy Welcome Hero Banner */}
+      
       <section className="dashboard-welcome-banner" aria-label="Welcome banner">
         <div className="welcome-banner-left">
           <p className="welcome-date-eyebrow">{today}</p>
@@ -74,7 +83,6 @@ export function DashboardOverview() {
             Student ID: <strong>{displayUser?.studentId || "Unavailable"}</strong> • Keep your momentum going!
           </p>
 
-          {/* Student Profile Tags from PostgreSQL */}
           <div className="welcome-tags-row">
             <span className="welcome-tag-chip">
               <GraduationCap size={15} />
@@ -91,7 +99,6 @@ export function DashboardOverview() {
           </div>
         </div>
 
-        {/* Weekly Focus Metric Widget */}
         <div className="weekly-focus-card" aria-label="Weekly focus 78 percent">
           <div className="focus-card-top">
             <span className="focus-label">WEEKLY FOCUS</span>
@@ -107,9 +114,8 @@ export function DashboardOverview() {
         </div>
       </section>
 
-      {/* 2. Top Summary Metric Cards (Row of 3 Cards) */}
       <section className="dashboard-metrics-grid" aria-label="Quick metrics">
-        {/* Metric 1: Classes this week */}
+        
         <Link href="/schedule" className="dashboard-metric-card">
           <div className="metric-card-top-row">
             <div className="metric-icon-box metric-icon-blue">
@@ -122,7 +128,6 @@ export function DashboardOverview() {
           <span className="metric-card-subtext">Upcoming classes</span>
         </Link>
 
-        {/* Metric 2: Attendance rate */}
         <Link href="/attendance" className="dashboard-metric-card">
           <div className="metric-card-top-row">
             <div className="metric-icon-box metric-icon-green">
@@ -138,7 +143,6 @@ export function DashboardOverview() {
           <span className="attendance-status-text">No attendance data</span>
         </Link>
 
-        {/* Metric 3: New materials */}
         <Link href="/materials" className="dashboard-metric-card">
           <div className="metric-card-top-row">
             <div className="metric-icon-box metric-icon-yellow">
@@ -152,9 +156,8 @@ export function DashboardOverview() {
         </Link>
       </section>
 
-      {/* 3. Bottom Grid: Upcoming Classes & Notice Board */}
       <div className="dashboard-bottom-grid">
-        {/* Left: Upcoming Classes */}
+        
         <section className="dashboard-section" aria-labelledby="upcoming-classes-heading">
           <div className="dashboard-section-header">
             <div>
@@ -215,7 +218,6 @@ export function DashboardOverview() {
           </div>
         </section>
 
-        {/* Right: Notice Board */}
         <section className="dashboard-section" aria-labelledby="notice-board-heading">
           <div className="dashboard-section-header">
             <div>

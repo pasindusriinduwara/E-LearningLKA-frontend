@@ -1,4 +1,4 @@
-// src/services/authService.ts
+
 const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 const API_BASE_URL = configuredBaseUrl.replace(/\/api\/v1\/?$/, "");
 
@@ -27,6 +27,9 @@ export interface LoginPayload {
 
 export interface AuthenticationResponse {
     token: string;
+    role?: "STUDENT" | "TEACHER" | string;
+    email?: string;
+    name?: string;
 }
 
 export async function registerUser(data: RegisterPayload): Promise<AuthenticationResponse> {

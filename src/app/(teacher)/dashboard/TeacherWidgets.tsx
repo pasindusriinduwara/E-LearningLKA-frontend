@@ -3,8 +3,7 @@ import { Bell, Clock, MapPin, Video, CheckCircle2, Clock3 } from "lucide-react";
 export function TeacherWidgets() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      {/* Today's Classes */}
+
       <div>
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Today</h3>
         <h2 className="text-xl font-extrabold text-gray-900 font-serif mb-4">Today&apos;s classes</h2>
@@ -37,7 +36,6 @@ export function TeacherWidgets() {
         </div>
       </div>
 
-      {/* Recent Activity */}
       <div>
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Students</h3>
         <h2 className="text-xl font-extrabold text-gray-900 font-serif mb-4">Recent activity</h2>
@@ -67,7 +65,6 @@ export function TeacherWidgets() {
         </div>
       </div>
 
-      {/* Pending Tasks */}
       <div>
         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Action Required</h3>
         <h2 className="text-xl font-extrabold text-gray-900 font-serif mb-4">Pending tasks</h2>

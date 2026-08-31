@@ -7,7 +7,6 @@ import { AssignmentListCard } from "@/components/assignments/AssignmentListCard"
 import { SubmissionsView } from "@/components/assignments/SubmissionsView";
 import type { Assignment, Submission } from "@/lib/types/assignment";
 
-// Mock Data
 const mockAssignments: Assignment[] = [
   { id: "1", title: "Integration — Practice Set 3", batch: "A/L Batch B", status: "Open", submissionsCount: 18, totalStudents: 32, dueDate: "29 Aug 2026" },
   { id: "2", title: "Differentiation Problems", batch: "A/L Batch A", status: "Closed", submissionsCount: 24, totalStudents: 24, dueDate: "27 Aug 2026" },
@@ -31,7 +30,7 @@ export default function AssignmentsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header */}
+      
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Assessments</p>
@@ -47,14 +46,12 @@ export default function AssignmentsPage() {
         )}
       </div>
 
-      {/* Conditional Create Form */}
       {isCreating && (
         <CreateAssignmentForm onCancel={() => setIsCreating(false)} />
       )}
 
-      {/* Main Split Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Assignment List */}
+        
         <div className="space-y-4">
           {mockAssignments.map((assignment) => (
             <AssignmentListCard 
@@ -66,7 +63,6 @@ export default function AssignmentsPage() {
           ))}
         </div>
 
-        {/* Right Column: Submissions View */}
         <div className="lg:col-span-2">
           {activeAssignment && (
             <SubmissionsView 

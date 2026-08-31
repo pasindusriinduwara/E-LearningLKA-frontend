@@ -13,22 +13,18 @@ export async function getStudentProfile(): Promise<StudentProfile> {
   return fetchApi<StudentProfile>("/students/profile");
 }
 
-// 2. Fetch Upcoming Classes
 export async function getUpcomingClasses(): Promise<ScheduleItem[]> {
   return fetchApi<ScheduleItem[]>("/schedules/upcoming");
 }
 
-// 3. Fetch Recent Learning Materials
 export async function getRecentMaterials(): Promise<LearningResource[]> {
   return fetchApi<LearningResource[]>("/materials/recent");
 }
 
-// 4. Fetch Student Invoices
 export async function getStudentInvoices(): Promise<StudentInvoice[]> {
   return fetchApi<StudentInvoice[]>("/invoices/my-invoices");
 }
 
-// 5. Fetch Announcements / Notices
 export async function getAnnouncements(): Promise<AnnouncementItem[]> {
   return fetchApi<AnnouncementItem[]>("/announcements");
 }

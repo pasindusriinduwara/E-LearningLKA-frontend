@@ -2,8 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getStudentProfile } from "@/services/studentService";
-import { getTeacherProfile } from "@/services/teacherService";
+import { getCurrentUserProfile } from "@/services/userService";
 
 export interface AuthUser {
   role: "STUDENT" | "TEACHER";
@@ -44,24 +43,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        try {
-          const student = await getStudentProfile();
-          setUser({ ...student, role: "STUDENT" });
-        } catch {
-          const teacher = await getTeacherProfile();
-          const name = teacher.name?.trim() || "Teacher";
-          const initials = name
+        const profile = await getCurrentUserProfile();
+        const defaultName = profile.role === "TEACHER" ? "Teacher" : "Student";
+        const name = profile.name?.trim() || defaultName;
+        const initials =
+          profile.initials ||
+          name
             .split(/\s+/)
             .map((part) => part[0])
             .filter(Boolean)
             .join("")
             .slice(0, 2)
-            .toUpperCase();
-          setUser({ ...teacher, role: "TEACHER", initials: initials || "TC" });
-        }
+            .toUpperCase() ||
+          (profile.role === "TEACHER" ? "TC" : "ST");
+
+        setUser({
+          ...profile,
+          name,
+          initials,
+        });
       } catch (err) {
         console.error("Auth context load error:", err);
         localStorage.removeItem("token");
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -81,8 +85,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        isAuthenticated: !!user, 
-        signOut
+        isAuthenticated: !!user,
+        signOut,
       }}
     >
       {children}

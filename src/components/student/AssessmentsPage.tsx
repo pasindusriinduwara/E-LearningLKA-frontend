@@ -166,16 +166,13 @@ export function AssessmentsPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
 
-  // Active quiz runner state
   const [activeQuiz, setActiveQuiz] = useState<AssessmentItem | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  // Review modal state
   const [reviewedAssessment, setReviewedAssessment] = useState<AssessmentItem | null>(null);
 
-  // Filter assessments
   const filteredAssessments = useMemo(() => {
     return mockAssessments.filter((item) => {
       const matchesSearch =
@@ -196,7 +193,6 @@ export function AssessmentsPage() {
     });
   }, [searchQuery, selectedStatus, selectedSubject]);
 
-  // Statistics
   const stats = useMemo(() => {
     const todo = mockAssessments.filter((a) => a.status === "To do").length;
     const inProgress = mockAssessments.filter((a) => a.status === "In progress").length;
@@ -225,7 +221,7 @@ export function AssessmentsPage() {
 
   return (
     <div className="assessments-page-wrapper">
-      {/* Page Header */}
+      
       <header className="assessments-header">
         <div>
           <p className="assessments-eyebrow">ACADEMIC EVALUATIONS</p>
@@ -236,9 +232,8 @@ export function AssessmentsPage() {
         </div>
       </header>
 
-      {/* Top 4 Metric Stat Cards */}
       <div className="assessments-stats-grid">
-        {/* Card 1: To do */}
+        
         <button
           type="button"
           className={`assessment-stat-card ${selectedStatus === "To do" ? "assessment-stat-active" : ""}`}
@@ -253,7 +248,6 @@ export function AssessmentsPage() {
           </div>
         </button>
 
-        {/* Card 2: In progress */}
         <button
           type="button"
           className={`assessment-stat-card ${selectedStatus === "In progress" ? "assessment-stat-active" : ""}`}
@@ -268,7 +262,6 @@ export function AssessmentsPage() {
           </div>
         </button>
 
-        {/* Card 3: Graded */}
         <button
           type="button"
           className={`assessment-stat-card ${selectedStatus === "Graded" ? "assessment-stat-active" : ""}`}
@@ -283,7 +276,6 @@ export function AssessmentsPage() {
           </div>
         </button>
 
-        {/* Card 4: Total Assigned */}
         <button
           type="button"
           className="assessment-stat-card"
@@ -300,7 +292,6 @@ export function AssessmentsPage() {
 
       </div>
 
-      {/* Search & Subject Filter Bar */}
       <div className="assessments-controls-bar">
         <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
@@ -340,12 +331,11 @@ export function AssessmentsPage() {
         </div>
       </div>
 
-      {/* Assessments List */}
       <div className="assessments-cards-list">
         {filteredAssessments.map((item) => {
           return (
             <article className="assessment-item-card" key={item.id}>
-              {/* Left Details Block */}
+              
               <div className="assessment-item-main">
                 <div className="assessment-top-meta">
                   <span
@@ -393,7 +383,6 @@ export function AssessmentsPage() {
                 )}
               </div>
 
-              {/* Right Action Block */}
               <div className="assessment-item-action-box">
                 {item.status === "Graded" ? (
                   <div className="score-summary-badge">
@@ -470,7 +459,6 @@ export function AssessmentsPage() {
         )}
       </div>
 
-      {/* Quiz Runner Modal */}
       {activeQuiz && (
         <div className="payment-modal-backdrop">
           <div className="quiz-modal-card" onClick={(e) => e.stopPropagation()}>
@@ -494,7 +482,7 @@ export function AssessmentsPage() {
 
             {!quizSubmitted ? (
               <div className="quiz-modal-body">
-                {/* Timer and Progress Track */}
+                
                 <div className="quiz-status-bar">
                   <div className="quiz-timer">
                     <Timer size={16} />
@@ -505,7 +493,6 @@ export function AssessmentsPage() {
                   </span>
                 </div>
 
-                {/* Active Question */}
                 {activeQuiz.questions && activeQuiz.questions[currentQuestionIndex] && (
                   <div className="quiz-question-container">
                     <h4 className="quiz-question-text">
@@ -533,7 +520,6 @@ export function AssessmentsPage() {
                   </div>
                 )}
 
-                {/* Question Navigation Footer */}
                 <div className="quiz-modal-footer">
                   <button
                     type="button"
@@ -599,7 +585,6 @@ export function AssessmentsPage() {
         </div>
       )}
 
-      {/* Review Feedback Modal */}
       {reviewedAssessment && (
         <div className="payment-modal-backdrop" onClick={() => setReviewedAssessment(null)}>
           <div className="payment-modal-card" onClick={(e) => e.stopPropagation()}>

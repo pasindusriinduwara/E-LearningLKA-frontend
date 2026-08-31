@@ -71,15 +71,14 @@ export function FeesPage() {
 
   return (
     <div className="fees-page-wrapper">
-      {/* Page Header */}
+      
       <header className="fees-header">
         <p className="fees-eyebrow">BILLING</p>
         <h1 className="fees-title">Fees &amp; Payments</h1>
       </header>
 
-      {/* Summary Metrics Cards */}
       <div className="billing-summary-grid">
-        {/* Card 1: Total Outstanding */}
+        
         <article className="billing-card-dark">
           <span className="card-label-dark">TOTAL OUTSTANDING</span>
           <strong className="card-amount-dark">Rs. 12,800</strong>
@@ -93,7 +92,6 @@ export function FeesPage() {
           </button>
         </article>
 
-        {/* Card 2: Paid this term */}
         <article className="billing-card-light">
           <div className="icon-badge icon-badge-green">
             <Check size={22} strokeWidth={2.6} />
@@ -103,7 +101,6 @@ export function FeesPage() {
           <p className="card-subtext-green">All clear ✓</p>
         </article>
 
-        {/* Card 3: Overdue */}
         <article className="billing-card-light">
           <div className="icon-badge icon-badge-red">
             <CircleAlert size={22} strokeWidth={2.4} />
@@ -114,12 +111,11 @@ export function FeesPage() {
         </article>
       </div>
 
-      {/* Invoice History Section */}
       <section className="invoice-history-section" aria-labelledby="invoice-heading">
         <h2 id="invoice-heading" className="invoice-history-heading">Invoice history</h2>
 
         <div className="invoice-table-card">
-          {/* Header Row */}
+          
           <div className="invoice-row invoice-head-row">
             <span>SUBJECT</span>
             <span>PERIOD</span>
@@ -128,7 +124,6 @@ export function FeesPage() {
             <span>STATUS</span>
           </div>
 
-          {/* Table Data Rows */}
           {invoiceData.map((invoice) => (
             <div className="invoice-row invoice-body-row" key={invoice.id}>
               <div className="invoice-subject-cell">
@@ -165,7 +160,6 @@ export function FeesPage() {
         </div>
       </section>
 
-      {/* Quick Pay Modal */}
       {paymentModalOpen && (
         <div className="payment-modal-backdrop" onClick={() => setPaymentModalOpen(false)}>
           <div className="payment-modal-card" onClick={(e) => e.stopPropagation()}>

@@ -32,47 +32,40 @@ export function ResultsTable({ results }: { results: StudentResult[] }) {
           <tbody className="divide-y divide-gray-50 text-sm">
             {results.map((result) => (
               <tr key={result.id} className="hover:bg-gray-50/50 transition-colors">
-                {/* Rank */}
+                
                 <td className="px-6 py-4">
                   <span className={`font-bold font-serif text-lg ${getRankColor(result.rank)}`}>
                     #{result.rank}
                   </span>
                 </td>
-                
-                {/* Student */}
+
                 <td className="px-6 py-4">
                   <div className="font-bold text-gray-900">{result.studentName}</div>
                   <div className="text-xs text-gray-400">ID {result.studentId}</div>
                 </td>
-                
-                {/* Term 1 */}
+
                 <td className="px-6 py-4 text-gray-600">
                   {result.term1}<span className="text-gray-400 text-xs">/100</span>
                 </td>
-                
-                {/* Term 2 */}
+
                 <td className="px-6 py-4 text-gray-600">
                   {result.term2}<span className="text-gray-400 text-xs">/100</span>
                 </td>
-                
-                {/* Assignment */}
+
                 <td className="px-6 py-4 text-gray-600">
                   {result.assignment}<span className="text-gray-400 text-xs">/50 +proj</span>
                 </td>
-                
-                {/* Total */}
+
                 <td className="px-6 py-4">
                   <span className="font-extrabold text-gray-900 text-base">{result.total}</span>
                 </td>
-                
-                {/* Grade */}
+
                 <td className="px-6 py-4">
                   <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${getGradeStyles(result.grade)}`}>
                     {result.grade}
                   </span>
                 </td>
 
-                {/* Action */}
                 <td className="px-6 py-4 text-right">
                   <button className="text-xs font-bold text-[#2D9F75] hover:text-emerald-700 transition-colors">
                     Edit

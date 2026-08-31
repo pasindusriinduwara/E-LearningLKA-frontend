@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  LayoutDashboard, Calendar, CheckSquare, BookOpen, 
-  ClipboardList, LineChart, MessageCircle, Settings, 
-  LogOut, Bell, ChevronRight, Menu, GraduationCap 
+import {
+  LayoutDashboard, Calendar, CheckSquare, BookOpen,
+  ClipboardList, LineChart, MessageCircle, Settings,
+  LogOut, Bell, ChevronRight, Menu, GraduationCap
 } from "lucide-react";
 
 const navItems = [
@@ -23,22 +23,29 @@ const navItems = [
 
 export function TeacherShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { user, loading, signOut } = useAuth();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const teacherName = user?.name || "Teacher";
   const teacherInitials = user?.initials || teacherName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "TC";
   const teacherRole = user?.qualification || "Teacher";
+  useEffect(() => {
+    if (!loading && user && user.role === "STUDENT") {
+      router.replace("/dashboard");
+    }
+  }, [user, loading, router]);
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      {/* Sidebar */}
+      
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-gray-300 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center h-16 px-6 bg-[#111827] border-b border-gray-800">
           <GraduationCap className="text-emerald-500 mr-2" size={24} />
           <span className="text-xl font-bold text-white tracking-tight">classroom.</span>
           <span className="ml-2 text-[10px] font-bold text-emerald-500 border border-emerald-500/30 px-1.5 py-0.5 rounded uppercase tracking-wider bg-emerald-500/10">Teacher</span>
         </div>
-        
+
         <div className="p-4">
           <div className="flex items-center p-3 bg-gray-800/50 rounded-xl mb-6">
             <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">{teacherInitials}</div>
@@ -75,7 +82,6 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-8 z-10">
           <div className="flex items-center">

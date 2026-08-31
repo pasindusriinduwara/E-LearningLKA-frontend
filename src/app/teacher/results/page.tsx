@@ -27,7 +27,7 @@ export default function ResultsPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      {/* Header Section */}
+      
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Academic Performance</p>
@@ -38,10 +38,8 @@ export default function ResultsPage() {
         </button>
       </div>
 
-      {/* Stats Cards */}
       <ResultStats stats={mockStats} />
 
-      {/* Batch Filters */}
       <div className="flex items-center gap-3 overflow-x-auto pb-2 hide-scrollbar">
         {BATCHES.map((batch) => (
           <button
@@ -58,7 +56,6 @@ export default function ResultsPage() {
         ))}
       </div>
 
-      {/* Results Table */}
       <ResultsTable results={mockResults} />
     </div>
   );
