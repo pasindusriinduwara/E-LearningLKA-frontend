@@ -14,6 +14,7 @@ import {
   type CreateBatchData,
 } from "@/services/batchService";
 
+
 import {
   getTeacherBatches,
   getTeacherSchedules,
@@ -24,6 +25,14 @@ import {
   getSubjects,
   type SubjectOption,
 } from "@/services/subjectService";
+import { ScheduleClassModal } from "@/components/classes/SheduleClassModal";
+import {
+  createTeacherSchedule,
+} from "@/services/classService";
+
+import type { CreateScheduleData } from "@/lib/types/class";
+
+
 
 export default function MyClassesPage() {
   const router = useRouter();
@@ -37,6 +46,16 @@ export default function MyClassesPage() {
   const [schedule, setSchedule] = useState<ScheduleBlock[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+
+  const [isScheduling, setIsScheduling] = useState(false);
+
+  const [selectedBatchForSchedule, setSelectedBatchForSchedule] = useState<string | undefined>(undefined);
+  async function handleScheduleSubmit(data: CreateScheduleData) {
+    await createTeacherSchedule(data);
+    await loadData(); // Refreshes both batches and schedule views
+  }
+
+
 
   async function loadData() {
     setPageLoading(true);
@@ -87,7 +106,35 @@ export default function MyClassesPage() {
   }
 
   return (
+
     <div className="max-w-7xl mx-auto space-y-6">
+      <div className="flex gap-2">
+        {!isCreating && (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedBatchForSchedule(undefined);
+                setIsScheduling(true);
+              }}
+              className="bg-[#2D9F75] hover:bg-emerald-600 text-white font-medium px-4 py-2.5 rounded-xl flex items-center gap-2"
+            >
+              <Plus size={18} />
+              Schedule class
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCreating(true)}
+              className="border border-[#2D9F75] text-[#2D9F75] hover:bg-emerald-50 font-medium px-4 py-2.5 rounded-xl flex items-center gap-2"
+            >
+              <Plus size={18} />
+              New batch
+            </button>
+          </>
+        )}
+      </div>
+
       <div className="flex justify-between items-end">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
@@ -123,11 +170,10 @@ export default function MyClassesPage() {
         <button
           type="button"
           onClick={() => setActiveView("batches")}
-          className={`px-6 py-2 rounded-lg text-sm font-semibold ${
-            activeView === "batches"
-              ? "bg-[#2D9F75] text-white"
-              : "text-gray-500"
-          }`}
+          className={`px-6 py-2 rounded-lg text-sm font-semibold ${activeView === "batches"
+            ? "bg-[#2D9F75] text-white"
+            : "text-gray-500"
+            }`}
         >
           Batches
         </button>
@@ -135,11 +181,10 @@ export default function MyClassesPage() {
         <button
           type="button"
           onClick={() => setActiveView("schedule")}
-          className={`px-6 py-2 rounded-lg text-sm font-semibold ${
-            activeView === "schedule"
-              ? "bg-[#2D9F75] text-white"
-              : "text-gray-500"
-          }`}
+          className={`px-6 py-2 rounded-lg text-sm font-semibold ${activeView === "schedule"
+            ? "bg-[#2D9F75] text-white"
+            : "text-gray-500"
+            }`}
         >
           Schedule
         </button>
@@ -174,6 +219,16 @@ export default function MyClassesPage() {
           )}
         </>
       )}
+
+      {isScheduling && (
+        <ScheduleClassModal
+          batches={batches}
+          initialBatchId={selectedBatchForSchedule}
+          onClose={() => setIsScheduling(false)}
+          onSubmit={handleScheduleSubmit}
+        />
+      )}
+
     </div>
   );
 }
