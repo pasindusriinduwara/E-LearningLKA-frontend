@@ -47,6 +47,7 @@ export interface ClassScheduleItem {
   location: string;
   mode: string;
   accent?: string;
+  day?: string;
 }
 
 // Grid display schedule block
