@@ -3,16 +3,23 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { TeacherBatch } from "@/services/teacherService"; // or "@/lib/types/teacher"
-import type { CreateScheduleData, DeliveryMode, RepeatInterval } from "@/lib/types/class";
+import type { CreateScheduleData, DeliveryMode, RepeatInterval, ClassScheduleItem } from "@/lib/types/class";
 
 interface Props {
     batches: TeacherBatch[];
     initialBatchId?: string;
+    existingSchedules?: ClassScheduleItem[];
     onClose: () => void;
     onSubmit: (data: CreateScheduleData) => Promise<void>;
 }
 
-export function ScheduleClassModal({ batches, initialBatchId, onClose, onSubmit }: Props) {
+export function ScheduleClassModal({
+    batches,
+    initialBatchId,
+    existingSchedules = [],
+    onClose,
+    onSubmit,
+}: Props) {
     const [batchId, setBatchId] = useState(initialBatchId || batches[0]?.id || "");
     const [title, setTitle] = useState("");
     const [date, setDate] = useState("");
@@ -26,10 +33,30 @@ export function ScheduleClassModal({ batches, initialBatchId, onClose, onSubmit 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!batchId || !title || !date) {
-            setError("Please fill in all required fields.");
+
+        // 1. Time Order Pre-Check
+        if (startTime >= endTime) {
+            setError("Start time must be earlier than End time.");
             return;
         }
+
+        // 2. Client-Side Overlap Pre-Check (against current active schedules)
+        if (existingSchedules && existingSchedules.length > 0) {
+            const hasConflict = existingSchedules.some((s) => {
+                if (s.date !== date) return false;
+                if (s.startTime && s.endTime) {
+                    return startTime < s.endTime && s.startTime < endTime;
+                }
+                return false;
+            });
+
+            if (hasConflict) {
+                setError("This time slot conflicts with an already scheduled class on this date.");
+                return;
+            }
+        }
+
+        // 3. Submit to backend
         try {
             setLoading(true);
             setError("");
@@ -45,11 +72,13 @@ export function ScheduleClassModal({ batches, initialBatchId, onClose, onSubmit 
             });
             onClose();
         } catch (err) {
+            // Displays the detailed message from ScheduleConflictException (HTTP 409)
             setError(err instanceof Error ? err.message : "Failed to schedule class");
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -159,7 +188,33 @@ export function ScheduleClassModal({ batches, initialBatchId, onClose, onSubmit 
                         </div>
                     </div>
 
-                    {/* 5. Buttons */}
+                    {/* 5. Repeat */}
+                    <div>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Repeat</label>
+                        <div className="flex gap-2">
+                            {(
+                                [
+                                    { value: "ONCE", label: "Once" },
+                                    { value: "WEEKLY", label: "Weekly" },
+                                    { value: "BI_WEEKLY", label: "Bi-weekly" },
+                                ] as const
+                            ).map((r) => (
+                                <button
+                                    key={r.value}
+                                    type="button"
+                                    onClick={() => setRepeat(r.value)}
+                                    className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all border ${repeat === r.value
+                                            ? "bg-[#2D9F75] border-[#2D9F75] text-white shadow-sm"
+                                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                                        }`}
+                                >
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 6. Buttons */}
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                         <button
                             type="button"

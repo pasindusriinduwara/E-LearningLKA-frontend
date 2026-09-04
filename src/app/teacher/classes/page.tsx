@@ -8,7 +8,6 @@ import { BatchGrid } from "@/components/classes/BatchGrid";
 import { ScheduleView } from "@/components/classes/SheduleView";
 import { CreateBatchForm } from "@/components/classes/CreateBatchForm";
 
-import type { ScheduleBlock } from "@/lib/types/class";
 import {
   createNewBatch,
   type CreateBatchData,
@@ -30,7 +29,7 @@ import {
   createTeacherSchedule,
 } from "@/services/classService";
 
-import type { CreateScheduleData } from "@/lib/types/class";
+import type { CreateScheduleData, ClassScheduleItem } from "@/lib/types/class";
 
 
 
@@ -43,7 +42,7 @@ export default function MyClassesPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [batches, setBatches] = useState<TeacherBatch[]>([]);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
-  const [schedule, setSchedule] = useState<ScheduleBlock[]>([]);
+  const [schedule, setSchedule] = useState<ClassScheduleItem[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState("");
 
@@ -71,7 +70,7 @@ export default function MyClassesPage() {
 
       setBatches(batchData);
       setSubjects(subjectData);
-      setSchedule(scheduleData as ScheduleBlock[]);
+      setSchedule(scheduleData as ClassScheduleItem[]);
     } catch (error) {
       setPageError(
         error instanceof Error
@@ -224,6 +223,7 @@ export default function MyClassesPage() {
         <ScheduleClassModal
           batches={batches}
           initialBatchId={selectedBatchForSchedule}
+          existingSchedules={schedule}
           onClose={() => setIsScheduling(false)}
           onSubmit={handleScheduleSubmit}
         />

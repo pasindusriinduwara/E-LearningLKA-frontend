@@ -44,10 +44,14 @@ export interface ClassScheduleItem {
   teacher: string;
   date: string;
   time: string;
+  startTime?: string;
+  endTime?: string;
   location: string;
   mode: string;
   accent?: string;
   day?: string;
+  dayOfWeek?: string;
+
 }
 
 // Grid display schedule block
