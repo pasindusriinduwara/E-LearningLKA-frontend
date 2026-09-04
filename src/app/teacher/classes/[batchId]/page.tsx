@@ -6,7 +6,7 @@ import {
   ArrowLeft,
   Check,
   Clock3,
-  IndianRupee,
+  Wallet,
   Monitor,
   Users,
   X,
@@ -209,11 +209,10 @@ export default function BatchDetailsPage() {
           </div>
 
           <span
-            className={`rounded-full px-3 py-1 text-xs font-bold ${
-              batch.active
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-gray-100 text-gray-500"
-            }`}
+            className={`rounded-full px-3 py-1 text-xs font-bold ${batch.active
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-gray-100 text-gray-500"
+              }`}
           >
             {batch.active ? "ACTIVE" : "INACTIVE"}
           </span>
@@ -227,7 +226,7 @@ export default function BatchDetailsPage() {
           />
 
           <InfoItem
-            icon={<IndianRupee size={18} />}
+            icon={<Wallet size={18} />}
             label="Monthly fee"
             value={`LKR ${batch.monthlyFee}`}
           />
@@ -384,11 +383,10 @@ function SummaryCard({
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-5">
       <div
-        className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${
-          color === "emerald"
-            ? "bg-emerald-50 text-emerald-600"
-            : "bg-amber-50 text-amber-600"
-        }`}
+        className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${color === "emerald"
+          ? "bg-emerald-50 text-emerald-600"
+          : "bg-amber-50 text-amber-600"
+          }`}
       >
         {icon}
       </div>
@@ -414,11 +412,10 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`border-b-2 pb-3 text-sm font-semibold ${
-        active
-          ? "border-[#2D9F75] text-[#2D9F75]"
-          : "border-transparent text-gray-400"
-      }`}
+      className={`border-b-2 pb-3 text-sm font-semibold ${active
+        ? "border-[#2D9F75] text-[#2D9F75]"
+        : "border-transparent text-gray-400"
+        }`}
     >
       {children}
     </button>
@@ -454,11 +451,10 @@ function StudentRow({
       </div>
 
       <span
-        className={`ml-auto rounded-full px-3 py-1 text-xs font-bold ${
-          status === "APPROVED"
-            ? "bg-emerald-50 text-emerald-600"
-            : "bg-amber-50 text-amber-600"
-        }`}
+        className={`ml-auto rounded-full px-3 py-1 text-xs font-bold ${status === "APPROVED"
+          ? "bg-emerald-50 text-emerald-600"
+          : "bg-amber-50 text-amber-600"
+          }`}
       >
         {status}
       </span>
