@@ -109,6 +109,16 @@ export function rejectEnrollment(requestId: string) {
   );
 }
 
+export interface TeacherAnnouncement {
+  id: string;
+  batchId?: string;
+  title: string;
+  description: string;
+  type?: string;
+  time?: string;
+  createdAt?: string;
+}
+
 export function uploadTeacherMaterial(data: {
   batchId: string;
   title: string;
@@ -133,4 +143,52 @@ export function uploadTeacherMaterial(data: {
       body: formData,
     }
   );
+}
+
+export function getBatchMaterials(batchId: string) {
+  return fetchApi<TeacherMaterial[]>(`/teacher/batches/${batchId}/materials`);
+}
+
+export function createTeacherMaterial(data: {
+  batchId: string;
+  title: string;
+  subject?: string;
+  type: string;
+  time?: string;
+  size?: string;
+  fileUrl?: string;
+}) {
+  return fetchApi<TeacherMaterial>("/teacher/materials", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteTeacherMaterial(id: string) {
+  return fetchApi<void>(`/teacher/materials/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export function getBatchAnnouncements(batchId: string) {
+  return fetchApi<TeacherAnnouncement[]>(`/teacher/batches/${batchId}/announcements`);
+}
+
+export function createTeacherAnnouncement(data: {
+  batchId: string;
+  title: string;
+  description: string;
+  type?: string;
+  time?: string;
+}) {
+  return fetchApi<TeacherAnnouncement>("/teacher/announcements", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteTeacherAnnouncement(id: string) {
+  return fetchApi<void>(`/teacher/announcements/${id}`, {
+    method: "DELETE",
+  });
 }

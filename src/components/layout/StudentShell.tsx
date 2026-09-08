@@ -8,7 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My schedule", href: "/schedule", icon: CalendarDays },
-  { label: "Enroll Classes", href: "/enrollment", icon: UserPlus }, { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
+  { label: "My Classes", href: "/classes", icon: GraduationCap },
+  { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
   { label: "Materials", href: "/materials", icon: BookOpen },
   { label: "Fees & payments", href: "/fees", icon: WalletCards },
 ];
@@ -19,6 +20,9 @@ const supportItems = [
 ];
 
 function isActivePath(pathname: string, href: string) {
+  if (href === "/classes") {
+    return pathname === "/classes" || pathname.startsWith("/classes/") || pathname === "/enrollment";
+  }
   return pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
 }
 

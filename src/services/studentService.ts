@@ -17,6 +17,10 @@ export async function getUpcomingClasses(): Promise<ScheduleItem[]> {
   return fetchApi<ScheduleItem[]>("/schedules/upcoming");
 }
 
+export async function getBatchSchedules(batchId: string): Promise<any[]> {
+  return fetchApi<any[]>(`/schedules/batch/${batchId}`);
+}
+
 export async function getRecentMaterials(): Promise<LearningResource[]> {
   return fetchApi<LearningResource[]>("/materials/recent");
 }
@@ -28,3 +32,11 @@ export async function getStudentInvoices(): Promise<StudentInvoice[]> {
 export async function getAnnouncements(): Promise<AnnouncementItem[]> {
   return fetchApi<AnnouncementItem[]>("/announcements");
 }
+
+export async function getBatchMaterials(batchId: string): Promise<LearningResource[]> {
+  return fetchApi<LearningResource[]>(`/materials/batch/${batchId}`);
+}
+
+export async function getBatchAnnouncements(batchId: string): Promise<AnnouncementItem[]> {
+  return fetchApi<AnnouncementItem[]>(`/announcements/batch/${batchId}`);
+}
