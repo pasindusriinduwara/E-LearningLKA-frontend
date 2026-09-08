@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import type { ClassScheduleItem } from "@/lib/types/class";
 
 const DAYS_OF_WEEK = [
@@ -9,6 +10,12 @@ const DAYS_OF_WEEK = [
   { key: "SATURDAY", label: "SAT" },
   { key: "SUNDAY", label: "SUN" },
 ] as const;
+
+interface ScheduleViewProps {
+  schedule: ClassScheduleItem[];
+  onEdit?: (item: ClassScheduleItem) => void;
+  onDelete?: (item: ClassScheduleItem) => void;
+}
 
 function getNormalizedDay(item: ClassScheduleItem): string {
   // Check dayOfWeek enum string or legacy day
@@ -23,7 +30,11 @@ function getNormalizedDay(item: ClassScheduleItem): string {
   return "";
 }
 
-export function ScheduleView({ schedule }: { schedule: ClassScheduleItem[] }) {
+export function ScheduleView({
+  schedule,
+  onEdit,
+  onDelete,
+}: ScheduleViewProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
       {DAYS_OF_WEEK.map(({ key, label }) => {
@@ -42,16 +53,49 @@ export function ScheduleView({ schedule }: { schedule: ClassScheduleItem[] }) {
               dayBlocks.map((block) => (
                 <div
                   key={block.id}
-                  className="bg-[#F0FDF4] border border-[#2D9F75]/30 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+                  className="group bg-[#F0FDF4] border border-[#2D9F75]/30 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
                 >
                   <div
                     className="absolute top-0 left-0 right-0 h-1"
                     style={{ backgroundColor: block.accent || "#2D9F75" }}
                   />
 
-                  <p className="text-xs font-bold text-[#2D9F75] mb-1.5">
-                    {block.time || "Time not set"}
-                  </p>
+                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                    <p className="text-xs font-bold text-[#2D9F75]">
+                      {block.time || "Time not set"}
+                    </p>
+
+                    {(onEdit || onDelete) && (
+                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        {onEdit && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(block);
+                            }}
+                            title="Edit schedule"
+                            className="p-1 rounded-lg hover:bg-emerald-100 text-gray-500 hover:text-emerald-700 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(block);
+                            }}
+                            title="Delete schedule"
+                            className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   <h4 className="text-sm font-bold text-gray-900 leading-snug mb-1">
                     {block.title}
