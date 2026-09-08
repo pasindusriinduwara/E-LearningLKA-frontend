@@ -249,12 +249,7 @@ export default function MyClassesPage() {
           batches={batches}
           initialBatchId={selectedBatchForSchedule}
           existingSchedules={schedule}
-          scheduleToEdit={editingSchedule
-
-
-
-
-          }
+          scheduleToEdit={editingSchedule}
           onClose={() => {
             setIsScheduling(false);
             setEditingSchedule(null);

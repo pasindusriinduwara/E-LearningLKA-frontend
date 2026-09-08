@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import Link from "next/link";
+import { Search, ArrowLeft } from "lucide-react";
 import { ClassCard } from "@/components/enrollment/ClassCard";
 import {
   getAvailableBatches,
@@ -79,6 +80,16 @@ export default function EnrollmentPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+      <div>
+        <Link
+          href="/classes"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors mb-3"
+        >
+          <ArrowLeft size={16} />
+          <span>Back to My Classes</span>
+        </Link>
+      </div>
+
       <div>
         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
           Discover
