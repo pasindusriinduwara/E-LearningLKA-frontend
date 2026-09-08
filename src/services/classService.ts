@@ -23,3 +23,27 @@ export function createTeacherSchedule(data: CreateScheduleData) {
 export function getTeacherSchedules() {
     return fetchApi<ClassScheduleItem[]>("/teacher/schedules");
 }
+
+
+
+/**
+ * Updates an existing schedule.
+ * PUT /api/v1/teacher/schedules/{id}
+ */
+export function updateTeacherSchedule(id: string, data: CreateScheduleData) {
+    return fetchApi<ClassScheduleItem>(`/teacher/schedules/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+    });
+}
+
+/**
+ * Soft deletes an existing schedule.
+ * DELETE /api/v1/teacher/schedules/{id}
+ */
+export function deleteTeacherSchedule(id: string) {
+    return fetchApi<void>(`/teacher/schedules/${id}`, {
+        method: "DELETE",
+    });
+}
+

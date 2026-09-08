@@ -9,6 +9,7 @@ interface Props {
     batches: TeacherBatch[];
     initialBatchId?: string;
     existingSchedules?: ClassScheduleItem[];
+    scheduleToEdit?: ClassScheduleItem | null; // <-- Added
     onClose: () => void;
     onSubmit: (data: CreateScheduleData) => Promise<void>;
 }
@@ -17,19 +18,37 @@ export function ScheduleClassModal({
     batches,
     initialBatchId,
     existingSchedules = [],
+    scheduleToEdit,
     onClose,
     onSubmit,
 }: Props) {
-    const [batchId, setBatchId] = useState(initialBatchId || batches[0]?.id || "");
-    const [title, setTitle] = useState("");
-    const [date, setDate] = useState("");
-    const [startTime, setStartTime] = useState("16:30");
-    const [endTime, setEndTime] = useState("18:30");
-    const [location, setLocation] = useState("");
-    const [mode, setMode] = useState<"IN_PERSON" | "ONLINE" | "HYBRID">("IN_PERSON");
-    const [repeat, setRepeat] = useState<"ONCE" | "WEEKLY" | "BI_WEEKLY">("ONCE");
+    const isEditing = Boolean(scheduleToEdit);
+
+    const [batchId, setBatchId] = useState(
+        scheduleToEdit?.batchId || initialBatchId || batches[0]?.id || ""
+    );
+    const [title, setTitle] = useState(scheduleToEdit?.title || "");
+    const [date, setDate] = useState(scheduleToEdit?.date || "");
+    const [startTime, setStartTime] = useState(scheduleToEdit?.startTime || "16:30");
+    const [endTime, setEndTime] = useState(scheduleToEdit?.endTime || "18:30");
+    const [location, setLocation] = useState(scheduleToEdit?.location || "");
+    const [mode, setMode] = useState<"IN_PERSON" | "ONLINE" | "HYBRID">(
+        (scheduleToEdit?.mode as any) || "IN_PERSON"
+    );
+    const [repeat, setRepeat] = useState<"ONCE" | "WEEKLY" | "BI_WEEKLY">("WEEKLY");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    // Conflict check ignores self if editing:
+    const hasConflict = existingSchedules.some((s) => {
+        if (isEditing && s.id === scheduleToEdit?.id) return false;
+        if (s.date !== date) return false;
+        if (s.startTime && s.endTime) {
+            return startTime < s.endTime && s.startTime < endTime;
+        }
+        return false;
+    });
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -204,8 +223,8 @@ export function ScheduleClassModal({
                                     type="button"
                                     onClick={() => setRepeat(r.value)}
                                     className={`px-5 py-2 rounded-2xl text-xs font-bold transition-all border ${repeat === r.value
-                                            ? "bg-[#2D9F75] border-[#2D9F75] text-white shadow-sm"
-                                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                                        ? "bg-[#2D9F75] border-[#2D9F75] text-white shadow-sm"
+                                        : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
                                         }`}
                                 >
                                     {r.label}
