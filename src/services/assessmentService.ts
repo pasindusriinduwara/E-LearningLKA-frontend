@@ -37,12 +37,16 @@ export interface SaveQuizPayload {
 export interface AssessmentSummary {
   id: string;
   batchId: string;
+  batchName?: string;
   title: string;
   assessmentType: string;
   totalMarks: number;
   dueDate?: string;
   durationMinutes: number;
   questionCount: number;
+  status?: string;
+  submissionsCount?: number;
+  totalStudents?: number;
   createdAt: string;
 }
 
@@ -130,6 +134,13 @@ export const assessmentService = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+
+  /**
+   * Retrieves all assessments
+   */
+  async getAllAssessments(): Promise<AssessmentSummary[]> {
+    return fetchApi<AssessmentSummary[]>("/assessments");
   },
 
   /**

@@ -18,19 +18,30 @@ export function SubmissionsView({ assignment, submissions }: SubmissionsViewProp
         </h2>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[600px]">
-          <thead>
-            <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
-              <th className="px-6 py-4 font-bold">Student</th>
-              <th className="px-6 py-4 font-bold">Submitted</th>
-              <th className="px-6 py-4 font-bold">Status</th>
-              <th className="px-6 py-4 font-bold">Marks</th>
-              <th className="px-6 py-4 font-bold">Grade</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 text-sm">
-            {submissions.map((sub) => (
+      {submissions.length === 0 ? (
+        <div className="p-12 text-center flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-gray-50 text-gray-400 flex items-center justify-center">
+            📄
+          </div>
+          <h3 className="text-sm font-bold text-gray-800">No Submissions Yet</h3>
+          <p className="text-xs text-gray-400 max-w-sm">
+            When students in this batch complete and submit this assessment, their scores, timestamps, and grade records will appear here automatically.
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[600px]">
+            <thead>
+              <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase tracking-wider font-bold">
+                <th className="px-6 py-4 font-bold">Student</th>
+                <th className="px-6 py-4 font-bold">Submitted</th>
+                <th className="px-6 py-4 font-bold">Status</th>
+                <th className="px-6 py-4 font-bold">Marks</th>
+                <th className="px-6 py-4 font-bold">Grade</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 text-sm">
+              {submissions.map((sub) => (
               <tr key={sub.id} className="hover:bg-gray-50/50 transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-bold text-gray-900">{sub.studentName}</div>
@@ -76,6 +87,7 @@ export function SubmissionsView({ assignment, submissions }: SubmissionsViewProp
           </tbody>
         </table>
       </div>
+      )}
     </div>
   );
 }
