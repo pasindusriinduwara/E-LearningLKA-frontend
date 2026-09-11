@@ -22,6 +22,8 @@ export default function AssignmentsPage() {
   const [reviewTitle, setReviewTitle] = useState("Imported MCQ Quiz");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   const loadAssessments = useCallback(async () => {
     setIsLoading(true);
@@ -78,6 +80,30 @@ export default function AssignmentsPage() {
   useEffect(() => {
     loadAssessments();
   }, [loadAssessments]);
+
+  useEffect(() => {
+    if (!activeAssignmentId) {
+      setSubmissions([]);
+      return;
+    }
+    setIsLoadingSubmissions(true);
+    assessmentService
+      .getAssessmentSubmissions(activeAssignmentId)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setSubmissions(data);
+        } else {
+          setSubmissions([]);
+        }
+      })
+      .catch((err) => {
+        console.warn("Could not fetch submissions for assessment:", err);
+        setSubmissions([]);
+      })
+      .finally(() => {
+        setIsLoadingSubmissions(false);
+      });
+  }, [activeAssignmentId]);
 
   const activeAssignment = assignments.find((a) => a.id === activeAssignmentId);
 
@@ -250,7 +276,7 @@ export default function AssignmentsPage() {
             {activeAssignment && (
               <SubmissionsView
                 assignment={activeAssignment}
-                submissions={[]}
+                submissions={submissions}
                 onToggleHide={(a) => handleToggleHide(a)}
                 onEdit={(a) => handleEdit(a)}
                 onDelete={(a) => handleDelete(a)}

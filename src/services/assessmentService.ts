@@ -266,6 +266,13 @@ export const assessmentService = {
   },
 
   /**
+   * Retrieves all student submissions for an assessment (Teacher view)
+   */
+  async getAssessmentSubmissions(id: string): Promise<any[]> {
+    return fetchApi<any[]>(`/assessments/${id}/submissions`);
+  },
+
+  /**
    * Toggles visibility (hide/unhide) of an assessment for students
    */
   async toggleHideAssessment(id: string): Promise<any> {
