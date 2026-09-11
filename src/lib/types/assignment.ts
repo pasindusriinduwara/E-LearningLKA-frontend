@@ -12,6 +12,10 @@ export interface Assignment {
   hidden?: boolean;
   totalMarks?: number;
   durationMinutes?: number;
+  attachmentUrl?: string;
+  instructions?: string;
+  submissionType?: string;
+  type?: string;
 }
 
 export interface Submission {
@@ -19,8 +23,11 @@ export interface Submission {
   studentName: string;
   studentId: string;
   submittedAt: string | null;
-  status: SubmissionStatus;
+  status: SubmissionStatus | string;
   marks: number | null;
   totalMarks: number;
   grade: string | null;
+  paperUploadUrl?: string;
+  answerText?: string;
+  feedback?: string;
 }

@@ -22,6 +22,9 @@ export interface SaveQuizPayload {
   totalMarks: number;
   dueDate?: string;
   durationMinutes: number;
+  attachmentUrl?: string;
+  instructions?: string;
+  submissionType?: string;
   questions: {
     questionText: string;
     marks: number;
@@ -49,6 +52,11 @@ export interface AssessmentSummary {
   submitted?: boolean;
   scoreObtained?: number;
   grade?: string;
+  attachmentUrl?: string;
+  instructions?: string;
+  submissionType?: string;
+  paperUploadUrl?: string;
+  feedback?: string;
   submissionsCount?: number;
   totalStudents?: number;
   createdAt?: string;
@@ -63,6 +71,9 @@ export interface StudentQuizTakeResponse {
   totalMarks: number;
   durationMinutes: number;
   dueDate: string;
+  attachmentUrl?: string;
+  instructions?: string;
+  submissionType?: string;
   questions: StudentQuestionDto[];
 }
 
@@ -297,6 +308,62 @@ export const assessmentService = {
   async deleteAssessment(id: string): Promise<void> {
     return fetchApi<void>(`/assessments/${id}`, {
       method: "DELETE",
+    });
+  },
+
+  /**
+   * Upload question paper or student answer sheet file
+   */
+  async uploadPaper(file: File): Promise<{ url: string; fileName: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetch("http://localhost:8080/api/v1/assessments/upload-paper", {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to upload file");
+    }
+    return res.json();
+  },
+
+  /**
+   * Submit an essay-type or paper assignment
+   */
+  async submitEssay(
+    id: string,
+    payload: {
+      studentId?: string;
+      answerText?: string;
+      paperUploadUrl?: string;
+      fileName?: string;
+    }
+  ): Promise<QuizSubmissionResult> {
+    return fetchApi<QuizSubmissionResult>(`/assessments/${id}/submit-essay`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  /**
+   * Grade a student submission (Teacher evaluation)
+   */
+  async gradeSubmission(
+    assessmentId: string,
+    submissionId: string,
+    payload: {
+      scoreObtained: number;
+      feedback: string;
+    }
+  ): Promise<any> {
+    return fetchApi(`/assessments/${assessmentId}/submissions/${submissionId}/grade`, {
+      method: "POST",
+      body: JSON.stringify(payload),
     });
   },
 };

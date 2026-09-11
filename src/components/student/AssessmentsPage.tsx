@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { StudentQuizTakingModal } from "./StudentQuizTakingModal";
 import { QuizResultModal } from "./QuizResultModal";
+import { StudentEssaySubmissionModal } from "./StudentEssaySubmissionModal";
 
 export type AssessmentStatus = "To do" | "In progress" | "Graded";
 
@@ -105,6 +106,9 @@ export function AssessmentsPage() {
 
   // Quiz Taking Modal State
   const [activeQuizTakingId, setActiveQuizTakingId] = useState<string | null>(null);
+
+  // Essay / Paper Submission Modal State
+  const [activeEssaySubmissionId, setActiveEssaySubmissionId] = useState<string | null>(null);
 
   // Result View Modal State
   const [activeResult, setActiveResult] = useState<QuizSubmissionResult | null>(null);
@@ -203,7 +207,11 @@ export function AssessmentsPage() {
     return { todo, inProgress, graded, total };
   }, [assessments]);
 
-  async function handleViewResult(assessmentId: string) {
+  async function handleViewResult(assessmentId: string, itemType?: string) {
+    if (itemType === "Assignment" || itemType === "Essay") {
+      setActiveEssaySubmissionId(assessmentId);
+      return;
+    }
     setIsLoadingResult(true);
     try {
       const res = await assessmentService.getStudentSubmission(
@@ -213,7 +221,7 @@ export function AssessmentsPage() {
       setActiveResult(res);
     } catch (err) {
       console.error("Could not fetch submission review:", err);
-      alert("Could not load submission result details.");
+      setActiveEssaySubmissionId(assessmentId);
     } finally {
       setIsLoadingResult(false);
     }
@@ -515,7 +523,7 @@ export function AssessmentsPage() {
                           type="button"
                           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-blue-600 font-semibold text-xs tracking-wide transition-all duration-200 shadow-sm hover:shadow-md active:scale-98 disabled:opacity-50 group"
                           disabled={isLoadingResult}
-                          onClick={() => handleViewResult(item.id)}
+                          onClick={() => handleViewResult(item.id, item.type)}
                         >
                           <Trophy size={15} className="text-amber-400 group-hover:scale-110 transition-transform" />
                           <span>View Result</span>
@@ -525,6 +533,19 @@ export function AssessmentsPage() {
                           />
                         </button>
                       </div>
+                    ) : item.type === "Assignment" || item.type === "Essay" ? (
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold text-xs tracking-wide shadow-md shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all duration-200 active:scale-98 w-full lg:w-auto group"
+                        onClick={() => setActiveEssaySubmissionId(item.id)}
+                      >
+                        <FileText size={16} className="group-hover:scale-110 transition-transform" />
+                        <span>Open Paper</span>
+                        <ChevronRight
+                          size={15}
+                          className="group-hover:translate-x-0.5 transition-transform"
+                        />
+                      </button>
                     ) : (
                       <button
                         type="button"
@@ -562,6 +583,19 @@ export function AssessmentsPage() {
         <QuizResultModal
           result={activeResult}
           onClose={() => setActiveResult(null)}
+        />
+      )}
+
+      {/* Student Essay / Paper Submission Modal */}
+      {activeEssaySubmissionId && (
+        <StudentEssaySubmissionModal
+          assessmentId={activeEssaySubmissionId}
+          studentId={user?.studentId || user?.id}
+          onClose={() => setActiveEssaySubmissionId(null)}
+          onSubmitSuccess={() => {
+            setActiveEssaySubmissionId(null);
+            loadAssessments();
+          }}
         />
       )}
     </div>

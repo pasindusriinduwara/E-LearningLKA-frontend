@@ -60,6 +60,10 @@ export default function AssignmentsPage() {
             submissionsCount: a.submissionsCount || 0,
             totalStudents: a.totalStudents || 32,
             dueDate: formattedDate,
+            attachmentUrl: a.attachmentUrl,
+            instructions: a.instructions,
+            submissionType: a.submissionType,
+            type: a.assessmentType === "MCQ_QUIZ" ? "MCQ Quiz" : "Assignment",
           };
         });
 
@@ -280,6 +284,14 @@ export default function AssignmentsPage() {
                 onToggleHide={(a) => handleToggleHide(a)}
                 onEdit={(a) => handleEdit(a)}
                 onDelete={(a) => handleDelete(a)}
+                onRefreshSubmissions={() => {
+                  if (activeAssignmentId) {
+                    assessmentService.getAssessmentSubmissions(activeAssignmentId).then((data) => {
+                      if (Array.isArray(data)) setSubmissions(data);
+                    });
+                  }
+                  loadAssessments();
+                }}
               />
             )}
           </div>
