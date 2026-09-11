@@ -17,6 +17,9 @@ import {
   Timer,
   Loader2,
   BookOpen,
+  Calendar,
+  GraduationCap,
+  Trophy,
 } from "lucide-react";
 import {
   assessmentService,
@@ -53,6 +56,42 @@ export interface AssessmentItem {
   grade?: string;
   feedback?: string;
   questions?: QuestionItem[];
+}
+
+function getGradeBadgeStyle(grade?: string) {
+  switch (grade) {
+    case "A+":
+    case "A":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800";
+    case "B":
+    case "C":
+      return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800";
+    case "S":
+      return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800";
+    case "F":
+      return "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800";
+    default:
+      return "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+  }
+}
+
+function getSubjectBadge(subjectCode: string, subjectName: string) {
+  if (subjectCode === "math") {
+    return {
+      bg: "bg-blue-50/90 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60",
+      dot: "bg-blue-600",
+    };
+  }
+  if (subjectCode === "chem") {
+    return {
+      bg: "bg-emerald-50/90 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/80 dark:border-emerald-800/60",
+      dot: "bg-emerald-600",
+    };
+  }
+  return {
+    bg: "bg-purple-50/90 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border-purple-200/80 dark:border-purple-800/60",
+    dot: "bg-purple-600",
+  };
 }
 
 export function AssessmentsPage() {
@@ -338,90 +377,169 @@ export function AssessmentsPage() {
       {!isLoading && filteredAssessments.length > 0 && (
         <div className="assessments-cards-list">
           {filteredAssessments.map((item) => {
+            const isGraded = item.status === "Graded";
+            const isInProgress = item.status === "In progress";
+            const subjBadge = getSubjectBadge(item.subjectCode, item.subject);
+
             return (
-              <article className="assessment-item-card" key={item.id}>
-                <div className="assessment-item-main">
-                  <div className="assessment-top-meta">
-                    <span
-                      className={`subject-tag ${
-                        item.subjectCode === "math"
-                          ? "subject-tag-math"
-                          : item.subjectCode === "chem"
-                          ? "subject-tag-chem"
-                          : "subject-tag-phys"
-                      }`}
-                    >
-                      {item.subject.toUpperCase()}
-                    </span>
-                    <span className="assessment-type-pill">{item.type}</span>
-                  </div>
+              <article
+                key={item.id}
+                className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-5 md:p-6 shadow-sm transition-all duration-200 hover:shadow-md hover:border-indigo-300/80 dark:hover:border-indigo-800/80"
+              >
+                {/* Dynamic Smart Status Accent Stripe */}
+                <div
+                  className={`absolute left-0 top-0 bottom-0 w-1.5 transition-colors ${
+                    isGraded
+                      ? "bg-gradient-to-b from-emerald-500 to-teal-600"
+                      : isInProgress
+                      ? "bg-gradient-to-b from-amber-400 to-orange-500"
+                      : "bg-gradient-to-b from-blue-600 to-indigo-600"
+                  }`}
+                />
 
-                  <h3 className="assessment-card-title">{item.title}</h3>
-                  <p className="assessment-card-teacher">Batch: {item.teacher}</p>
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pl-1.5">
+                  {/* Main Details */}
+                  <div className="flex-1 min-w-0">
+                    {/* Top Row: Subject, Type, Status */}
+                    <div className="flex flex-wrap items-center gap-2 mb-2.5">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold tracking-wider uppercase border ${subjBadge.bg}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${subjBadge.dot}`} />
+                        {item.subject}
+                      </span>
 
-                  <div className="assessment-specs-row">
-                    <span className="spec-item">
-                      <FileText size={14} />
-                      <span>{item.questionsCount} Questions</span>
-                    </span>
-                    <span className="spec-item">
-                      <Clock3 size={14} />
-                      <span>{item.duration}</span>
-                    </span>
-                    <span className="spec-item">
-                      <Award size={14} />
-                      <span>{item.totalMarks} Marks</span>
-                    </span>
-                    <span className="spec-due-date">
-                      <span>Due: {item.dueDate}</span>
-                    </span>
-                  </div>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700">
+                        {item.type}
+                      </span>
 
-                  {item.status === "In progress" && (
-                    <div className="assessment-inline-progress">
-                      <div className="progress-track-bg">
-                        <div className="progress-track-fill" style={{ width: `${item.progress}%` }} />
-                      </div>
-                      <span className="progress-track-text">{item.progress}% completed</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="assessment-item-actions">
-                  {item.status === "Graded" ? (
-                    <div className="flex items-center gap-3">
-                      {item.score !== undefined && (
-                        <div className="text-right">
-                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">
-                            {item.score} / {item.totalMarks}
-                          </span>
-                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                            Grade {item.grade || "A"}
-                          </span>
-                        </div>
+                      {/* Smart Status Pill */}
+                      {isGraded ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 ml-auto sm:ml-0">
+                          <CheckCircle2 size={12} className="text-emerald-500" />
+                          Graded
+                        </span>
+                      ) : isInProgress ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 ml-auto sm:ml-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                          In Progress
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 ml-auto sm:ml-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                          Available
+                        </span>
                       )}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {item.title}
+                    </h3>
+
+                    {/* Batch */}
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      <GraduationCap size={14} className="text-slate-400 shrink-0" />
+                      <span>
+                        Batch: <span className="font-medium text-slate-700 dark:text-slate-300">{item.teacher}</span>
+                      </span>
+                    </div>
+
+                    {/* Smart Spec Chips */}
+                    <div className="flex flex-wrap items-center gap-2 pt-3.5">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                        <FileText size={13} className="text-slate-400" />
+                        <span>{item.questionsCount} Questions</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                        <Clock3 size={13} className="text-slate-400" />
+                        <span>{item.duration}</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
+                        <Award size={13} className="text-slate-400" />
+                        <span>{item.totalMarks} Marks</span>
+                      </span>
+
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50/80 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg border border-rose-200/70 dark:border-rose-900/50">
+                        <Calendar size={13} className="text-rose-500" />
+                        <span>Due: {item.dueDate}</span>
+                      </span>
+                    </div>
+
+                    {/* In Progress Bar */}
+                    {isInProgress && (
+                      <div className="assessment-inline-progress mt-3">
+                        <div className="progress-track-bg">
+                          <div className="progress-track-fill" style={{ width: `${item.progress}%` }} />
+                        </div>
+                        <span className="progress-track-text">{item.progress}% completed</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions & Result Capsule */}
+                  <div className="flex items-center justify-between lg:justify-end gap-3.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800/80 shrink-0">
+                    {isGraded ? (
+                      <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
+                        {/* Score Capsule */}
+                        {item.score !== undefined && (
+                          <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200/70 dark:border-slate-700/70 shadow-xs">
+                            <div className="text-right">
+                              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-tight">
+                                Score
+                              </span>
+                              <span className="text-sm font-extrabold text-slate-800 dark:text-slate-100">
+                                {item.score}{" "}
+                                <span className="text-xs font-normal text-slate-400">
+                                  / {item.totalMarks}
+                                </span>
+                              </span>
+                            </div>
+
+                            {item.grade && (
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-xs font-black tracking-wide border ${getGradeBadgeStyle(
+                                  item.grade
+                                )}`}
+                              >
+                                {item.grade}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* View Result Action Button */}
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white dark:bg-slate-800 dark:hover:bg-blue-600 font-semibold text-xs tracking-wide transition-all duration-200 shadow-sm hover:shadow-md active:scale-98 disabled:opacity-50 group"
+                          disabled={isLoadingResult}
+                          onClick={() => handleViewResult(item.id)}
+                        >
+                          <Trophy size={15} className="text-amber-400 group-hover:scale-110 transition-transform" />
+                          <span>View Result</span>
+                          <ChevronRight
+                            size={14}
+                            className="text-slate-400 group-hover:text-white group-hover:translate-x-0.5 transition-all"
+                          />
+                        </button>
+                      </div>
+                    ) : (
                       <button
                         type="button"
-                        className="review-feedback-btn flex items-center gap-1.5"
-                        disabled={isLoadingResult}
-                        onClick={() => handleViewResult(item.id)}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs tracking-wide shadow-md shadow-blue-500/20 hover:shadow-blue-500/30 transition-all duration-200 active:scale-98 w-full lg:w-auto group"
+                        onClick={() => setActiveQuizTakingId(item.id)}
                       >
-                        <Award size={16} className="text-amber-500" />
-                        <span>View Result</span>
-                        <ChevronRight size={14} />
+                        <PlayCircle size={17} className="group-hover:scale-110 transition-transform" />
+                        <span>Start Quiz</span>
+                        <ChevronRight
+                          size={15}
+                          className="group-hover:translate-x-0.5 transition-transform"
+                        />
                       </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="start-assessment-btn flex items-center gap-1.5"
-                      onClick={() => setActiveQuizTakingId(item.id)}
-                    >
-                      <PlayCircle size={18} />
-                      <span>Start Quiz</span>
-                      <ChevronRight size={16} />
-                    </button>
-                  )}
+                    )}
+                  </div>
                 </div>
               </article>
             );
