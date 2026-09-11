@@ -7,6 +7,7 @@ import { AssignmentListCard } from "@/components/assignments/AssignmentListCard"
 import { SubmissionsView } from "@/components/assignments/SubmissionsView";
 import { PdfQuizUploadModal } from "@/components/assignments/PdfQuizUploadModal";
 import { QuizReviewStudio } from "@/components/assignments/QuizReviewStudio";
+import { EditAssignmentModal } from "@/components/assignments/EditAssignmentModal";
 import { ParsedQuestion } from "@/lib/utils/quizParser";
 import { assessmentService } from "@/services/assessmentService";
 import type { Assignment, Submission } from "@/lib/types/assignment";
@@ -16,6 +17,7 @@ export default function AssignmentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [reviewQuestions, setReviewQuestions] = useState<ParsedQuestion[] | null>(null);
   const [reviewTitle, setReviewTitle] = useState("Imported MCQ Quiz");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -40,11 +42,19 @@ export default function AssignmentsPage() {
             }
           }
 
+          let status = (a.status as "Open" | "Closed" | "Hidden") || "Open";
+          if (a.hidden) {
+            status = "Hidden";
+          }
+
           return {
             id: a.id,
             title: a.title,
             batch: a.batchName || "A/L Batch",
-            status: (a.status as "Open" | "Closed") || "Open",
+            status: status,
+            hidden: Boolean(a.hidden),
+            totalMarks: a.totalMarks,
+            durationMinutes: a.durationMinutes,
             submissionsCount: a.submissionsCount || 0,
             totalStudents: a.totalStudents || 32,
             dueDate: formattedDate,
@@ -88,6 +98,39 @@ export default function AssignmentsPage() {
     setSuccessMsg("Assignment created and published successfully!");
     await loadAssessments();
     setTimeout(() => setSuccessMsg(null), 6000);
+  };
+
+  const handleToggleHide = async (assignment: Assignment, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await assessmentService.toggleHideAssessment(assignment.id);
+      const isNowHidden = !assignment.hidden;
+      setSuccessMsg(`"${assignment.title}" is now ${isNowHidden ? "hidden from" : "visible to"} students.`);
+      await loadAssessments();
+      setTimeout(() => setSuccessMsg(null), 5000);
+    } catch (err) {
+      console.error("Failed to toggle visibility:", err);
+    }
+  };
+
+  const handleDelete = async (assignment: Assignment, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm(`Are you sure you want to delete "${assignment.title}"?`)) {
+      return;
+    }
+
+    try {
+      await assessmentService.deleteAssessment(assignment.id);
+      setSuccessMsg(`"${assignment.title}" was deleted.`);
+      await loadAssessments();
+      setTimeout(() => setSuccessMsg(null), 5000);
+    } catch (err) {
+      console.error("Failed to delete assessment:", err);
+    }
+  };
+
+  const handleEdit = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
   };
 
   return (
@@ -197,6 +240,8 @@ export default function AssignmentsPage() {
                 assignment={assignment}
                 isActive={assignment.id === activeAssignmentId}
                 onClick={() => setActiveAssignmentId(assignment.id)}
+                onToggleHide={(a, e) => handleToggleHide(a, e)}
+                onDelete={(a, e) => handleDelete(a, e)}
               />
             ))}
           </div>
@@ -206,6 +251,9 @@ export default function AssignmentsPage() {
               <SubmissionsView
                 assignment={activeAssignment}
                 submissions={[]}
+                onToggleHide={(a) => handleToggleHide(a)}
+                onEdit={(a) => handleEdit(a)}
+                onDelete={(a) => handleDelete(a)}
               />
             )}
           </div>
@@ -218,6 +266,20 @@ export default function AssignmentsPage() {
         onClose={() => setIsPdfModalOpen(false)}
         onQuestionsExtracted={handleQuestionsExtracted}
       />
+
+      {/* Edit Assignment Modal */}
+      {editingAssignment && (
+        <EditAssignmentModal
+          assignment={editingAssignment}
+          isOpen={Boolean(editingAssignment)}
+          onClose={() => setEditingAssignment(null)}
+          onUpdated={async () => {
+            setSuccessMsg("Assignment updated successfully!");
+            await loadAssessments();
+            setTimeout(() => setSuccessMsg(null), 5000);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ClipboardCheck,
   Clock3,
@@ -15,7 +15,17 @@ import {
   FileCheck,
   Send,
   Timer,
+  Loader2,
+  BookOpen,
 } from "lucide-react";
+import {
+  assessmentService,
+  AssessmentSummary,
+  QuizSubmissionResult,
+} from "@/services/assessmentService";
+import { useAuth } from "@/context/AuthContext";
+import { StudentQuizTakingModal } from "./StudentQuizTakingModal";
+import { QuizResultModal } from "./QuizResultModal";
 
 export type AssessmentStatus = "To do" | "In progress" | "Graded";
 
@@ -29,10 +39,10 @@ export interface QuestionItem {
 export interface AssessmentItem {
   id: string;
   title: string;
-  subject: "Combined Mathematics" | "Chemistry" | "Physics";
-  subjectCode: "math" | "chem" | "phys";
+  subject: string;
+  subjectCode: string;
   teacher: string;
-  type: "MCQ Quiz" | "Structured Paper" | "Assignment";
+  type: string;
   questionsCount: number;
   duration: string;
   dueDate: string;
@@ -45,136 +55,89 @@ export interface AssessmentItem {
   questions?: QuestionItem[];
 }
 
-const mockAssessments: AssessmentItem[] = [
-  {
-    id: "asm-01",
-    title: "Integration Techniques — Term Paper 02",
-    subject: "Combined Mathematics",
-    subjectCode: "math",
-    teacher: "Mr. K. Perera",
-    type: "Structured Paper",
-    questionsCount: 20,
-    duration: "60 mins",
-    dueDate: "29 Aug 2026, 6:00 PM",
-    status: "To do",
-    progress: 0,
-    totalMarks: 100,
-    questions: [
-      {
-        id: 1,
-        question: "Find the indefinite integral of ∫ (3x² + 4x - 5) dx with respect to x.",
-        options: ["x³ + 2x² - 5x + C", "3x³ + 4x² - 5x + C", "6x + 4 + C", "x³ + 4x² - 5x + C"],
-        selectedOption: 0,
-      },
-      {
-        id: 2,
-        question: "Evaluate the definite integral ∫ from 0 to 1 of e^(2x) dx.",
-        options: ["(e² - 1) / 2", "e² - 1", "2(e² - 1)", "e² / 2"],
-      },
-      {
-        id: 3,
-        question: "Which substitution is most appropriate to evaluate ∫ x / √(1 - x²) dx?",
-        options: ["u = 1 - x²", "u = sin(x)", "u = x²", "u = tan(x)"],
-      },
-    ],
-  },
-  {
-    id: "asm-02",
-    title: "Organic Reaction Mechanisms Quiz",
-    subject: "Chemistry",
-    subjectCode: "chem",
-    teacher: "Ms. A. Fernando",
-    type: "MCQ Quiz",
-    questionsCount: 15,
-    duration: "45 mins",
-    dueDate: "31 Aug 2026, 8:00 PM",
-    status: "In progress",
-    progress: 40,
-    totalMarks: 50,
-    questions: [
-      {
-        id: 1,
-        question: "Which of the following is the major product in the acid-catalyzed hydration of propene?",
-        options: ["Propan-2-ol", "Propan-1-ol", "Propene oxide", "Propanoic acid"],
-        selectedOption: 0,
-      },
-      {
-        id: 2,
-        question: "In nucleophilic substitution (SN2) reactions, the reaction proceeds with:",
-        options: ["Complete inversion of configuration", "Retention of configuration", "Racemization", "No stereochemical change"],
-        selectedOption: 0,
-      },
-      {
-        id: 3,
-        question: "What reagent is used to convert an alcohol into an alkyl chloride most cleanly?",
-        options: ["SOCl₂ with pyridine", "NaCl with H₂O", "Cl₂ with light", "HCl with NaOH"],
-      },
-    ],
-  },
-  {
-    id: "asm-03",
-    title: "Waves & Oscillations Evaluation Test",
-    subject: "Physics",
-    subjectCode: "phys",
-    teacher: "Mr. R. Silva",
-    type: "MCQ Quiz",
-    questionsCount: 25,
-    duration: "75 mins",
-    dueDate: "Submitted 22 Aug 2026",
-    status: "Graded",
-    progress: 100,
-    totalMarks: 100,
-    score: 88,
-    grade: "A",
-    feedback: "Excellent understanding of stationary waves and resonance tube calculations. Review Doppler effect sign conventions.",
-  },
-  {
-    id: "asm-04",
-    title: "Differential Equations Practice Evaluation",
-    subject: "Combined Mathematics",
-    subjectCode: "math",
-    teacher: "Mr. K. Perera",
-    type: "Structured Paper",
-    questionsCount: 18,
-    duration: "50 mins",
-    dueDate: "Submitted 17 Aug 2026",
-    status: "Graded",
-    progress: 100,
-    totalMarks: 100,
-    score: 94,
-    grade: "A+",
-    feedback: "Outstanding work on integrating factor methods. All steps neatly laid out.",
-  },
-  {
-    id: "asm-05",
-    title: "Thermodynamics & Enthalpy Calculation Assignment",
-    subject: "Chemistry",
-    subjectCode: "chem",
-    teacher: "Ms. A. Fernando",
-    type: "Assignment",
-    questionsCount: 10,
-    duration: "60 mins",
-    dueDate: "02 Sep 2026, 11:59 PM",
-    status: "To do",
-    progress: 0,
-    totalMarks: 50,
-  },
-];
-
 export function AssessmentsPage() {
+  const { user } = useAuth();
+  const [assessments, setAssessments] = useState<AssessmentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("All");
   const [selectedSubject, setSelectedSubject] = useState<string>("All");
 
-  const [activeQuiz, setActiveQuiz] = useState<AssessmentItem | null>(null);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
+  // Quiz Taking Modal State
+  const [activeQuizTakingId, setActiveQuizTakingId] = useState<string | null>(null);
 
-  const [reviewedAssessment, setReviewedAssessment] = useState<AssessmentItem | null>(null);
+  // Result View Modal State
+  const [activeResult, setActiveResult] = useState<QuizSubmissionResult | null>(null);
+  const [isLoadingResult, setIsLoadingResult] = useState(false);
+
+  const loadAssessments = () => {
+    setIsLoading(true);
+    assessmentService
+      .getStudentAssessments(user?.studentId || user?.id)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const mapped: AssessmentItem[] = data.map((a: AssessmentSummary) => {
+            let subj = "Combined Mathematics";
+            let code = "math";
+            const bName = (a.batchName || "").toLowerCase();
+            if (bName.includes("chem")) {
+              subj = "Chemistry";
+              code = "chem";
+            } else if (bName.includes("phys")) {
+              subj = "Physics";
+              code = "phys";
+            }
+
+            let formattedDue = "Open";
+            if (a.dueDate) {
+              try {
+                formattedDue = new Date(a.dueDate).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+              } catch {
+                formattedDue = a.dueDate;
+              }
+            }
+
+            const isGraded = a.submitted || a.status === "Graded";
+
+            return {
+              id: a.id,
+              title: a.title,
+              subject: subj,
+              subjectCode: code,
+              teacher: a.batchName || "Instructor",
+              type: a.assessmentType === "MCQ_QUIZ" ? "MCQ Quiz" : "Assignment",
+              questionsCount: a.questionCount || 0,
+              duration: `${a.durationMinutes || 60} mins`,
+              dueDate: formattedDue,
+              status: isGraded ? "Graded" : "To do",
+              progress: isGraded ? 100 : 0,
+              totalMarks: a.totalMarks || 100,
+              score: a.scoreObtained != null ? Number(a.scoreObtained) : undefined,
+              grade: a.grade,
+            };
+          });
+          setAssessments(mapped);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load assessments from database:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    loadAssessments();
+  }, [user]);
 
   const filteredAssessments = useMemo(() => {
-    return mockAssessments.filter((item) => {
+    return assessments.filter((item) => {
       const matchesSearch =
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.teacher.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -191,37 +154,41 @@ export function AssessmentsPage() {
 
       return matchesSearch && matchesStatus && matchesSubject;
     });
-  }, [searchQuery, selectedStatus, selectedSubject]);
+  }, [assessments, searchQuery, selectedStatus, selectedSubject]);
 
   const stats = useMemo(() => {
-    const todo = mockAssessments.filter((a) => a.status === "To do").length;
-    const inProgress = mockAssessments.filter((a) => a.status === "In progress").length;
-    const graded = mockAssessments.filter((a) => a.status === "Graded").length;
-    const total = mockAssessments.length;
+    const todo = assessments.filter((a) => a.status === "To do").length;
+    const inProgress = assessments.filter((a) => a.status === "In progress").length;
+    const graded = assessments.filter((a) => a.status === "Graded").length;
+    const total = assessments.length;
     return { todo, inProgress, graded, total };
-  }, []);
+  }, [assessments]);
 
-  function handleStartQuiz(item: AssessmentItem) {
-    setActiveQuiz(item);
-    setCurrentQuestionIndex(0);
-    setUserAnswers({});
-    setQuizSubmitted(false);
+  async function handleViewResult(assessmentId: string) {
+    setIsLoadingResult(true);
+    try {
+      const res = await assessmentService.getStudentSubmission(
+        assessmentId,
+        user?.studentId || user?.id
+      );
+      setActiveResult(res);
+    } catch (err) {
+      console.error("Could not fetch submission review:", err);
+      alert("Could not load submission result details.");
+    } finally {
+      setIsLoadingResult(false);
+    }
   }
 
-  function handleSelectOption(qIndex: number, optionIndex: number) {
-    setUserAnswers((prev) => ({
-      ...prev,
-      [qIndex]: optionIndex,
-    }));
-  }
-
-  function handleSubmitQuiz() {
-    setQuizSubmitted(true);
+  function handleQuizFinished(result: QuizSubmissionResult) {
+    setActiveQuizTakingId(null);
+    setActiveResult(result);
+    // Reload assessments to refresh statuses and counts from live database
+    loadAssessments();
   }
 
   return (
     <div className="assessments-page-wrapper">
-      
       <header className="assessments-header">
         <div>
           <p className="assessments-eyebrow">ACADEMIC EVALUATIONS</p>
@@ -232,8 +199,8 @@ export function AssessmentsPage() {
         </div>
       </header>
 
+      {/* Stats Counter Bar */}
       <div className="assessments-stats-grid">
-        
         <button
           type="button"
           className={`assessment-stat-card ${selectedStatus === "To do" ? "assessment-stat-active" : ""}`}
@@ -272,7 +239,7 @@ export function AssessmentsPage() {
           </div>
           <div className="asm-stat-info">
             <strong className="asm-stat-number">{String(stats.graded).padStart(2, "0")}</strong>
-            <span className="asm-stat-label">Graded (Avg 91%)</span>
+            <span className="asm-stat-label">Graded</span>
           </div>
         </button>
 
@@ -289,16 +256,16 @@ export function AssessmentsPage() {
             <span className="asm-stat-label">Total assigned</span>
           </div>
         </button>
-
       </div>
 
+      {/* Controls Bar */}
       <div className="assessments-controls-bar">
         <div className="search-input-wrapper">
           <Search size={18} className="search-icon" />
           <input
             type="text"
             className="search-input"
-            placeholder="Search assessments, subjects, teachers..."
+            placeholder="Search assessments, subjects, batches..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -331,122 +298,30 @@ export function AssessmentsPage() {
         </div>
       </div>
 
-      <div className="assessments-cards-list">
-        {filteredAssessments.map((item) => {
-          return (
-            <article className="assessment-item-card" key={item.id}>
-              
-              <div className="assessment-item-main">
-                <div className="assessment-top-meta">
-                  <span
-                    className={`subject-tag ${
-                      item.subjectCode === "math"
-                        ? "subject-tag-math"
-                        : item.subjectCode === "chem"
-                        ? "subject-tag-chem"
-                        : "subject-tag-phys"
-                    }`}
-                  >
-                    {item.subject.toUpperCase()}
-                  </span>
-                  <span className="assessment-type-pill">{item.type}</span>
-                </div>
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
+          <Loader2 size={32} className="animate-spin text-[#2D9F75]" />
+          <p className="text-sm font-medium text-gray-500">Loading your assessments from database...</p>
+        </div>
+      )}
 
-                <h3 className="assessment-card-title">{item.title}</h3>
-                <p className="assessment-card-teacher">Uploaded by {item.teacher}</p>
-
-                <div className="assessment-specs-row">
-                  <span className="spec-item">
-                    <FileText size={14} />
-                    <span>{item.questionsCount} Questions</span>
-                  </span>
-                  <span className="spec-item">
-                    <Clock3 size={14} />
-                    <span>{item.duration}</span>
-                  </span>
-                  <span className="spec-item">
-                    <Award size={14} />
-                    <span>{item.totalMarks} Marks</span>
-                  </span>
-                  <span className="spec-due-date">
-                    <span>{item.dueDate}</span>
-                  </span>
-                </div>
-
-                {item.status === "In progress" && (
-                  <div className="assessment-inline-progress">
-                    <div className="progress-track-bg">
-                      <div className="progress-track-fill" style={{ width: `${item.progress}%` }} />
-                    </div>
-                    <span>{item.progress}% completed</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="assessment-item-action-box">
-                {item.status === "Graded" ? (
-                  <div className="score-summary-badge">
-                    <div className="score-number-box">
-                      <span className="score-label">Score</span>
-                      <strong className="score-val">{item.score}%</strong>
-                    </div>
-                    <span className="grade-pill">Grade {item.grade}</span>
-                  </div>
-                ) : (
-                  <span
-                    className={`status-badge ${
-                      item.status === "To do" ? "status-badge-due" : "status-badge-progress"
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                )}
-
-                {item.status === "To do" && (
-                  <button
-                    type="button"
-                    className="asm-action-btn asm-btn-primary"
-                    onClick={() => handleStartQuiz(item)}
-                  >
-                    <span>Start assessment</span>
-                    <ChevronRight size={16} />
-                  </button>
-                )}
-
-                {item.status === "In progress" && (
-                  <button
-                    type="button"
-                    className="asm-action-btn asm-btn-primary"
-                    onClick={() => handleStartQuiz(item)}
-                  >
-                    <span>Continue test</span>
-                    <ChevronRight size={16} />
-                  </button>
-                )}
-
-                {item.status === "Graded" && (
-                  <button
-                    type="button"
-                    className="asm-action-btn asm-btn-outline"
-                    onClick={() => setReviewedAssessment(item)}
-                  >
-                    <span>View feedback</span>
-                    <FileCheck size={16} />
-                  </button>
-                )}
-              </div>
-            </article>
-          );
-        })}
-
-        {filteredAssessments.length === 0 && (
-          <div className="materials-empty-state">
-            <HelpCircle size={40} className="empty-icon-art" />
-            <h3>No assessments matching criteria</h3>
-            <p>Try switching filter tabs or clearing your search term.</p>
+      {/* Empty State */}
+      {!isLoading && filteredAssessments.length === 0 && (
+        <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center space-y-3">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-[#2D9F75] flex items-center justify-center">
+            <BookOpen size={28} />
+          </div>
+          <h3 className="text-base font-bold text-gray-800">No Assessments Available</h3>
+          <p className="text-xs text-gray-400 max-w-sm">
+            {searchQuery || selectedStatus !== "All"
+              ? "No assessments match your current filter criteria."
+              : "Your teachers haven't assigned any tests or quizzes yet. Check back soon!"}
+          </p>
+          {(searchQuery || selectedStatus !== "All") && (
             <button
               type="button"
-              className="reset-filters-btn"
+              className="mt-2 text-xs font-bold text-[#2D9F75] underline"
               onClick={() => {
                 setSearchQuery("");
                 setSelectedStatus("All");
@@ -455,178 +330,121 @@ export function AssessmentsPage() {
             >
               Reset filters
             </button>
-          </div>
-        )}
-      </div>
-
-      {activeQuiz && (
-        <div className="payment-modal-backdrop">
-          <div className="quiz-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="quiz-modal-header">
-              <div>
-                <span className="quiz-header-badge">{activeQuiz.subject}</span>
-                <h3 className="quiz-header-title">{activeQuiz.title}</h3>
-                <p className="quiz-header-sub">
-                  {activeQuiz.teacher} • {activeQuiz.duration} time limit
-                </p>
-              </div>
-              <button
-                type="button"
-                className="close-modal-btn"
-                onClick={() => setActiveQuiz(null)}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {!quizSubmitted ? (
-              <div className="quiz-modal-body">
-                
-                <div className="quiz-status-bar">
-                  <div className="quiz-timer">
-                    <Timer size={16} />
-                    <span>Time Remaining: <strong>54:20</strong></span>
-                  </div>
-                  <span className="quiz-q-count">
-                    Question {currentQuestionIndex + 1} of {activeQuiz.questions?.length || 3}
-                  </span>
-                </div>
-
-                {activeQuiz.questions && activeQuiz.questions[currentQuestionIndex] && (
-                  <div className="quiz-question-container">
-                    <h4 className="quiz-question-text">
-                      {activeQuiz.questions[currentQuestionIndex].question}
-                    </h4>
-
-                    <div className="quiz-options-list">
-                      {activeQuiz.questions[currentQuestionIndex].options.map((opt, optIdx) => {
-                        const isSelected = userAnswers[currentQuestionIndex] === optIdx;
-                        return (
-                          <button
-                            key={opt}
-                            type="button"
-                            className={`quiz-option-btn ${isSelected ? "quiz-option-selected" : ""}`}
-                            onClick={() => handleSelectOption(currentQuestionIndex, optIdx)}
-                          >
-                            <span className="option-letter">
-                              {String.fromCharCode(65 + optIdx)}
-                            </span>
-                            <span className="option-text">{opt}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                <div className="quiz-modal-footer">
-                  <button
-                    type="button"
-                    className="quiz-nav-btn"
-                    disabled={currentQuestionIndex === 0}
-                    onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}
-                  >
-                    Previous
-                  </button>
-
-                  <div className="quiz-pips-row">
-                    {activeQuiz.questions?.map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className={`quiz-pip ${idx === currentQuestionIndex ? "quiz-pip-current" : userAnswers[idx] !== undefined ? "quiz-pip-answered" : ""}`}
-                        onClick={() => setCurrentQuestionIndex(idx)}
-                      >
-                        {idx + 1}
-                      </button>
-                    ))}
-                  </div>
-
-                  {currentQuestionIndex < (activeQuiz.questions?.length || 3) - 1 ? (
-                    <button
-                      type="button"
-                      className="quiz-nav-btn quiz-nav-next"
-                      onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="quiz-nav-btn quiz-nav-submit"
-                      onClick={handleSubmitQuiz}
-                    >
-                      <Send size={15} />
-                      <span>Submit paper</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="payment-modal-body modal-center-body">
-                <div className="success-icon-wrap">
-                  <CheckCircle2 size={54} />
-                </div>
-                <h4>Assessment Submitted Successfully!</h4>
-                <p>
-                  Your responses have been recorded and sent to {activeQuiz.teacher} for grading.
-                </p>
-                <button
-                  type="button"
-                  className="confirm-pay-btn"
-                  onClick={() => setActiveQuiz(null)}
-                >
-                  Return to assessments
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       )}
 
-      {reviewedAssessment && (
-        <div className="payment-modal-backdrop" onClick={() => setReviewedAssessment(null)}>
-          <div className="payment-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="payment-modal-head">
-              <div>
-                <h3>{reviewedAssessment.title}</h3>
-                <p>{reviewedAssessment.subject} • {reviewedAssessment.teacher}</p>
-              </div>
-              <button
-                type="button"
-                className="close-modal-btn"
-                onClick={() => setReviewedAssessment(null)}
-                aria-label="Close"
-              >
-                <X size={18} />
-              </button>
-            </div>
+      {/* Assessments Cards List */}
+      {!isLoading && filteredAssessments.length > 0 && (
+        <div className="assessments-cards-list">
+          {filteredAssessments.map((item) => {
+            return (
+              <article className="assessment-item-card" key={item.id}>
+                <div className="assessment-item-main">
+                  <div className="assessment-top-meta">
+                    <span
+                      className={`subject-tag ${
+                        item.subjectCode === "math"
+                          ? "subject-tag-math"
+                          : item.subjectCode === "chem"
+                          ? "subject-tag-chem"
+                          : "subject-tag-phys"
+                      }`}
+                    >
+                      {item.subject.toUpperCase()}
+                    </span>
+                    <span className="assessment-type-pill">{item.type}</span>
+                  </div>
 
-            <div className="payment-modal-body">
-              <div className="score-highlight-card">
-                <div>
-                  <span>Final Result</span>
-                  <strong className="score-huge">{reviewedAssessment.score}%</strong>
+                  <h3 className="assessment-card-title">{item.title}</h3>
+                  <p className="assessment-card-teacher">Batch: {item.teacher}</p>
+
+                  <div className="assessment-specs-row">
+                    <span className="spec-item">
+                      <FileText size={14} />
+                      <span>{item.questionsCount} Questions</span>
+                    </span>
+                    <span className="spec-item">
+                      <Clock3 size={14} />
+                      <span>{item.duration}</span>
+                    </span>
+                    <span className="spec-item">
+                      <Award size={14} />
+                      <span>{item.totalMarks} Marks</span>
+                    </span>
+                    <span className="spec-due-date">
+                      <span>Due: {item.dueDate}</span>
+                    </span>
+                  </div>
+
+                  {item.status === "In progress" && (
+                    <div className="assessment-inline-progress">
+                      <div className="progress-track-bg">
+                        <div className="progress-track-fill" style={{ width: `${item.progress}%` }} />
+                      </div>
+                      <span className="progress-track-text">{item.progress}% completed</span>
+                    </div>
+                  )}
                 </div>
-                <span className="grade-badge-huge">Grade {reviewedAssessment.grade}</span>
-              </div>
 
-              <div className="teacher-feedback-box">
-                <span className="feedback-label">Teacher&apos;s Feedback</span>
-                <p>{reviewedAssessment.feedback}</p>
-              </div>
-
-              <button
-                type="button"
-                className="confirm-pay-btn"
-                onClick={() => setReviewedAssessment(null)}
-              >
-                Close feedback
-              </button>
-            </div>
-          </div>
+                <div className="assessment-item-actions">
+                  {item.status === "Graded" ? (
+                    <div className="flex items-center gap-3">
+                      {item.score !== undefined && (
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 block">
+                            {item.score} / {item.totalMarks}
+                          </span>
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                            Grade {item.grade || "A"}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        className="review-feedback-btn flex items-center gap-1.5"
+                        disabled={isLoadingResult}
+                        onClick={() => handleViewResult(item.id)}
+                      >
+                        <Award size={16} className="text-amber-500" />
+                        <span>View Result</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="start-assessment-btn flex items-center gap-1.5"
+                      onClick={() => setActiveQuizTakingId(item.id)}
+                    >
+                      <PlayCircle size={18} />
+                      <span>Start Quiz</span>
+                      <ChevronRight size={16} />
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
         </div>
+      )}
+
+      {/* Modern Student Quiz Taking Studio Modal */}
+      {activeQuizTakingId && (
+        <StudentQuizTakingModal
+          assessmentId={activeQuizTakingId}
+          studentId={user?.studentId || user?.id}
+          onClose={() => setActiveQuizTakingId(null)}
+          onSubmitSuccess={handleQuizFinished}
+        />
+      )}
+
+      {/* Graded Quiz Result Review Modal */}
+      {activeResult && (
+        <QuizResultModal
+          result={activeResult}
+          onClose={() => setActiveResult(null)}
+        />
       )}
     </div>
   );

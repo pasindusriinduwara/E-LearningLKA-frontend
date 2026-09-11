@@ -1,4 +1,4 @@
-export type AssignmentStatus = "Open" | "Closed";
+export type AssignmentStatus = "Open" | "Closed" | "Hidden";
 export type SubmissionStatus = "Submitted" | "Pending";
 
 export interface Assignment {
@@ -9,6 +9,9 @@ export interface Assignment {
   submissionsCount: number;
   totalStudents: number;
   dueDate: string;
+  hidden?: boolean;
+  totalMarks?: number;
+  durationMinutes?: number;
 }
 
 export interface Submission {

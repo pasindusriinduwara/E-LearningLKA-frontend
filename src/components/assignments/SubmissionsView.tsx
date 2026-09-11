@@ -1,21 +1,81 @@
+import { Eye, EyeOff, Edit3, Trash2 } from "lucide-react";
 import type { Assignment, Submission } from "@/lib/types/assignment";
 
 interface SubmissionsViewProps {
   assignment: Assignment;
   submissions: Submission[];
+  onToggleHide?: (assignment: Assignment) => void;
+  onEdit?: (assignment: Assignment) => void;
+  onDelete?: (assignment: Assignment) => void;
 }
 
-export function SubmissionsView({ assignment, submissions }: SubmissionsViewProps) {
+export function SubmissionsView({
+  assignment,
+  submissions,
+  onToggleHide,
+  onEdit,
+  onDelete,
+}: SubmissionsViewProps) {
+  const isHidden = assignment.hidden || assignment.status === "Hidden";
+
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      
-      <div className="p-6 md:p-8 border-b border-gray-100">
-        <p className="text-[10px] font-bold text-[#2D9F75] uppercase tracking-widest mb-2">
-          {assignment.batch}
-        </p>
-        <h2 className="text-2xl font-bold text-gray-900 font-serif">
-          {assignment.title}
-        </h2>
+      <div className="p-6 md:p-8 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <p className="text-[10px] font-bold text-[#2D9F75] uppercase tracking-widest">
+              {assignment.batch}
+            </p>
+            {isHidden && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200 flex items-center gap-1">
+                <EyeOff size={10} /> Hidden from students
+              </span>
+            )}
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 font-serif">
+            {assignment.title}
+          </h2>
+        </div>
+
+        {/* Toolbar Buttons */}
+        <div className="flex items-center gap-2">
+          {onToggleHide && (
+            <button
+              type="button"
+              onClick={() => onToggleHide(assignment)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-xl border flex items-center gap-1.5 transition-colors ${
+                isHidden
+                  ? "bg-emerald-50 text-[#2D9F75] border-emerald-200 hover:bg-emerald-100"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {isHidden ? <Eye size={14} /> : <EyeOff size={14} />}
+              <span>{isHidden ? "Unhide" : "Hide"}</span>
+            </button>
+          )}
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(assignment)}
+              className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl flex items-center gap-1.5 transition-colors"
+            >
+              <Edit3 size={14} />
+              <span>Edit</span>
+            </button>
+          )}
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(assignment)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 border border-gray-200 rounded-xl transition-colors"
+              title="Delete assignment"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
+        </div>
       </div>
 
       {submissions.length === 0 ? (
