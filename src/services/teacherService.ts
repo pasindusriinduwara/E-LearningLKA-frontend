@@ -1,4 +1,5 @@
 import { fetchApi } from "@/lib/api";
+import type { ClassScheduleItem } from "@/lib/types/class";
 
 export interface TeacherProfile {
   id: string;
@@ -57,6 +58,21 @@ export interface MaterialUploadResponse {
   fileUrl: string;
 }
 
+export interface TeacherStudentView {
+  id: string;
+  name: string;
+  studentId: string;
+  batchName: string;
+}
+
+export interface PendingEnrollmentRequest {
+  id: string;
+  studentId: string;
+  batchId: string;
+  status: string;
+  createdAt: string;
+}
+
 export function getTeacherProfile() {
   return fetchApi<TeacherProfile>("/teacher/profile");
 }
@@ -70,11 +86,11 @@ export function getTeacherBatches() {
 }
 
 export function getTeacherSchedules() {
-  return fetchApi("/teacher/schedules");
+  return fetchApi<ClassScheduleItem[]>("/teacher/schedules");
 }
 
 export function getTeacherStudents() {
-  return fetchApi("/teacher/students");
+  return fetchApi<TeacherStudentView[]>("/teacher/students");
 }
 
 export function getTeacherMaterials() {
@@ -82,7 +98,11 @@ export function getTeacherMaterials() {
 }
 
 export function getTeacherAnnouncements() {
-  return fetchApi("/teacher/announcements");
+  return fetchApi<TeacherAnnouncement[]>("/teacher/announcements");
+}
+
+export function getTeacherPendingEnrollments() {
+  return fetchApi<PendingEnrollmentRequest[]>("/enrollments/pending");
 }
 
 export function getBatchEnrollments(batchId: string) {
