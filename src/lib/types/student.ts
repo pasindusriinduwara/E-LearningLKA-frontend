@@ -17,6 +17,8 @@ export interface ScheduleItem {
 export interface LearningResource {
   id?: string;
   batchId?: string;
+  batchName?: string;
+  teacherName?: string;
   title: string;
   subject: string;
   type: string;
@@ -24,6 +26,7 @@ export interface LearningResource {
   size: string;
   fileUrl?: string;
   cloudinaryPublicId?: string;
+  createdAt?: string;
 }
 
 export interface StudentInvoice {
