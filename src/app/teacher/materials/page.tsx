@@ -13,7 +13,8 @@ import {
 } from "@/services/teacherService";
 
 function toMaterialType(type?: string): Material["type"] {
-  return type?.toLowerCase().includes("video") ? "video" : "document";
+  const t = type?.toLowerCase() || "";
+  return t.includes("video") || t.includes("recording") ? "video" : "document";
 }
 
 function mapMaterial(material: TeacherMaterial, batches: TeacherBatch[]): Material {
