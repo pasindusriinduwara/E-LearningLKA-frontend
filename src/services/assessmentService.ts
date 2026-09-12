@@ -230,10 +230,11 @@ export const assessmentService = {
   },
 
   /**
-   * Retrieves assessments for batch
+   * Retrieves assessments for batch (supports passing studentId for enrollment-isolated view)
    */
-  async getBatchAssessments(batchId: string): Promise<AssessmentSummary[]> {
-    return fetchApi<AssessmentSummary[]>(`/assessments/batch/${batchId}`);
+  async getBatchAssessments(batchId: string, studentId?: string): Promise<AssessmentSummary[]> {
+    const query = studentId ? `?studentId=${encodeURIComponent(studentId)}` : "";
+    return fetchApi<AssessmentSummary[]>(`/assessments/batch/${batchId}${query}`);
   },
 
   /**

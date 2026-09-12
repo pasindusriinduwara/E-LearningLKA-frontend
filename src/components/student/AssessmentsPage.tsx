@@ -238,7 +238,13 @@ export function AssessmentsPage() {
     <div className="assessments-page-wrapper">
       <header className="assessments-header">
         <div>
-          <p className="assessments-eyebrow">ACADEMIC EVALUATIONS</p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="assessments-eyebrow mb-0">ACADEMIC EVALUATIONS</p>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Enrolled Classes Only
+            </span>
+          </div>
           <h1 className="assessments-title">Assessments</h1>
         </div>
         <div className="assessments-new-badge">
@@ -359,11 +365,11 @@ export function AssessmentsPage() {
           <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-[#2D9F75] flex items-center justify-center">
             <BookOpen size={28} />
           </div>
-          <h3 className="text-base font-bold text-gray-800">No Assessments Available</h3>
+          <h3 className="text-base font-bold text-gray-800">No Assessments for Your Classes</h3>
           <p className="text-xs text-gray-400 max-w-sm">
             {searchQuery || selectedStatus !== "All"
               ? "No assessments match your current filter criteria."
-              : "Your teachers haven't assigned any tests or quizzes yet. Check back soon!"}
+              : "You have access strictly to resources of your enrolled classes. No active assignments have been posted for your classes yet."}
           </p>
           {(searchQuery || selectedStatus !== "All") && (
             <button

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Timer,
   AlertTriangle,
@@ -9,7 +9,6 @@ import {
   Send,
   Flag,
   CheckCircle2,
-  HelpCircle,
   X,
   Loader2,
   ShieldAlert,
@@ -214,13 +213,12 @@ export function StudentQuizTakingModal({
 
         {/* Center Countdown Timer */}
         <div
-          className={`flex items-center gap-2.5 px-4 py-2 rounded-xl font-mono text-sm font-bold border transition-colors ${
-            isCriticalTime
-              ? "bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse"
-              : isLowTime
+          className={`flex items-center gap-2.5 px-4 py-2 rounded-xl font-mono text-sm font-bold border transition-colors ${isCriticalTime
+            ? "bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse"
+            : isLowTime
               ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
               : "bg-slate-800/80 text-emerald-400 border-emerald-500/30"
-          }`}
+            }`}
         >
           <Timer className="w-4 h-4" />
           <span>{formatTime(secondsRemaining)}</span>
@@ -264,11 +262,10 @@ export function StudentQuizTakingModal({
 
               <button
                 onClick={() => handleToggleFlag(currentQuestion.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                  flaggedQuestions[currentQuestion.id]
-                    ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                    : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${flaggedQuestions[currentQuestion.id]
+                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                  : "bg-slate-900 text-slate-400 border-slate-800 hover:text-slate-200"
+                  }`}
               >
                 <Flag className="w-3.5 h-3.5" />
                 <span>{flaggedQuestions[currentQuestion.id] ? "Flagged for Review" : "Flag Question"}</span>
@@ -292,34 +289,30 @@ export function StudentQuizTakingModal({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption(currentQuestion.id, opt.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-4 group ${
-                      isSelected
-                        ? "bg-blue-600/15 border-blue-500/70 shadow-md shadow-blue-900/20"
-                        : "bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-850"
-                    }`}
+                    className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-4 group ${isSelected
+                      ? "bg-blue-600/15 border-blue-500/70 shadow-md shadow-blue-900/20"
+                      : "bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-850"
+                      }`}
                   >
                     <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${
-                        isSelected
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-800 text-slate-300 group-hover:bg-slate-700"
-                      }`}
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm shrink-0 transition-colors ${isSelected
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-800 text-slate-300 group-hover:bg-slate-700"
+                        }`}
                     >
                       {label}
                     </div>
                     <span
-                      className={`text-base flex-1 ${
-                        isSelected ? "text-blue-100 font-medium" : "text-slate-200"
-                      }`}
+                      className={`text-base flex-1 ${isSelected ? "text-blue-100 font-medium" : "text-slate-200"
+                        }`}
                     >
                       {opt.optionText}
                     </span>
                     <div
-                      className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                        isSelected
-                          ? "border-blue-500 bg-blue-500/20"
-                          : "border-slate-700 bg-transparent"
-                      }`}
+                      className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${isSelected
+                        ? "border-blue-500 bg-blue-500/20"
+                        : "border-slate-700 bg-transparent"
+                        }`}
                     >
                       {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
                     </div>

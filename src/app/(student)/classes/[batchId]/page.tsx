@@ -26,6 +26,7 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import {
   getAvailableBatches,
   type AvailableBatch,
@@ -37,6 +38,14 @@ import {
   getBatchSchedules,
   type AnnouncementItem,
 } from "@/services/studentService";
+import {
+  assessmentService,
+  type AssessmentSummary,
+  type QuizSubmissionResult,
+} from "@/services/assessmentService";
+import { StudentQuizTakingModal } from "@/components/student/StudentQuizTakingModal";
+import { StudentEssaySubmissionModal } from "@/components/student/StudentEssaySubmissionModal";
+import { QuizResultModal } from "@/components/student/QuizResultModal";
 import type { LearningResource } from "@/lib/types/student";
 import { getEmbedVideoUrl } from "@/lib/videoUtils";
 
@@ -61,6 +70,10 @@ interface ClassAssignment {
   fileUrl?: string;
   score?: number;
   grade?: string;
+  type?: string;
+  instructions?: string;
+  isRealAssessment?: boolean;
+  feedback?: string;
 }
 
 interface ClassResult {
@@ -83,6 +96,7 @@ export default function StudentClassDetailsPage() {
   const [error, setError] = useState("");
 
   // Live session video modal state
+  const { user } = useAuth();
   const [activeRecording, setActiveRecording] = useState<ClassRecording | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<ClassAssignment | null>(null);
@@ -93,7 +107,13 @@ export default function StudentClassDetailsPage() {
   const [materials, setMaterials] = useState<LearningResource[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [batchAssessments, setBatchAssessments] = useState<AssessmentSummary[]>([]);
   const [classResults] = useState<ClassResult[]>([]);
+
+  // Assessment Interaction Modals
+  const [activeQuizTakingId, setActiveQuizTakingId] = useState<string | null>(null);
+  const [activeEssaySubmissionId, setActiveEssaySubmissionId] = useState<string | null>(null);
+  const [activeResult, setActiveResult] = useState<QuizSubmissionResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,12 +125,13 @@ export default function StudentClassDetailsPage() {
         setLoading(true);
         setError("");
 
-        const [batches, myStatuses, batchMats, batchNotices, batchScheds] = await Promise.all([
+        const [batches, myStatuses, batchMats, batchNotices, batchScheds, batchAsgs] = await Promise.all([
           getAvailableBatches(),
           getMyEnrollmentStatuses(),
           getBatchMaterials(batchId).catch(() => []),
           getBatchAnnouncements(batchId).catch(() => []),
           getBatchSchedules(batchId).catch(() => []),
+          assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id).catch(() => []),
         ]);
 
         const currentBatch = batches.find((b) => b.id === batchId);
@@ -131,6 +152,7 @@ export default function StudentClassDetailsPage() {
           setMaterials(batchMats);
           setAnnouncements(batchNotices);
           setSchedules(batchScheds);
+          setBatchAssessments(Array.isArray(batchAsgs) ? batchAsgs : []);
         }
       } catch (err) {
         if (!cancelled) {
@@ -150,7 +172,7 @@ export default function StudentClassDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [batchId]);
+  }, [batchId, user]);
 
   // 100% Dynamic Recordings uploaded by the teacher
   const classRecordings: ClassRecording[] = useMemo(() => {
@@ -183,9 +205,41 @@ export default function StudentClassDetailsPage() {
     );
   }, [materials]);
 
-  // 100% Dynamic Assignments from teacher materials
+  // 100% Dynamic Assignments from teacher assessments and uploaded materials
   const classAssignments: ClassAssignment[] = useMemo(() => {
-    return materials
+    // 1. Published assessments (MCQ Quizzes & Essay Papers) for this class
+    const fromAssessments: ClassAssignment[] = batchAssessments.map((a) => {
+      let formattedDue = "Open Submission";
+      if (a.dueDate) {
+        try {
+          formattedDue = new Date(a.dueDate).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+        } catch {
+          formattedDue = a.dueDate;
+        }
+      }
+      const isGraded = a.submitted || a.status === "Graded";
+      return {
+        id: a.id,
+        title: a.title,
+        dueDate: formattedDue,
+        totalMarks: a.totalMarks || 100,
+        status: isGraded ? ("Graded" as const) : ("To do" as const),
+        fileUrl: a.attachmentUrl || a.paperUploadUrl,
+        score: a.scoreObtained != null ? Number(a.scoreObtained) : undefined,
+        grade: a.grade,
+        type: a.assessmentType === "MCQ_QUIZ" ? "MCQ Quiz" : "Assignment",
+        instructions: a.instructions,
+        isRealAssessment: true,
+        feedback: a.feedback,
+      };
+    });
+
+    // 2. Plus any uploaded materials flagged as assignments
+    const fromMaterials: ClassAssignment[] = materials
       .filter((m) => m.type === "ASSIGNMENT" || m.type === "HOMEWORK")
       .map((m, idx) => {
         const id = m.id || `asg-${idx}`;
@@ -196,9 +250,27 @@ export default function StudentClassDetailsPage() {
           totalMarks: 100,
           status: submittedAsgIds.has(id) ? ("Submitted" as const) : ("To do" as const),
           fileUrl: m.fileUrl,
+          type: "Assignment",
+          isRealAssessment: false,
         };
       });
-  }, [materials, submittedAsgIds]);
+
+    return [...fromAssessments, ...fromMaterials];
+  }, [batchAssessments, materials, submittedAsgIds]);
+
+  const allResults: ClassResult[] = useMemo(() => {
+    const fromAsg: ClassResult[] = batchAssessments
+      .filter((a) => a.submitted || a.status === "Graded")
+      .map((a, idx) => ({
+        examName: a.title,
+        date: a.dueDate ? new Date(a.dueDate).toLocaleDateString("en-GB") : "Recently",
+        marks: a.scoreObtained != null ? Number(a.scoreObtained) : 0,
+        rank: idx + 1,
+        grade: a.grade || "A",
+        feedback: a.feedback || "Evaluated by teacher",
+      }));
+    return [...fromAsg, ...classResults];
+  }, [batchAssessments, classResults]);
 
   function handleOpenSubmitModal(asg: ClassAssignment) {
     setSelectedAssignment(asg);
@@ -668,62 +740,123 @@ export default function StudentClassDetailsPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between mb-2">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 font-serif">Class Assignments</h3>
-              <p className="text-xs text-gray-500">Submit your solved problem sheets and view instructor feedback.</p>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-bold text-gray-900 font-serif">Class Assignments</h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {batch.name}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500">Submit your solved problem sheets, attempt quizzes, and view instructor feedback.</p>
             </div>
           </div>
 
           <div className="divide-y divide-gray-100">
             {classAssignments.length > 0 ? (
-              classAssignments.map((asg) => (
-                <div key={asg.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="text-sm font-bold text-gray-900">{asg.title}</h4>
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                          asg.status === "Graded"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : asg.status === "Submitted"
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}
-                      >
-                        {asg.status}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">Due: {asg.dueDate} • Total Marks: {asg.totalMarks}</p>
-                  </div>
+              classAssignments.map((asg) => {
+                const isGraded = asg.status === "Graded";
+                const isSubmitted = asg.status === "Submitted";
+                const isQuiz = asg.type === "MCQ Quiz";
 
-                  <div className="flex items-center gap-3">
-                    {asg.fileUrl && (
-                      <a
-                        href={asg.fileUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                      >
-                        <Download size={13} />
-                        <span>Paper</span>
-                      </a>
-                    )}
-                    {asg.status === "Submitted" ? (
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
-                        Pending Teacher Review
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleOpenSubmitModal(asg)}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D9F75] hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
-                      >
-                        <Upload size={14} />
-                        <span>Submit Solution</span>
-                      </button>
-                    )}
+                return (
+                  <div key={asg.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h4 className="text-sm font-bold text-gray-900">{asg.title}</h4>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                          {asg.type || "Assignment"}
+                        </span>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            isGraded
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : isSubmitted
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
+                        >
+                          {asg.status}
+                        </span>
+                        {isGraded && asg.grade && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            Grade: {asg.grade} {asg.score != null ? `(${asg.score}/${asg.totalMarks})` : ""}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">Due: {asg.dueDate} • Total Marks: {asg.totalMarks}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {asg.fileUrl && (
+                        <a
+                          href={asg.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                        >
+                          <Download size={13} />
+                          <span>Paper</span>
+                        </a>
+                      )}
+
+                      {asg.isRealAssessment ? (
+                        isQuiz ? (
+                          isGraded ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                assessmentService.getStudentSubmission(asg.id, user?.studentId || user?.id)
+                                  .then(setActiveResult)
+                                  .catch(() => alert("Could not load submission result"));
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              <span>View Result</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setActiveQuizTakingId(asg.id)}
+                              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D9F75] hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                            >
+                              <Play size={13} />
+                              <span>Start Quiz</span>
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setActiveEssaySubmissionId(asg.id)}
+                            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer ${
+                              isGraded
+                                ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200"
+                                : "bg-[#2D9F75] hover:bg-emerald-700 text-white"
+                            }`}
+                          >
+                            <FileText size={14} />
+                            <span>{isGraded ? "View Feedback" : isSubmitted ? "View Submission" : "Open Paper & Submit"}</span>
+                          </button>
+                        )
+                      ) : (
+                        isSubmitted ? (
+                          <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100">
+                            Pending Teacher Review
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenSubmitModal(asg)}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2D9F75] hover:bg-emerald-700 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer"
+                          >
+                            <Upload size={14} />
+                            <span>Submit Solution</span>
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="py-12 text-center border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
                 <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-3">
@@ -797,7 +930,7 @@ export default function StudentClassDetailsPage() {
           <h3 className="text-lg font-bold text-gray-900 font-serif mb-1">Assessment Performance</h3>
           <p className="text-xs text-gray-500 mb-4">Your evaluated papers and term test scores for {batch.name}.</p>
 
-          {classResults.length > 0 ? (
+          {allResults.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="border-b border-gray-100 text-gray-400 uppercase tracking-wider font-bold">
@@ -811,7 +944,7 @@ export default function StudentClassDetailsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700">
-                  {classResults.map((r, i) => (
+                  {allResults.map((r, i) => (
                     <tr key={i} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-4 px-3 font-bold text-gray-900">{r.examName}</td>
                       <td className="py-4 px-3 text-gray-500">{r.date}</td>
@@ -983,6 +1116,49 @@ export default function StudentClassDetailsPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Student Quiz Taking Studio Modal */}
+      {activeQuizTakingId && (
+        <StudentQuizTakingModal
+          assessmentId={activeQuizTakingId}
+          studentId={user?.studentId || user?.id}
+          onClose={() => setActiveQuizTakingId(null)}
+          onSubmitSuccess={(result) => {
+            setActiveQuizTakingId(null);
+            setActiveResult(result);
+            if (batchId) {
+              assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id)
+                .then((data) => setBatchAssessments(Array.isArray(data) ? data : []))
+                .catch(console.warn);
+            }
+          }}
+        />
+      )}
+
+      {/* Student Essay / Paper Assignment Modal */}
+      {activeEssaySubmissionId && (
+        <StudentEssaySubmissionModal
+          assessmentId={activeEssaySubmissionId}
+          studentId={user?.studentId || user?.id}
+          onClose={() => setActiveEssaySubmissionId(null)}
+          onSubmitSuccess={() => {
+            setActiveEssaySubmissionId(null);
+            if (batchId) {
+              assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id)
+                .then((data) => setBatchAssessments(Array.isArray(data) ? data : []))
+                .catch(console.warn);
+            }
+          }}
+        />
+      )}
+
+      {/* Student Quiz / Assessment Result Review Modal */}
+      {activeResult && (
+        <QuizResultModal
+          result={activeResult}
+          onClose={() => setActiveResult(null)}
+        />
       )}
     </div>
   );
