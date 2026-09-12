@@ -15,6 +15,9 @@ export interface AuthUser {
   exam?: string;
   stream?: string;
   medium?: string;
+  email?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
   qualification?: string;
   bio?: string;
 }
@@ -24,6 +27,8 @@ interface AuthContextValue {
   loading: boolean;
   isAuthenticated: boolean;
   signOut: () => void;
+  refreshUser: () => Promise<void>;
+  updateUser: (partial: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -33,46 +38,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
+  async function loadUser() {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const profile = await getCurrentUserProfile();
+      const defaultName = profile.role === "TEACHER" ? "Teacher" : "Student";
+      const name = profile.name?.trim() || defaultName;
+      const initials =
+        profile.initials ||
+        name
+          .split(/\s+/)
+          .map((part) => part[0])
+          .filter(Boolean)
+          .join("")
+          .slice(0, 2)
+          .toUpperCase() ||
+        (profile.role === "TEACHER" ? "TC" : "ST");
+
+      setUser({
+        ...profile,
+        name,
+        initials,
+      });
+    } catch (err) {
+      console.error("Auth context load error:", err);
+      localStorage.removeItem("token");
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    async function loadUser() {
-      const token = localStorage.getItem("token");
+    loadUser();
+  }, []);
 
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const profile = await getCurrentUserProfile();
-        const defaultName = profile.role === "TEACHER" ? "Teacher" : "Student";
-        const name = profile.name?.trim() || defaultName;
-        const initials =
-          profile.initials ||
-          name
+  function updateUser(partial: Partial<AuthUser>) {
+    setUser((prev) => {
+      if (!prev) return null;
+      const updated = { ...prev, ...partial };
+      if (partial.name && !partial.initials) {
+        updated.initials =
+          partial.name
             .split(/\s+/)
             .map((part) => part[0])
             .filter(Boolean)
             .join("")
             .slice(0, 2)
-            .toUpperCase() ||
-          (profile.role === "TEACHER" ? "TC" : "ST");
-
-        setUser({
-          ...profile,
-          name,
-          initials,
-        });
-      } catch (err) {
-        console.error("Auth context load error:", err);
-        localStorage.removeItem("token");
-        setUser(null);
-      } finally {
-        setLoading(false);
+            .toUpperCase() || prev.initials;
       }
-    }
-
-    loadUser();
-  }, []);
+      return updated;
+    });
+  }
 
   function signOut() {
     localStorage.removeItem("token");
@@ -87,6 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         isAuthenticated: !!user,
         signOut,
+        refreshUser: loadUser,
+        updateUser,
       }}
     >
       {children}

@@ -1,5 +1,10 @@
-import { StudentPlaceholder } from "@/components/student/StudentPages";
+import { StudentSettingsPage } from "@/components/student/StudentSettingsPage";
+
+export const metadata = {
+  title: "Profile & Settings | Classroom",
+  description: "Manage your student profile details, study stream, and account preferences.",
+};
 
 export default function SettingsRoute() {
-  return <StudentPlaceholder title="Settings" description="Profile, language, notifications, and account preferences will appear here." />;
+  return <StudentSettingsPage />;
 }

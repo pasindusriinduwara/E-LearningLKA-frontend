@@ -6,8 +6,20 @@ export interface TeacherProfile {
   userId: string;
   title: string;
   name: string;
+  initials?: string;
   qualification?: string;
   bio?: string;
+  email?: string;
+  phoneNumber?: string;
+}
+
+export interface UpdateTeacherProfilePayload {
+  title?: string;
+  name: string;
+  initials?: string;
+  qualification?: string;
+  bio?: string;
+  phoneNumber?: string;
 }
 
 export interface TeacherDashboardSummary {
@@ -75,6 +87,13 @@ export interface PendingEnrollmentRequest {
 
 export function getTeacherProfile() {
   return fetchApi<TeacherProfile>("/teacher/profile");
+}
+
+export function updateTeacherProfile(payload: UpdateTeacherProfilePayload) {
+  return fetchApi<TeacherProfile>("/teacher/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function getTeacherDashboard() {

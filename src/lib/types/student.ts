@@ -43,4 +43,18 @@ export interface StudentProfile {
   exam: string;
   stream: string;
   medium: string;
+  email?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
 }
+
+export interface UpdateStudentProfilePayload {
+  name: string;
+  initials?: string;
+  phoneNumber?: string;
+  exam?: string;
+  stream?: string;
+  medium?: string;
+  dateOfBirth?: string;
+}
+
