@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, User, ChevronRight, Sparkles } from "lucide-react";
-import { requestEnrollment } from "@/services/enrollmentService";
+import { Clock, User, ChevronRight, Sparkles, XCircle, LogOut, CheckCircle2 } from "lucide-react";
+import { requestEnrollment, cancelEnrollmentRequest, leaveClass } from "@/services/enrollmentService";
 import type { AvailableBatch } from "@/services/batchService";
 
 export function ClassCard({
@@ -48,6 +48,56 @@ export function ClassCard({
         requestError instanceof Error
           ? requestError.message
           : "Enrollment request failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancelRequest(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to cancel your enrollment request for this class?")) {
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      await cancelEnrollmentRequest(batch.id);
+      setStatus("AVAILABLE");
+      if (onStatusChange) {
+        onStatusChange("AVAILABLE");
+      }
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to cancel request"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleLeaveClass(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to leave this class? You will lose access to all class materials and live sessions.")) {
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      await leaveClass(batch.id);
+      setStatus("AVAILABLE");
+      if (onStatusChange) {
+        onStatusChange("AVAILABLE");
+      }
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to leave class"
       );
     } finally {
       setLoading(false);
@@ -118,19 +168,46 @@ export function ClassCard({
 
       <div className="pt-2" onClick={(e) => e.stopPropagation()}>
         {status === "PENDING" ? (
-          <button
-            disabled
-            className="w-full py-2.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-600 border border-amber-200"
-          >
-            Pending Approval
-          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 text-center flex items-center justify-center gap-1.5">
+              <Clock size={13} />
+              <span>Pending Approval</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelRequest}
+              disabled={loading}
+              className="py-2.5 px-3 rounded-xl text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 transition-colors shrink-0 flex items-center gap-1 disabled:opacity-50"
+              title="Cancel enrollment request"
+            >
+              <XCircle size={13} />
+              <span>{loading ? "..." : "Cancel"}</span>
+            </button>
+          </div>
         ) : status === "APPROVED" ? (
-          <button
-            disabled
-            className="w-full py-2.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200"
-          >
-            Enrolled
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/classes/${batch.id}`);
+              }}
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-[#2D9F75] border border-emerald-200 transition-colors flex items-center justify-center gap-1.5"
+            >
+              <CheckCircle2 size={13} />
+              <span>Enrolled</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleLeaveClass}
+              disabled={loading}
+              className="py-2.5 px-3 rounded-xl text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-colors shrink-0 flex items-center gap-1 disabled:opacity-50"
+              title="Leave this class"
+            >
+              <LogOut size={13} />
+              <span>{loading ? "..." : "Leave"}</span>
+            </button>
+          </div>
         ) : status === "REJECTED" ? (
           <button
             onClick={handleEnroll}

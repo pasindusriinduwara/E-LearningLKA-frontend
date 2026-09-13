@@ -24,6 +24,7 @@ import {
   HelpCircle,
   Check,
   Sparkle,
+  LogOut,
 } from "lucide-react";
 import {
   getBatchById,
@@ -33,6 +34,7 @@ import {
 import {
   requestEnrollment,
   cancelEnrollmentRequest,
+  leaveClass,
   getMyEnrollmentStatuses,
 } from "@/services/enrollmentService";
 import { useAuth } from "@/context/AuthContext";
@@ -51,6 +53,7 @@ export default function ClassDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -139,6 +142,34 @@ export default function ClassDetailsPage() {
       );
     } finally {
       setCancelling(false);
+    }
+  }
+
+  async function handleLeaveClass() {
+    if (!batchId) return;
+    if (!confirm("Are you sure you want to leave this class? You will lose access to all class materials, assessments, and live sessions.")) {
+      return;
+    }
+
+    setError("");
+    setSuccessMessage("");
+    setLeaving(true);
+
+    try {
+      await leaveClass(batchId);
+      setStatus("AVAILABLE");
+      setSuccessMessage("You have successfully left this class.");
+      const updated = await getBatchById(batchId).catch(() => null);
+      if (updated) {
+        setBatch(updated);
+        setStatus("AVAILABLE");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to leave class"
+      );
+    } finally {
+      setLeaving(false);
     }
   }
 
@@ -661,6 +692,25 @@ export default function ClassDetailsPage() {
                       className="group-hover:translate-x-1 transition-transform"
                     />
                   </Link>
+
+                  <button
+                    type="button"
+                    onClick={handleLeaveClass}
+                    disabled={leaving}
+                    className="w-full py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-red-600 hover:bg-red-50 border border-gray-200 hover:border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {leaving ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Leaving Class...</span>
+                      </>
+                    ) : (
+                      <>
+                        <LogOut size={14} />
+                        <span>Leave This Class</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : isPending ? (
                 <div className="space-y-3">

@@ -43,3 +43,10 @@ export function cancelEnrollmentRequest(batchId: string) {
     method: "DELETE",
   });
 }
+
+export function leaveClass(batchId: string) {
+  return fetchApi<{ message: string }>(`/enrollments/batches/${batchId}/leave`, {
+    method: "POST",
+  });
+}
+

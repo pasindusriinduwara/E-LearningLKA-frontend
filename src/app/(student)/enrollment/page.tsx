@@ -80,10 +80,13 @@ export default function EnrollmentPage() {
     );
   }, [batches, searchQuery]);
 
-  function handleEnrollSuccess(batchId: string) {
+  function handleStatusUpdate(
+    batchId: string,
+    status: "AVAILABLE" | "PENDING" | "APPROVED" | "REJECTED"
+  ) {
     setBatches((prev) =>
       prev.map((b) =>
-        b.id === batchId ? { ...b, status: "PENDING" as const } : b
+        b.id === batchId ? { ...b, status } : b
       )
     );
   }
@@ -153,11 +156,7 @@ export default function EnrollmentPage() {
               key={batch.id}
               batch={batch}
               onClick={() => router.push(`/enrollment/${batch.id}`)}
-              onStatusChange={(status) => {
-                if (status === "PENDING") {
-                  handleEnrollSuccess(batch.id);
-                }
-              }}
+              onStatusChange={(status) => handleStatusUpdate(batch.id, status)}
             />
           ))}
         </div>

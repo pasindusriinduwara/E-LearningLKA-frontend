@@ -15,15 +15,25 @@ import {
   FileText,
   ShieldCheck,
   ChevronRight,
+  LogOut,
+  XCircle,
 } from "lucide-react";
 import type { AvailableBatch } from "@/services/batchService";
-import { requestEnrollment } from "@/services/enrollmentService";
+import {
+  requestEnrollment,
+  cancelEnrollmentRequest,
+  leaveClass,
+} from "@/services/enrollmentService";
 
 interface ClassPreviewModalProps {
   batch: AvailableBatch | null;
   isOpen: boolean;
   onClose: () => void;
   onEnrollSuccess?: (batchId: string) => void;
+  onStatusChange?: (
+    batchId: string,
+    newStatus: "AVAILABLE" | "PENDING" | "APPROVED" | "REJECTED"
+  ) => void;
 }
 
 export function ClassPreviewModal({
@@ -31,6 +41,7 @@ export function ClassPreviewModal({
   isOpen,
   onClose,
   onEnrollSuccess,
+  onStatusChange,
 }: ClassPreviewModalProps) {
   const [status, setStatus] = useState<string>("AVAILABLE");
   const [loading, setLoading] = useState(false);
@@ -76,9 +87,60 @@ export function ClassPreviewModal({
       if (onEnrollSuccess) {
         onEnrollSuccess(batch.id);
       }
+      if (onStatusChange) {
+        onStatusChange(batch.id, "PENDING");
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Enrollment request failed"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleCancelRequest() {
+    if (!batch) return;
+    if (!confirm("Are you sure you want to cancel your enrollment request?")) {
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      await cancelEnrollmentRequest(batch.id);
+      setStatus("AVAILABLE");
+      setEnrolledSuccess(false);
+      if (onStatusChange) {
+        onStatusChange(batch.id, "AVAILABLE");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to cancel request"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleLeaveClass() {
+    if (!batch) return;
+    if (!confirm("Are you sure you want to leave this class? You will lose access to all class materials, assessments, and live sessions.")) {
+      return;
+    }
+    setError("");
+    setLoading(true);
+
+    try {
+      await leaveClass(batch.id);
+      setStatus("AVAILABLE");
+      setEnrolledSuccess(false);
+      if (onStatusChange) {
+        onStatusChange(batch.id, "AVAILABLE");
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to leave class"
       );
     } finally {
       setLoading(false);
@@ -351,23 +413,45 @@ export function ClassPreviewModal({
 
           <div className="w-full sm:w-auto flex items-center gap-2 order-1 sm:order-2">
             {isApproved ? (
-              <div className="w-full sm:w-auto flex items-center gap-2">
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-4 py-2.5 rounded-xl flex items-center justify-center gap-1.5">
+              <div className="w-full sm:w-auto flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-100/70 border border-emerald-200 px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-1.5">
                   <CheckCircle2 size={15} />
-                  <span>Enrolled in this Class</span>
+                  <span>Enrolled</span>
                 </span>
                 <Link
                   href={`/classes/${batch.id}`}
-                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
                 >
                   <span>Open Classroom</span>
                   <ChevronRight size={14} />
                 </Link>
+                <button
+                  type="button"
+                  onClick={handleLeaveClass}
+                  disabled={loading}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  title="Leave this class"
+                >
+                  <LogOut size={14} />
+                  <span>{loading ? "Leaving..." : "Leave Class"}</span>
+                </button>
               </div>
             ) : isPending ? (
-              <div className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center gap-2">
-                <Clock size={15} />
-                <span>Pending Teacher Approval</span>
+              <div className="w-full sm:w-auto flex items-center gap-2 flex-wrap">
+                <div className="px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center gap-2">
+                  <Clock size={15} />
+                  <span>Pending Approval</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCancelRequest}
+                  disabled={loading}
+                  className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  title="Cancel enrollment request"
+                >
+                  <XCircle size={14} />
+                  <span>{loading ? "Cancelling..." : "Cancel Request"}</span>
+                </button>
               </div>
             ) : isRejected ? (
               <button
