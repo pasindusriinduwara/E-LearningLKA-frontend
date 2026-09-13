@@ -107,14 +107,14 @@ export function ClassCard({
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-2xl p-6 border border-gray-200 hover:border-[#2D9F75]/60 hover:shadow-lg transition-all flex flex-col h-full cursor-pointer group relative overflow-hidden"
+      className="bg-white rounded-2xl p-6 border border-gray-200 hover:border-[#4f6df5]/60 hover:shadow-lg transition-all flex flex-col h-full cursor-pointer group relative overflow-hidden"
     >
       {/* Subtle top indicator bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2D9F75] via-emerald-400 to-sky-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4f6df5] via-[#758efc] to-sky-400 opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="flex-1">
         <div className="flex items-center justify-between gap-2 mb-2">
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#2D9F75] border border-emerald-100">
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#4f6df5] border border-blue-100">
             {batch.subject}
           </span>
           <span className="text-[11px] font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
@@ -122,7 +122,7 @@ export function ClassCard({
           </span>
         </div>
 
-        <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#2D9F75] transition-colors leading-snug">
+        <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#4f6df5] transition-colors leading-snug">
           {batch.name}
         </h3>
 
@@ -152,7 +152,7 @@ export function ClassCard({
       </div>
 
       {/* Preview prompt hint */}
-      <div className="text-[11px] font-semibold text-[#2D9F75] flex items-center justify-between py-2 border-t border-gray-100 group-hover:text-emerald-700 transition-colors">
+      <div className="text-[11px] font-semibold text-[#4f6df5] flex items-center justify-between py-2 border-t border-gray-100 group-hover:text-[#3b5ce8] transition-colors">
         <span className="flex items-center gap-1">
           <Sparkles size={12} />
           <span>View Class Page & Educator Profile</span>
@@ -192,7 +192,7 @@ export function ClassCard({
                 e.stopPropagation();
                 router.push(`/classes/${batch.id}`);
               }}
-              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-[#2D9F75] border border-emerald-200 transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition-colors flex items-center justify-center gap-1.5"
             >
               <CheckCircle2 size={13} />
               <span>Enrolled</span>
@@ -212,7 +212,7 @@ export function ClassCard({
           <button
             onClick={handleEnroll}
             disabled={loading}
-            className="w-full py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition-colors"
+            className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white disabled:opacity-50 transition-colors shadow-sm shadow-blue-500/20"
           >
             {loading ? "Processing..." : "Request Again"}
           </button>
@@ -220,7 +220,7 @@ export function ClassCard({
           <button
             onClick={handleEnroll}
             disabled={loading}
-            className="w-full py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 shadow-sm transition-colors"
+            className="w-full py-2.5 rounded-xl text-xs font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white disabled:opacity-50 shadow-sm shadow-blue-500/20 transition-colors"
           >
             {loading ? "Processing..." : "Enroll Now"}
           </button>

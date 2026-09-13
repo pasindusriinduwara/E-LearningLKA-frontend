@@ -179,9 +179,9 @@ export function ClassPreviewModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 via-white to-sky-50/40">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100 bg-gradient-to-r from-blue-50/50 via-white to-indigo-50/40">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#2D9F75] text-white tracking-wide shadow-sm">
+            <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#4f6df5] text-white tracking-wide shadow-sm">
               {batch.subject || "Subject"}
             </span>
 
@@ -219,15 +219,15 @@ export function ClassPreviewModal({
               {batch.name}
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1 flex items-center gap-2">
-              <Sparkles size={14} className="text-[#2D9F75]" />
+              <Sparkles size={14} className="text-[#4f6df5]" />
               Comprehensive curriculum designed for Sri Lanka G.C.E. Advanced Level examinations.
             </p>
           </div>
 
           {/* Pricing Banner */}
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50/60 border border-emerald-200/70 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200/70 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+              <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
                 Monthly Tuition Fee
               </p>
               <div className="flex items-baseline gap-1.5 mt-0.5">
@@ -238,8 +238,8 @@ export function ClassPreviewModal({
               </div>
             </div>
 
-            <div className="text-xs text-emerald-700 font-medium bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-emerald-200 self-start sm:self-auto flex items-center gap-1.5">
-              <ShieldCheck size={15} className="text-[#2D9F75]" />
+            <div className="text-xs text-blue-700 font-medium bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-blue-200 self-start sm:self-auto flex items-center gap-1.5">
+              <ShieldCheck size={15} className="text-[#4f6df5]" />
               <span>Full curriculum & digital materials included</span>
             </div>
           </div>
@@ -248,10 +248,10 @@ export function ClassPreviewModal({
           <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-gray-100 pb-3">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-                <GraduationCap size={15} className="text-[#2D9F75]" />
+                <GraduationCap size={15} className="text-[#4f6df5]" />
                 <span>Teacher Profile & Educator Preview</span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                 <CheckCircle2 size={12} />
                 Verified Educator
               </span>
@@ -259,7 +259,7 @@ export function ClassPreviewModal({
 
             <div className="flex items-start gap-4">
               {/* Teacher Avatar */}
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#2D9F75] to-emerald-700 text-white font-black text-lg sm:text-xl flex items-center justify-center shadow-md shrink-0 border-2 border-white ring-2 ring-emerald-100">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-[#4f6df5] to-[#15203d] text-white font-black text-lg sm:text-xl flex items-center justify-center shadow-md shrink-0 border-2 border-white ring-2 ring-blue-100">
                 {teacherInitials}
               </div>
 
@@ -270,7 +270,7 @@ export function ClassPreviewModal({
                 </h3>
 
                 {batch.teacherQualification ? (
-                  <p className="text-xs font-semibold text-[#2D9F75] flex items-center gap-1 mt-0.5">
+                  <p className="text-xs font-semibold text-[#4f6df5] flex items-center gap-1 mt-0.5">
                     <Award size={13} className="shrink-0" />
                     <span>{batch.teacherQualification}</span>
                   </p>
@@ -350,7 +350,7 @@ export function ClassPreviewModal({
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600">
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100">
-                <BookOpen size={14} className="text-[#2D9F75] shrink-0" />
+                <BookOpen size={14} className="text-[#4f6df5] shrink-0" />
                 <span>
                   {batch.materialsCount && batch.materialsCount > 0
                     ? `${batch.materialsCount} Course Materials & Revision Modules`
@@ -358,7 +358,7 @@ export function ClassPreviewModal({
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100">
-                <FileText size={14} className="text-[#2D9F75] shrink-0" />
+                <FileText size={14} className="text-[#4f6df5] shrink-0" />
                 <span>
                   {batch.scheduleList && batch.scheduleList.length > 0
                     ? `${batch.scheduleList.length} Scheduled Weekly Sessions`
@@ -366,7 +366,7 @@ export function ClassPreviewModal({
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100">
-                <Video size={14} className="text-[#2D9F75] shrink-0" />
+                <Video size={14} className="text-[#4f6df5] shrink-0" />
                 <span>
                   {batch.deliveryMode === "ONLINE"
                     ? "Interactive online sessions with 24/7 video replays"
@@ -376,7 +376,7 @@ export function ClassPreviewModal({
                 </span>
               </div>
               <div className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-100">
-                <GraduationCap size={14} className="text-[#2D9F75] shrink-0" />
+                <GraduationCap size={14} className="text-[#4f6df5] shrink-0" />
                 <span>Direct academic guidance with {batch.teacher}</span>
               </div>
             </div>
@@ -384,29 +384,31 @@ export function ClassPreviewModal({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-xs">
-              <AlertCircle size={15} className="shrink-0" />
-              <span>{error}</span>
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+              {error}
             </div>
           )}
 
-          {/* Success Banner */}
+          {/* Enrollment Success Notice */}
           {enrolledSuccess && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-800 text-xs font-semibold">
-              <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
-              <span>
-                Enrollment request sent successfully! The teacher has been notified to approve your request.
-              </span>
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-2.5 text-xs text-emerald-800">
+              <CheckCircle2 size={16} className="shrink-0 mt-0.5 text-emerald-600" />
+              <div>
+                <p className="font-bold">Enrollment Request Submitted!</p>
+                <p className="text-emerald-700 mt-0.5">
+                  Your seat has been reserved pending teacher confirmation. You can view status updates in My Classes.
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Modal Footer / Action Bar */}
-        <div className="p-5 border-t border-gray-100 bg-gray-50 flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Modal Action Footer */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors order-2 sm:order-1"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-gray-600 hover:text-gray-900 hover:bg-gray-200/70 transition-colors order-2 sm:order-1"
           >
             Close Preview
           </button>
@@ -420,7 +422,7 @@ export function ClassPreviewModal({
                 </span>
                 <Link
                   href={`/classes/${batch.id}`}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-sm transition-all flex items-center justify-center gap-1.5"
                 >
                   <span>Open Classroom</span>
                   <ChevronRight size={14} />
@@ -458,7 +460,7 @@ export function ClassPreviewModal({
                 type="button"
                 onClick={handleEnroll}
                 disabled={loading}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -474,7 +476,7 @@ export function ClassPreviewModal({
                 type="button"
                 onClick={handleEnroll}
                 disabled={loading}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-blue-500/20"
               >
                 {loading ? (
                   <>

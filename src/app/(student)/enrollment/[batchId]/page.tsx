@@ -224,7 +224,7 @@ export default function ClassDetailsPage() {
         <div className="pt-2">
           <Link
             href="/enrollment"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#2D9F75] text-white hover:bg-emerald-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#4f6df5] text-white hover:bg-[#3b5ce8] transition-colors shadow-sm"
           >
             <ArrowLeft size={16} />
             <span>Browse Available Classes</span>
@@ -264,13 +264,13 @@ export default function ClassDetailsPage() {
         <div className="flex items-center gap-2 text-xs font-semibold text-gray-400">
           <Link
             href="/enrollment"
-            className="inline-flex items-center gap-1.5 text-gray-600 hover:text-[#2D9F75] transition-colors"
+            className="inline-flex items-center gap-1.5 text-gray-600 hover:text-[#4f6df5] transition-colors"
           >
             <ArrowLeft size={14} />
             <span>Class Catalog</span>
           </Link>
           <ChevronRight size={13} className="text-gray-300" />
-          <span className="text-[#2D9F75] font-bold">{batch.subject}</span>
+          <span className="text-[#4f6df5] font-bold">{batch.subject}</span>
           <ChevronRight size={13} className="text-gray-300" />
           <span className="text-gray-500 truncate max-w-[200px] sm:max-w-xs">
             {batch.name}
@@ -296,13 +296,13 @@ export default function ClassDetailsPage() {
       </div>
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-950 via-[#194030] to-teal-950 rounded-3xl p-6 sm:p-10 text-white shadow-xl">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-teal-300/10 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#121d33] via-[#15203d] to-[#1e2c4f] rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-blue-950/20">
+        <div className="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-indigo-400/10 rounded-full blur-2xl pointer-events-none" />
 
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3.5 py-1 rounded-full text-xs font-extrabold bg-[#2D9F75] text-white tracking-wide shadow-md">
+            <span className="px-3.5 py-1 rounded-full text-xs font-extrabold bg-[#4f6df5] text-white tracking-wide shadow-md">
               {batch.subject || "Subject"}
             </span>
 
@@ -341,17 +341,17 @@ export default function ClassDetailsPage() {
             {batch.name}
           </h1>
 
-          <p className="text-emerald-100/90 text-sm sm:text-base leading-relaxed flex items-center gap-2">
-            <Sparkles size={16} className="text-emerald-300 shrink-0" />
+          <p className="text-blue-100/90 text-sm sm:text-base leading-relaxed flex items-center gap-2">
+            <Sparkles size={16} className="text-blue-300 shrink-0" />
             <span>
               {batch.subject} • {batch.examYear} A/L academic curriculum delivered via {deliveryModeLabel}.
             </span>
           </p>
 
           {/* Live Dynamic Stats Strip */}
-          <div className="pt-2 flex items-center gap-3 sm:gap-6 flex-wrap text-xs text-emerald-100/80">
+          <div className="pt-2 flex items-center gap-3 sm:gap-6 flex-wrap text-xs text-blue-100/80">
             <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-              <Users size={14} className="text-emerald-300" />
+              <Users size={14} className="text-blue-300" />
               <span>
                 <strong className="text-white">{Number(batch.enrolledCount || 0)}</strong> Students Enrolled
               </span>
@@ -411,7 +411,7 @@ export default function ClassDetailsPage() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-sm space-y-6">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-400">
-                <GraduationCap size={18} className="text-[#2D9F75]" />
+                <GraduationCap size={18} className="text-[#4f6df5]" />
                 <span>Teacher Profile & Educator Preview</span>
               </div>
               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
@@ -422,7 +422,7 @@ export default function ClassDetailsPage() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
               {/* Teacher Avatar */}
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-[#2D9F75] to-emerald-800 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg shrink-0 border-4 border-white ring-4 ring-emerald-50">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-[#4f6df5] to-[#15203d] text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg shrink-0 border-4 border-white ring-4 ring-blue-50">
                 {teacherInitials}
               </div>
 
@@ -433,7 +433,7 @@ export default function ClassDetailsPage() {
                 </h3>
 
                 {batch.teacherQualification ? (
-                  <p className="text-sm font-semibold text-[#2D9F75] flex items-center gap-1.5">
+                  <p className="text-sm font-semibold text-[#4f6df5] flex items-center gap-1.5">
                     <Award size={16} className="shrink-0" />
                     <span>{batch.teacherQualification}</span>
                   </p>
@@ -571,7 +571,7 @@ export default function ClassDetailsPage() {
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-sm space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Sparkles size={18} className="text-[#2D9F75]" />
+                <Sparkles size={18} className="text-[#4f6df5]" />
                 <span>Included with Enrollment</span>
               </h2>
               <span className="text-xs font-medium text-gray-400">
@@ -580,8 +580,8 @@ export default function ClassDetailsPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all">
-                <div className="p-2 rounded-xl bg-emerald-100/70 text-[#2D9F75] shrink-0 mt-0.5">
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
+                <div className="p-2 rounded-xl bg-blue-100/70 text-[#4f6df5] shrink-0 mt-0.5">
                   <BookOpen size={16} />
                 </div>
                 <div>
@@ -596,7 +596,7 @@ export default function ClassDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all">
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
                 <div className="p-2 rounded-xl bg-blue-100/70 text-blue-600 shrink-0 mt-0.5">
                   <FileText size={16} />
                 </div>
@@ -614,7 +614,7 @@ export default function ClassDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all">
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
                 <div className="p-2 rounded-xl bg-purple-100/70 text-purple-600 shrink-0 mt-0.5">
                   <Video size={16} />
                 </div>
@@ -636,7 +636,7 @@ export default function ClassDetailsPage() {
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50/30 transition-all">
+              <div className="flex items-start gap-3 p-4 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
                 <div className="p-2 rounded-xl bg-amber-100/70 text-amber-600 shrink-0 mt-0.5">
                   <GraduationCap size={16} />
                 </div>
@@ -668,7 +668,7 @@ export default function ClassDetailsPage() {
                 <span className="text-xs text-gray-500 font-semibold">/ month</span>
               </div>
               <p className="text-xs text-emerald-700 font-medium mt-1 flex items-center gap-1.5">
-                <ShieldCheck size={14} className="text-[#2D9F75]" />
+                <ShieldCheck size={14} className="text-[#4f6df5]" />
                 <span>Full curriculum & digital materials included</span>
               </p>
             </div>
@@ -684,7 +684,7 @@ export default function ClassDetailsPage() {
 
                   <Link
                     href={`/classes/${batch.id}`}
-                    className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
+                    className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 group"
                   >
                     <span>Open Classroom</span>
                     <ChevronRight
@@ -771,7 +771,7 @@ export default function ClassDetailsPage() {
                     type="button"
                     onClick={handleEnroll}
                     disabled={submitting}
-                    className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-md hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-md hover:shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {submitting ? (
                       <>
@@ -822,7 +822,7 @@ export default function ClassDetailsPage() {
                 </div>
                 <div className="flex items-center justify-between py-1">
                   <span className="text-gray-400">Enrolled Students</span>
-                  <span className="font-semibold text-emerald-700">
+                  <span className="font-semibold text-blue-700">
                     {Number(batch.enrolledCount || 0)} Active
                   </span>
                 </div>
@@ -832,7 +832,7 @@ export default function ClassDetailsPage() {
             {/* Help / Reassurance */}
             <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs text-gray-500 space-y-1">
               <div className="flex items-center gap-1.5 font-semibold text-gray-700">
-                <HelpCircle size={14} className="text-[#2D9F75]" />
+                <HelpCircle size={14} className="text-[#4f6df5]" />
                 <span>Need assistance?</span>
               </div>
               <p className="leading-relaxed">

@@ -15,6 +15,11 @@ import {
   Tablet,
   ChevronRight,
   Sparkles,
+  Download,
+  FileText,
+  Video,
+  Link2,
+  Play,
 } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
@@ -33,12 +38,13 @@ import {
   getMyEnrollmentStatuses,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
-import type { ScheduleItem, StudentProfile } from "@/lib/types/student";
+import type { ScheduleItem, StudentProfile, LearningResource } from "@/lib/types/student";
 
 export function DashboardOverview() {
   const { user } = useAuth();
 
   const [classes, setClasses] = useState<ScheduleItem[]>([]);
+  const [resources, setResources] = useState<LearningResource[]>([]);
   const [materialsCount, setMaterialsCount] = useState(0);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
@@ -73,17 +79,21 @@ export function DashboardOverview() {
 
         if (cancelled) return;
 
+        const approvedBatchIds = new Set<string>();
+        if (statusesRes.status === "fulfilled") {
+          (statusesRes.value || []).forEach((item) => {
+            if (item.status === "APPROVED") {
+              approvedBatchIds.add(item.batchId);
+            }
+          });
+        }
+
         if (scheduleRes.status === "fulfilled") {
-          setClasses(scheduleRes.value || []);
-        }
-        if (materialsRes.status === "fulfilled") {
-          setMaterialsCount(materialsRes.value?.length || 0);
-        }
-        if (noticesRes.status === "fulfilled") {
-          setAnnouncements(noticesRes.value || []);
-        }
-        if (profileRes.status === "fulfilled") {
-          setProfile(profileRes.value);
+          const allUpcoming = scheduleRes.value || [];
+          const enrolledUpcoming = allUpcoming.filter(
+            (c: any) => c.batchId && approvedBatchIds.has(c.batchId)
+          );
+          setClasses(enrolledUpcoming);
         }
 
         if (batchesRes.status === "fulfilled") {
@@ -102,6 +112,27 @@ export function DashboardOverview() {
           }));
 
           setBatches(enriched);
+        }
+
+        if (materialsRes.status === "fulfilled") {
+          const allMaterials = materialsRes.value || [];
+          // Filter strictly for only enrolled classes (APPROVED)
+          const enrolledMaterials = allMaterials.filter(
+            (m) => m.batchId && approvedBatchIds.has(m.batchId)
+          );
+          setResources(enrolledMaterials);
+          setMaterialsCount(enrolledMaterials.length);
+        }
+        if (noticesRes.status === "fulfilled") {
+          const allNotices = noticesRes.value || [];
+          // Filter strictly for only enrolled classes (APPROVED)
+          const enrolledNotices = allNotices.filter(
+            (n: any) => n.batchId && approvedBatchIds.has(n.batchId)
+          );
+          setAnnouncements(enrolledNotices);
+        }
+        if (profileRes.status === "fulfilled") {
+          setProfile(profileRes.value);
         }
       } catch (err) {
         console.error("Dashboard data load error:", err);
@@ -305,7 +336,7 @@ export function DashboardOverview() {
           <div className="upcoming-classes-list">
             {loading ? (
               <div className="p-8 text-center bg-white rounded-2xl border border-gray-100">
-                <div className="w-6 h-6 border-2 border-[#2D9F75] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                <div className="w-6 h-6 border-2 border-[#4f6df5] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-xs text-gray-500">Loading upcoming timetable...</p>
               </div>
             ) : error ? (
@@ -314,19 +345,23 @@ export function DashboardOverview() {
               </div>
             ) : classes.length === 0 ? (
               <div className="p-10 text-center bg-white rounded-2xl border border-gray-100">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-[#2D9F75] flex items-center justify-center mx-auto mb-3">
+                <div className="w-10 h-10 rounded-xl bg-[#edf2ff] text-[#4f6df5] flex items-center justify-center mx-auto mb-3">
                   <CalendarDays size={20} />
                 </div>
-                <h3 className="text-sm font-bold text-gray-800">No classes scheduled this week</h3>
+                <h3 className="text-sm font-bold text-gray-800">
+                  {enrolledCount === 0 ? "No enrolled classes yet" : "No classes scheduled this week"}
+                </h3>
                 <p className="text-xs text-gray-400 mt-1 mb-4">
-                  Timetable entries will appear here once published by your instructors.
+                  {enrolledCount === 0
+                    ? "Enroll in a class to view your personalized weekly lecture schedule."
+                    : "Timetable entries will appear here once published by your instructors."}
                 </p>
                 <Link
                   href="/classes"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#2D9F75] text-white hover:bg-emerald-700 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#4f6df5] text-white hover:bg-[#3b5ce8] shadow-sm shadow-blue-500/20 transition-colors"
                 >
                   <Sparkles size={14} />
-                  <span>Go to My Classes</span>
+                  <span>{enrolledCount === 0 ? "Browse Classes to Enroll" : "Go to My Classes"}</span>
                 </Link>
               </div>
             ) : (
@@ -414,9 +449,13 @@ export function DashboardOverview() {
                 <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-2">
                   <CircleAlert size={20} />
                 </div>
-                <h3 className="text-sm font-bold text-gray-800">No new notices</h3>
+                <h3 className="text-sm font-bold text-gray-800">
+                  {enrolledCount === 0 ? "No notices" : "No new notices"}
+                </h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Broadcast notices and urgent updates will appear here.
+                  {enrolledCount === 0
+                    ? "Announcements from your enrolled classes will appear here."
+                    : "Broadcast notices and urgent updates will appear here."}
                 </p>
               </div>
             ) : (
@@ -437,6 +476,167 @@ export function DashboardOverview() {
           </div>
         </section>
       </div>
+
+      {/* 4. Enrolled Class Study Resources Section */}
+      <section className="dashboard-section mt-8 pt-6 border-t border-gray-100" aria-labelledby="enrolled-resources-heading">
+        <div className="dashboard-section-header">
+          <div>
+            <p className="dashboard-section-eyebrow">STUDY RESOURCES • ENROLLED CLASSES</p>
+            <h2 id="enrolled-resources-heading" className="dashboard-section-title">
+              Recent Class Resources
+            </h2>
+          </div>
+          <Link href="/materials" className="dashboard-section-action">
+            <span>View library ({resources.length})</span>
+            <ChevronRight size={16} />
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-5 bg-white border border-gray-100 rounded-2xl animate-pulse space-y-3 shadow-xs"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded-xl" />
+                  <div className="space-y-1.5 flex-1">
+                    <div className="w-20 h-3 bg-gray-200 rounded" />
+                    <div className="w-32 h-2.5 bg-gray-100 rounded" />
+                  </div>
+                </div>
+                <div className="w-3/4 h-4 bg-gray-200 rounded mt-2" />
+              </div>
+            ))}
+          </div>
+        ) : resources.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-[#edf2ff] text-[#4f6df5] flex items-center justify-center mx-auto mb-3">
+              <BookOpen size={24} />
+            </div>
+            <h3 className="text-sm font-bold text-gray-800">
+              {enrolledCount === 0
+                ? "No enrolled classes yet"
+                : "No resources uploaded yet"}
+            </h3>
+            <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto mb-4">
+              {enrolledCount === 0
+                ? "Enroll in tuition classes to access lesson recordings, lecture notes, and revision packs."
+                : "Your instructors haven't uploaded study materials for your enrolled classes yet. Check back soon!"}
+            </p>
+            {enrolledCount === 0 && (
+              <Link
+                href="/enrollment"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-[#4f6df5] text-white hover:bg-[#3b5ce8] transition-colors shadow-sm shadow-blue-500/20"
+              >
+                <Sparkles size={14} />
+                <span>Browse Classes to Enroll</span>
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {resources.slice(0, 6).map((res, index) => {
+              const rawType = (res.type || "").toUpperCase();
+              const isVideo =
+                rawType.includes("VIDEO") ||
+                rawType.includes("RECORDING") ||
+                rawType.includes("MP4") ||
+                rawType.includes("ZOOM") ||
+                rawType.includes("YOUTUBE") ||
+                res.fileUrl?.toLowerCase().includes("youtube.com") ||
+                res.fileUrl?.toLowerCase().includes("youtu.be");
+              const isPdf =
+                rawType.includes("PDF") || res.fileUrl?.toLowerCase().includes(".pdf");
+
+              return (
+                <article
+                  key={res.id || index}
+                  className="bg-white rounded-2xl p-5 border border-[#edf0f5] hover:border-[#4f6df5]/50 hover:shadow-md transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    {/* Top Row: Type Icon & Subject/Class Tag */}
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                          isVideo
+                            ? "bg-blue-50 text-blue-600"
+                            : isPdf
+                            ? "bg-red-50 text-red-600"
+                            : "bg-indigo-50 text-indigo-600"
+                        }`}
+                      >
+                        {isVideo ? (
+                          <Video size={20} />
+                        ) : isPdf ? (
+                          <FileText size={20} />
+                        ) : (
+                          <Link2 size={20} />
+                        )}
+                      </div>
+
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-50 text-[#4f6df5] border border-blue-100">
+                          {res.subject || "Subject"}
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-medium truncate max-w-[130px]">
+                          {res.batchName || "Enrolled Class"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Title */}
+                    <h4 className="text-sm font-bold text-gray-900 group-hover:text-[#4f6df5] transition-colors line-clamp-2 mb-1.5">
+                      {res.title}
+                    </h4>
+
+                    {/* Instructor / Class Subtitle */}
+                    <p className="text-xs text-gray-500 line-clamp-1 mb-3">
+                      {res.teacherName ? `Instructor: ${res.teacherName}` : res.batchName}
+                    </p>
+                  </div>
+
+                  {/* Footer / Action */}
+                  <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
+                    <span className="text-gray-400 text-[11px]">
+                      {res.time || res.size || "Class Material"}
+                    </span>
+
+                    {res.fileUrl ? (
+                      <a
+                        href={res.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-semibold text-[#4f6df5] hover:text-[#3b5ce8] hover:underline"
+                      >
+                        {isVideo ? (
+                          <>
+                            <Play size={12} className="fill-current" />
+                            <span>Watch</span>
+                          </>
+                        ) : (
+                          <>
+                            <Download size={12} />
+                            <span>Download</span>
+                          </>
+                        )}
+                      </a>
+                    ) : (
+                      <Link
+                        href="/materials"
+                        className="inline-flex items-center gap-1 font-semibold text-gray-400 hover:text-gray-700"
+                      >
+                        <span>View</span>
+                      </Link>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
