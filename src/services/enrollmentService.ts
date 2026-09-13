@@ -37,3 +37,16 @@ export function requestEnrollment(batchId: string) {
     }),
   });
 }
+
+export function cancelEnrollmentRequest(batchId: string) {
+  return fetchApi<{ message: string }>(`/enrollments/request/${batchId}`, {
+    method: "DELETE",
+  });
+}
+
+export function leaveClass(batchId: string) {
+  return fetchApi<{ message: string }>(`/enrollments/batches/${batchId}/leave`, {
+    method: "POST",
+  });
+}
+

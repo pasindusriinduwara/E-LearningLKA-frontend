@@ -14,6 +14,8 @@ import {
   Video,
   AlertCircle,
   GraduationCap,
+  LogOut,
+  XCircle,
 } from "lucide-react";
 import {
   getAvailableBatches,
@@ -21,15 +23,60 @@ import {
 } from "@/services/batchService";
 import {
   getMyEnrollmentStatuses,
+  leaveClass,
+  cancelEnrollmentRequest,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
+import { ClassPreviewModal } from "@/components/enrollment/ClassPreviewModal";
 
 export default function StudentClassesPage() {
   const [batches, setBatches] = useState<AvailableBatch[]>([]);
+  const [previewBatch, setPreviewBatch] = useState<AvailableBatch | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"enrolled" | "pending">("enrolled");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionBatchId, setActionBatchId] = useState<string | null>(null);
+
+  async function handleLeaveClass(batchId: string) {
+    if (!confirm("Are you sure you want to leave this class? You will lose access to class materials, assessments, and live sessions.")) {
+      return;
+    }
+    setActionBatchId(batchId);
+    setError("");
+
+    try {
+      await leaveClass(batchId);
+      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      if (previewBatch?.id === batchId) {
+        setPreviewBatch(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to leave class");
+    } finally {
+      setActionBatchId(null);
+    }
+  }
+
+  async function handleCancelRequest(batchId: string) {
+    if (!confirm("Are you sure you want to cancel your pending enrollment request?")) {
+      return;
+    }
+    setActionBatchId(batchId);
+    setError("");
+
+    try {
+      await cancelEnrollmentRequest(batchId);
+      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      if (previewBatch?.id === batchId) {
+        setPreviewBatch(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel request");
+    } finally {
+      setActionBatchId(null);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -244,7 +291,8 @@ export default function StudentClassesPage() {
             return (
               <div
                 key={batch.id}
-                className="bg-white rounded-2xl border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group"
+                onClick={() => setPreviewBatch(batch)}
+                className="bg-white rounded-2xl border border-gray-200 hover:border-[#2D9F75]/60 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 {/* Top Accent bar */}
                 <div
@@ -298,10 +346,21 @@ export default function StudentClassesPage() {
                         <span>Exam Year: {batch.examYear}</span>
                       </div>
                     </div>
+
+                    <div className="text-[11px] font-semibold text-[#2D9F75] flex items-center justify-between pt-2 pb-1 border-t border-gray-100 group-hover:text-emerald-700 transition-colors">
+                      <span className="flex items-center gap-1">
+                        <Sparkles size={12} />
+                        <span>Preview class & teacher profile</span>
+                      </span>
+                      <ChevronRight size={14} className="transform group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
 
                   {/* Status Banner / Card Actions */}
-                  <div className="pt-4 border-t border-gray-100 space-y-2.5">
+                  <div
+                    className="pt-3 border-t border-gray-100 space-y-2.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {isApproved ? (
                       <>
                         <div className="flex items-center gap-2">
@@ -331,7 +390,16 @@ export default function StudentClassesPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Enrolled
                           </span>
-                          <span>Monthly Fee: LKR {batch.monthlyFee}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleLeaveClass(batch.id)}
+                            disabled={actionBatchId === batch.id}
+                            className="inline-flex items-center gap-1 text-gray-400 hover:text-red-600 transition-colors font-medium hover:underline disabled:opacity-50"
+                            title="Leave this class"
+                          >
+                            <LogOut size={12} />
+                            <span>{actionBatchId === batch.id ? "Leaving..." : "Leave Class"}</span>
+                          </button>
                         </div>
                       </>
                     ) : (
@@ -343,6 +411,19 @@ export default function StudentClassesPage() {
                         <p className="text-[11px] text-center text-gray-400">
                           You will gain full access once your teacher approves.
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => handleCancelRequest(batch.id)}
+                          disabled={actionBatchId === batch.id}
+                          className="w-full py-2 rounded-xl text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <XCircle size={14} />
+                          <span>
+                            {actionBatchId === batch.id
+                              ? "Cancelling..."
+                              : "Cancel Enrollment Request"}
+                          </span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -352,6 +433,22 @@ export default function StudentClassesPage() {
           })}
         </div>
       )}
+
+      {/* Class Details & Teacher Profile Preview Modal */}
+      <ClassPreviewModal
+        batch={previewBatch}
+        isOpen={Boolean(previewBatch)}
+        onClose={() => setPreviewBatch(null)}
+        onStatusChange={(batchId, newStatus) => {
+          if (newStatus === "AVAILABLE") {
+            setBatches((prev) => prev.filter((b) => b.id !== batchId));
+          } else {
+            setBatches((prev) =>
+              prev.map((b) => (b.id === batchId ? { ...b, status: newStatus } : b))
+            );
+          }
+        }}
+      />
     </div>
   );
 }

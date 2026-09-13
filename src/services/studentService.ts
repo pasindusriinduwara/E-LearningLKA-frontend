@@ -1,5 +1,5 @@
 import { fetchApi } from "@/lib/api";
-import type { LearningResource, ScheduleItem, StudentInvoice, StudentProfile } from "@/lib/types/student";
+import type { LearningResource, ScheduleItem, StudentInvoice, StudentProfile, UpdateStudentProfilePayload } from "@/lib/types/student";
 
 export interface AnnouncementItem {
   id?: string;
@@ -11,6 +11,13 @@ export interface AnnouncementItem {
 
 export async function getStudentProfile(): Promise<StudentProfile> {
   return fetchApi<StudentProfile>("/students/profile");
+}
+
+export async function updateStudentProfile(payload: UpdateStudentProfilePayload): Promise<StudentProfile> {
+  return fetchApi<StudentProfile>("/students/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function getUpcomingClasses(): Promise<ScheduleItem[]> {

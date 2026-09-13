@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Search, ArrowLeft } from "lucide-react";
 import { ClassCard } from "@/components/enrollment/ClassCard";
 import {
@@ -11,6 +12,7 @@ import {
 import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
 
 export default function EnrollmentPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [batches, setBatches] = useState<AvailableBatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,17 @@ export default function EnrollmentPage() {
     );
   }, [batches, searchQuery]);
 
+  function handleStatusUpdate(
+    batchId: string,
+    status: "AVAILABLE" | "PENDING" | "APPROVED" | "REJECTED"
+  ) {
+    setBatches((prev) =>
+      prev.map((b) =>
+        b.id === batchId ? { ...b, status } : b
+      )
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div>
@@ -98,6 +111,9 @@ export default function EnrollmentPage() {
         <h1 className="text-4xl font-extrabold text-gray-900 font-serif">
           Enroll in Classes
         </h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Browse available tuition classes, preview educator credentials and schedules, and enroll online.
+        </p>
       </div>
 
       <div className="relative w-full max-w-md">
@@ -139,6 +155,8 @@ export default function EnrollmentPage() {
             <ClassCard
               key={batch.id}
               batch={batch}
+              onClick={() => router.push(`/enrollment/${batch.id}`)}
+              onStatusChange={(status) => handleStatusUpdate(batch.id, status)}
             />
           ))}
         </div>

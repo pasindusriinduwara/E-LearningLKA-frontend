@@ -52,7 +52,12 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
       {mobileOpen && <button className="drawer-scrim" type="button" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} aria-label="Student navigation">
         <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
-        <Link className="student-chip" href="/settings" onClick={closeMenus}>
+        <Link 
+          className={`student-chip ${isActivePath(pathname, "/settings") ? "student-chip-active" : ""}`} 
+          href="/settings" 
+          onClick={closeMenus}
+          title="Manage Profile Details"
+        >
           <div className="avatar avatar-small">{user?.initials || "ST"}</div>
           <div>
             <strong>{user?.name || "Student"}</strong>
