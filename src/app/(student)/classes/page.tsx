@@ -23,9 +23,11 @@ import {
   getMyEnrollmentStatuses,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
+import { ClassPreviewModal } from "@/components/enrollment/ClassPreviewModal";
 
 export default function StudentClassesPage() {
   const [batches, setBatches] = useState<AvailableBatch[]>([]);
+  const [previewBatch, setPreviewBatch] = useState<AvailableBatch | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"enrolled" | "pending">("enrolled");
   const [loading, setLoading] = useState(true);
@@ -244,7 +246,8 @@ export default function StudentClassesPage() {
             return (
               <div
                 key={batch.id}
-                className="bg-white rounded-2xl border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group"
+                onClick={() => setPreviewBatch(batch)}
+                className="bg-white rounded-2xl border border-gray-200 hover:border-[#2D9F75]/60 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 {/* Top Accent bar */}
                 <div
@@ -298,10 +301,21 @@ export default function StudentClassesPage() {
                         <span>Exam Year: {batch.examYear}</span>
                       </div>
                     </div>
+
+                    <div className="text-[11px] font-semibold text-[#2D9F75] flex items-center justify-between pt-2 pb-1 border-t border-gray-100 group-hover:text-emerald-700 transition-colors">
+                      <span className="flex items-center gap-1">
+                        <Sparkles size={12} />
+                        <span>Preview class & teacher profile</span>
+                      </span>
+                      <ChevronRight size={14} className="transform group-hover:translate-x-0.5 transition-transform" />
+                    </div>
                   </div>
 
                   {/* Status Banner / Card Actions */}
-                  <div className="pt-4 border-t border-gray-100 space-y-2.5">
+                  <div
+                    className="pt-3 border-t border-gray-100 space-y-2.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {isApproved ? (
                       <>
                         <div className="flex items-center gap-2">
@@ -352,6 +366,13 @@ export default function StudentClassesPage() {
           })}
         </div>
       )}
+
+      {/* Class Details & Teacher Profile Preview Modal */}
+      <ClassPreviewModal
+        batch={previewBatch}
+        isOpen={Boolean(previewBatch)}
+        onClose={() => setPreviewBatch(null)}
+      />
     </div>
   );
 }
