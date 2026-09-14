@@ -38,7 +38,31 @@ export async function registerUser(data: RegisterPayload): Promise<Authenticatio
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error("Registration failed. Email might already exist.");
+
+    if (!response.ok) {
+        let errorMessage = "Registration failed. Please check your details and try again.";
+        try {
+            const errorData = await response.json();
+            if (errorData.message) {
+                errorMessage = errorData.message;
+            } else if (errorData.error) {
+                errorMessage = errorData.error;
+            } else if (errorData.errors && typeof errorData.errors === "object") {
+                const firstError = Object.values(errorData.errors)[0];
+                if (typeof firstError === "string") {
+                    errorMessage = firstError;
+                }
+            }
+        } catch {
+            if (response.status === 409) {
+                errorMessage = "An account with this email address already exists. Please sign in instead.";
+            } else if (response.status === 400) {
+                errorMessage = "Invalid registration details. Please verify all fields.";
+            }
+        }
+        throw new Error(errorMessage);
+    }
+
     return response.json() as Promise<AuthenticationResponse>;
 }
 
@@ -48,6 +72,19 @@ export async function loginUser(data: LoginPayload): Promise<AuthenticationRespo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error("Invalid email or password");
+
+    if (!response.ok) {
+        let errorMessage = "Invalid email or password. Please try again.";
+        try {
+            const errorData = await response.json();
+            if (errorData.message) {
+                errorMessage = errorData.message;
+            }
+        } catch {
+            // fallback
+        }
+        throw new Error(errorMessage);
+    }
+
     return response.json() as Promise<AuthenticationResponse>;
 }
