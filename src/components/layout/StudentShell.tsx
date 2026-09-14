@@ -79,7 +79,6 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
               >
                 <Icon size={18} />
                 <span>{label}</span>
-                {label === "Materials" && !active && <span className="nav-count">3</span>}
               </Link>
             );
           })}

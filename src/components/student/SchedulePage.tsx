@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Clock3, MapPin, Video, Loader2 } from "lucide-react";
 import { getUpcomingClasses } from "@/services/studentService";
+import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
 import type { ScheduleItem } from "@/lib/types/student";
 
 export interface ScheduleDayTab {
@@ -44,8 +45,23 @@ export function SchedulePage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getUpcomingClasses();
-        setSchedules(data || []);
+        const [data, statuses] = await Promise.all([
+          getUpcomingClasses().catch(() => []),
+          getMyEnrollmentStatuses().catch(() => []),
+        ]);
+
+        const approvedBatchIds = new Set<string>();
+        statuses.forEach((item) => {
+          if (item.status === "APPROVED") {
+            approvedBatchIds.add(item.batchId);
+          }
+        });
+
+        // Strictly enforce enrolled classes only
+        const enrolledSchedules = (data || []).filter(
+          (item: any) => item.batchId && approvedBatchIds.has(item.batchId)
+        );
+        setSchedules(enrolledSchedules);
       } catch (err) {
         console.error("Failed to load schedules:", err);
         setError("Failed to load schedule from server.");

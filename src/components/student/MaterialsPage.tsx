@@ -157,7 +157,9 @@ export function MaterialsPage() {
       const activeBatches = batchesRes.filter((b) => approvedBatchIds.has(b.id));
       setEnrolledBatches(activeBatches);
 
-      const mapped = materialsRes.map((r, idx) => mapBackendMaterial(r, idx));
+      const mapped = materialsRes
+        .filter((r) => r.batchId && approvedBatchIds.has(r.batchId))
+        .map((r, idx) => mapBackendMaterial(r, idx));
       setMaterials(mapped);
     } catch (err: unknown) {
       console.error("Failed to load student materials:", err);

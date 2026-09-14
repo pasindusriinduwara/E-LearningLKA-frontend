@@ -2,7 +2,8 @@ export type DeliveryMode = "In person" | "Online";
 export type AccentTone = "coral" | "green" | "yellow";
 
 export interface ScheduleItem {
-  id: number;
+  id: number | string;
+  batchId?: string;
   day: string;
   date: string;
   title: string;

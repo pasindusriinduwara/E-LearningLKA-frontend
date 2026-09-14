@@ -151,7 +151,7 @@ export default function StudentClassesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-            <GraduationCap size={14} className="text-[#2D9F75]" />
+            <GraduationCap size={14} className="text-[#4f6df5]" />
             My Studies
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-serif">
@@ -165,7 +165,7 @@ export default function StudentClassesPage() {
         {/* Button to go to Browse/Enroll page */}
         <Link
           href="/enrollment"
-          className="inline-flex items-center justify-center gap-2 bg-[#2D9F75] hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all shrink-0 hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 bg-[#4f6df5] hover:bg-[#3b5ce8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all shrink-0 hover:shadow-md hover:shadow-blue-500/20"
         >
           <Plus size={18} />
           <span>Enroll in Classes</span>
@@ -180,7 +180,7 @@ export default function StudentClassesPage() {
             onClick={() => setActiveTab("enrolled")}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 ${
               activeTab === "enrolled"
-                ? "bg-[#F0FDF4] text-[#2D9F75] border border-[#2D9F75]/30 shadow-sm"
+                ? "bg-[#edf2ff] text-[#4f6df5] border border-[#4f6df5]/30 shadow-sm"
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
             }`}
           >
@@ -188,7 +188,7 @@ export default function StudentClassesPage() {
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 activeTab === "enrolled"
-                  ? "bg-[#2D9F75] text-white"
+                  ? "bg-[#4f6df5] text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
             >
@@ -231,7 +231,7 @@ export default function StudentClassesPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search class or teacher..."
-            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D9F75]/20 focus:border-[#2D9F75]"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/20 focus:border-[#4f6df5]"
           />
         </div>
       </div>
@@ -239,7 +239,7 @@ export default function StudentClassesPage() {
       {/* Loading state */}
       {loading && (
         <div className="py-16 text-center">
-          <div className="w-8 h-8 border-3 border-[#2D9F75] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-3 border-[#4f6df5] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading your enrolled classes...</p>
         </div>
       )}
@@ -255,7 +255,7 @@ export default function StudentClassesPage() {
       {/* Empty State when no classes found */}
       {!loading && !error && displayedBatches.length === 0 && (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-sm my-8">
-          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#2D9F75] mx-auto mb-4">
+          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-[#4f6df5] mx-auto mb-4">
             <BookOpen size={28} />
           </div>
 
@@ -272,7 +272,7 @@ export default function StudentClassesPage() {
 
           <Link
             href="/enrollment"
-            className="inline-flex items-center gap-2 bg-[#2D9F75] hover:bg-emerald-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center gap-2 bg-[#4f6df5] hover:bg-[#3b5ce8] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-blue-500/20"
           >
             <Sparkles size={16} />
             <span>Browse Classes</span>
@@ -292,12 +292,12 @@ export default function StudentClassesPage() {
               <div
                 key={batch.id}
                 onClick={() => setPreviewBatch(batch)}
-                className="bg-white rounded-2xl border border-gray-200 hover:border-[#2D9F75]/60 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group cursor-pointer"
+                className="bg-white rounded-2xl border border-gray-200 hover:border-[#4f6df5]/60 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 {/* Top Accent bar */}
                 <div
                   className={`h-1.5 w-full ${
-                    isApproved ? "bg-[#2D9F75]" : "bg-amber-400"
+                    isApproved ? "bg-[#4f6df5]" : "bg-amber-400"
                   }`}
                 />
 
@@ -305,7 +305,7 @@ export default function StudentClassesPage() {
                   <div>
                     {/* Badges: Subject & Delivery Mode */}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#2D9F75] border border-emerald-100">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#4f6df5] border border-blue-100">
                         {batch.subject || "Subject"}
                       </span>
 
@@ -323,31 +323,39 @@ export default function StudentClassesPage() {
                     </div>
 
                     {/* Batch Name */}
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#2D9F75] transition-colors leading-snug mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#4f6df5] transition-colors leading-snug mb-2">
                       {batch.name}
                     </h3>
 
                     {/* Class Details list */}
-                    <div className="space-y-2 mb-4 text-xs text-gray-600">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-xs text-gray-600 gap-2">
                         <User size={14} className="text-gray-400 shrink-0" />
-                        <span className="font-medium text-gray-700">
-                          {batch.teacher || "Assigned Teacher"}
-                        </span>
+                        <span className="font-medium text-gray-800">{batch.teacher || "Assigned Teacher"}</span>
+                        {batch.teacherQualification && (
+                          <span className="text-[10px] text-gray-400 truncate max-w-[140px]">
+                            ({batch.teacherQualification})
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center text-xs text-gray-600 gap-2">
                         <Clock size={14} className="text-gray-400 shrink-0" />
-                        <span>{batch.schedule || "Schedule announced soon"}</span>
+                        <span>{batch.schedule || "Schedule announced by teacher"}</span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-400 shrink-0" />
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
                         <span>Exam Year: {batch.examYear}</span>
+                        {batch.monthlyFee !== undefined && batch.monthlyFee !== null && (
+                          <span className="font-semibold text-gray-800">
+                            LKR {Number(batch.monthlyFee || 0).toLocaleString()} / mo
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="text-[11px] font-semibold text-[#2D9F75] flex items-center justify-between pt-2 pb-1 border-t border-gray-100 group-hover:text-emerald-700 transition-colors">
+                    {/* Click preview prompt */}
+                    <div className="text-[11px] font-semibold text-[#4f6df5] flex items-center justify-between pt-2 pb-1 border-t border-gray-100 group-hover:text-[#3b5ce8] transition-colors">
                       <span className="flex items-center gap-1">
                         <Sparkles size={12} />
                         <span>Preview class & teacher profile</span>
@@ -366,7 +374,7 @@ export default function StudentClassesPage() {
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/classes/${batch.id}`}
-                            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-sm transition-all"
+                            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-sm transition-all"
                           >
                             <span>Enter Class</span>
                             <ChevronRight size={16} />

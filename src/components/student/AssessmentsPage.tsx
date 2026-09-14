@@ -240,8 +240,8 @@ export function AssessmentsPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <p className="assessments-eyebrow mb-0">ACADEMIC EVALUATIONS</p>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#edf2ff] text-[#4f6df5] border border-[#4f6df5]/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#4f6df5] animate-pulse" />
               Enrolled Classes Only
             </span>
           </div>
@@ -354,7 +354,7 @@ export function AssessmentsPage() {
       {/* Loading Indicator */}
       {isLoading && (
         <div className="py-20 text-center flex flex-col items-center justify-center space-y-3">
-          <Loader2 size={32} className="animate-spin text-[#2D9F75]" />
+          <Loader2 size={32} className="animate-spin text-[#4f6df5]" />
           <p className="text-sm font-medium text-gray-500">Loading your assessments from database...</p>
         </div>
       )}
@@ -362,7 +362,7 @@ export function AssessmentsPage() {
       {/* Empty State */}
       {!isLoading && filteredAssessments.length === 0 && (
         <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 shadow-sm flex flex-col items-center justify-center space-y-3">
-          <div className="w-16 h-16 rounded-3xl bg-emerald-50 text-[#2D9F75] flex items-center justify-center">
+          <div className="w-16 h-16 rounded-3xl bg-[#edf2ff] text-[#4f6df5] flex items-center justify-center">
             <BookOpen size={28} />
           </div>
           <h3 className="text-base font-bold text-gray-800">No Assessments for Your Classes</h3>
@@ -374,7 +374,7 @@ export function AssessmentsPage() {
           {(searchQuery || selectedStatus !== "All") && (
             <button
               type="button"
-              className="mt-2 text-xs font-bold text-[#2D9F75] underline"
+              className="mt-2 text-xs font-bold text-[#4f6df5] underline hover:text-[#3b5ce8]"
               onClick={() => {
                 setSearchQuery("");
                 setSelectedStatus("All");

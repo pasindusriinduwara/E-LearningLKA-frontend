@@ -3,6 +3,7 @@ import type { LearningResource, ScheduleItem, StudentInvoice, StudentProfile, Up
 
 export interface AnnouncementItem {
   id?: string;
+  batchId?: string;
   title: string;
   description: string;
   type: string;
