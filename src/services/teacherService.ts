@@ -9,6 +9,7 @@ export interface TeacherProfile {
   initials?: string;
   qualification?: string;
   bio?: string;
+  subjects?: string;
   email?: string;
   phoneNumber?: string;
 }
@@ -19,6 +20,7 @@ export interface UpdateTeacherProfilePayload {
   initials?: string;
   qualification?: string;
   bio?: string;
+  subjects?: string;
   phoneNumber?: string;
 }
 

@@ -33,6 +33,7 @@ export function TeacherSettingsPage() {
   const [initials, setInitials] = useState("");
   const [qualification, setQualification] = useState("");
   const [bio, setBio] = useState("");
+  const [subjects, setSubjects] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail] = useState("");
 
@@ -61,6 +62,7 @@ export function TeacherSettingsPage() {
         setInitials(profile.initials || user?.initials || "");
         setQualification(profile.qualification || user?.qualification || "");
         setBio(profile.bio || user?.bio || "");
+        setSubjects(profile.subjects || "");
         setPhoneNumber(profile.phoneNumber || user?.phoneNumber || "");
         setEmail(profile.email || user?.email || "");
 
@@ -95,6 +97,7 @@ export function TeacherSettingsPage() {
       setInitials(initialState.initials || "");
       setQualification(initialState.qualification || "");
       setBio(initialState.bio || "");
+      setSubjects(initialState.subjects || "");
       setPhoneNumber(initialState.phoneNumber || "");
     } else if (user) {
       setTitle(user.title || "Mr.");
@@ -135,6 +138,7 @@ export function TeacherSettingsPage() {
         initials: computedInitials,
         qualification: qualification.trim() || undefined,
         bio: bio.trim() || undefined,
+        subjects: subjects.trim() || undefined,
         phoneNumber: phoneNumber.trim() || undefined,
       });
 
@@ -355,6 +359,22 @@ export function TeacherSettingsPage() {
                 className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
               />
               <p className="text-[11px] text-gray-400 mt-1">Visible to enrolled students in batch descriptions and profiles.</p>
+            </div>
+
+            {/* Subjects Taught */}
+            <div className="md:col-span-2">
+              <label htmlFor="teacherSubjects" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                Subjects Taught
+              </label>
+              <input
+                id="teacherSubjects"
+                type="text"
+                placeholder="e.g. Physics, Combined Mathematics, Chemistry"
+                value={subjects}
+                onChange={(e) => setSubjects(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">Comma-separated list of subjects you teach.</p>
             </div>
           </div>
         </div>

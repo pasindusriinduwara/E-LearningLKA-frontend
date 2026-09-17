@@ -66,12 +66,35 @@ export default function MultiStepRegister() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, [e.target.name]: e.target.value });
     const handleSelectChange = (name: string, value: string) => setFormData({ ...formData, [name]: value });
 
+    const handleAddSubject = (subject: string) => {
+        const clean = subject.trim().replace(/\s+/g, " ");
+        if (!clean) return;
+        setFormData((prev) => {
+            const exists = prev.subjects.some((s) => s.toLowerCase() === clean.toLowerCase());
+            if (exists) return prev;
+            return { ...prev, subjects: [...prev.subjects, clean] };
+        });
+    };
+
+    const handleRemoveSubject = (subject: string) => {
+        const clean = subject.trim().toLowerCase();
+        setFormData((prev) => ({
+            ...prev,
+            subjects: prev.subjects.filter((s) => s.trim().toLowerCase() !== clean)
+        }));
+    };
+
+    const handleClearSubjects = () => {
+        setFormData((prev) => ({ ...prev, subjects: [] }));
+    };
+
     const handleToggleSubject = (subject: string) => {
-        const currentSubjects = formData.subjects;
-        if (currentSubjects.includes(subject)) {
-            setFormData({ ...formData, subjects: currentSubjects.filter(s => s !== subject) });
+        const clean = subject.trim();
+        const exists = formData.subjects.some((s) => s.toLowerCase() === clean.toLowerCase());
+        if (exists) {
+            handleRemoveSubject(clean);
         } else {
-            setFormData({ ...formData, subjects: [...currentSubjects, subject] });
+            handleAddSubject(clean);
         }
     };
 
@@ -216,6 +239,9 @@ export default function MultiStepRegister() {
                             formData={formData}
                             onChange={handleChange}
                             onToggleSubject={handleToggleSubject}
+                            onAddSubject={handleAddSubject}
+                            onRemoveSubject={handleRemoveSubject}
+                            onClearSubjects={handleClearSubjects}
                             onBack={handleBack}
                             onNext={handleNext}
                             loading={loading}
