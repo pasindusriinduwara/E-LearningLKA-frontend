@@ -49,6 +49,9 @@ export default function MultiStepRegister() {
             };
             const res = await registerUser(payload);
             localStorage.setItem("token", res.token);
+            const userRole = (res.role || (formData.role === "teacher" ? "TEACHER" : "STUDENT")).toUpperCase();
+            document.cookie = `token=${res.token}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `user_role=${userRole}; path=/; max-age=86400; SameSite=Lax`;
             router.push(formData.role === "teacher" ? "/teacher/dashboard" : "/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Registration failed. Please try again.");

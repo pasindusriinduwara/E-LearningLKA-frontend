@@ -1,4 +1,4 @@
-const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1").replace(/\/+$/, "");
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1").replace(/\/+$/, "");
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;

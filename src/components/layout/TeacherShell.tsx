@@ -10,14 +10,20 @@ import {
   LogOut, Bell, ChevronRight, Menu, GraduationCap
 } from "lucide-react";
 
-const navItems = [
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  badge?: number;
+}
+
+const navItems: NavItem[] = [
   { label: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
   { label: "My classes", href: "/teacher/classes", icon: Calendar },
-  { label: "Attendance", href: "/teacher/attendance", icon: CheckSquare },
+  { label: "Enrollments", href: "/teacher/enrollments", icon: CheckSquare },
   { label: "Materials", href: "/teacher/materials", icon: BookOpen },
   { label: "Assignments", href: "/teacher/assignments", icon: ClipboardList },
   { label: "Results", href: "/teacher/results", icon: LineChart },
-  { label: "Messages", href: "/teacher/messages", icon: MessageCircle, badge: 2 },
   { label: "Settings", href: "/teacher/settings", icon: Settings },
 ];
 
@@ -31,8 +37,12 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
   const teacherInitials = user?.initials || teacherName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "TC";
   const teacherRole = user?.qualification || "Teacher";
   useEffect(() => {
-    if (!loading && user && user.role === "STUDENT") {
-      router.replace("/dashboard");
+    if (!loading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (user.role === "STUDENT") {
+        router.replace("/dashboard");
+      }
     }
   }, [user, loading, router]);
 

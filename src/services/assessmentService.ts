@@ -1,4 +1,4 @@
-import { fetchApi } from "@/lib/api";
+import { fetchApi, API_BASE_URL } from "@/lib/api";
 import { ParsedQuestion, parseQuizTextLocally } from "@/lib/utils/quizParser";
 
 export interface BackendParsedQuestion {
@@ -321,7 +321,7 @@ export const assessmentService = {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     const headers: Record<string, string> = {};
     if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch("http://localhost:8080/api/v1/assessments/upload-paper", {
+    const res = await fetch(`${API_BASE_URL}/assessments/upload-paper`, {
       method: "POST",
       headers,
       body: formData,

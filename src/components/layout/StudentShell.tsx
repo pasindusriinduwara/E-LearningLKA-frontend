@@ -42,8 +42,12 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
     setProfileOpen(false);
   }
   useEffect(() => {
-    if (!loading && user && user.role === "TEACHER") {
-      router.replace("/teacher/dashboard");
+    if (!loading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (user.role === "TEACHER") {
+        router.replace("/teacher/dashboard");
+      }
     }
   }, [user, loading, router]);
 

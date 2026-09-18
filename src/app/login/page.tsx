@@ -24,6 +24,8 @@ export default function LoginPage() {
             const data = await loginUser({ email, password });
             localStorage.setItem("token", data.token);
             const userRole = (data.role || (role === "teacher" ? "TEACHER" : "STUDENT")).toUpperCase();
+            document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+            document.cookie = `user_role=${userRole}; path=/; max-age=86400; SameSite=Lax`;
             router.push(userRole === "TEACHER" ? "/teacher/dashboard" : "/dashboard");
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to login. Please try again.");

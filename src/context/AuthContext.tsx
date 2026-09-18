@@ -62,6 +62,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .toUpperCase() ||
         (profile.role === "TEACHER" ? "TC" : "ST");
 
+      if (typeof document !== "undefined") {
+        document.cookie = `token=${token}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `user_role=${profile.role}; path=/; max-age=86400; SameSite=Lax`;
+      }
+
       setUser({
         ...profile,
         name,
@@ -70,6 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       console.error("Auth context load error:", err);
       localStorage.removeItem("token");
+      if (typeof document !== "undefined") {
+        document.cookie = "token=; path=/; max-age=0";
+        document.cookie = "user_role=; path=/; max-age=0";
+      }
       setUser(null);
     } finally {
       setLoading(false);
@@ -100,6 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   function signOut() {
     localStorage.removeItem("token");
+    if (typeof document !== "undefined") {
+      document.cookie = "token=; path=/; max-age=0";
+      document.cookie = "user_role=; path=/; max-age=0";
+    }
     setUser(null);
     router.push("/login");
   }
