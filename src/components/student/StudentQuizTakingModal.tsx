@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useEffectEvent, useMemo, useRef } from "react";
 import {
   Timer,
   AlertTriangle,
@@ -26,7 +26,11 @@ interface StudentQuizTakingModalProps {
   onSubmitSuccess: (result: QuizSubmissionResult) => void;
 }
 
-export function StudentQuizTakingModal({
+export function StudentQuizTakingModal(props: StudentQuizTakingModalProps) {
+  return <QuizSession key={props.assessmentId} {...props} />;
+}
+
+function QuizSession({
   assessmentId,
   studentId,
   onClose,
@@ -46,12 +50,40 @@ export function StudentQuizTakingModal({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const submissionInFlight = useRef(false);
+  const timeoutAttempted = useRef(false);
+  const questions = useMemo(() => quizData?.questions || [], [quizData]);
+
+  async function performSubmit() {
+    if (submissionInFlight.current || !quizData) return;
+    submissionInFlight.current = true;
+    setIsSubmitting(true);
+    setShowConfirmModal(false);
+    try {
+      const answers = questions.map((q) => ({
+        questionId: q.id,
+        selectedOptionId: userAnswers[q.id] || undefined,
+      }));
+      const result = await assessmentService.submitQuiz(quizData.id, { studentId, answers });
+      onSubmitSuccess(result);
+    } catch (err: unknown) {
+      alert("Submission failed: " + (err instanceof Error ? err.message : String(err)));
+      submissionInFlight.current = false;
+      setIsSubmitting(false);
+    }
+  }
+
+  // Effect Events read the latest answers without restarting the countdown.
+  const submitAtTimeout = useEffectEvent(() => {
+    if (timeoutAttempted.current) return;
+    timeoutAttempted.current = true;
+    alert("Time has expired! Submitting your answers automatically now.");
+    void performSubmit();
+  });
 
   useEffect(() => {
     let mounted = true;
-    setIsLoading(true);
-    setError(null);
 
     assessmentService
       .getAssessmentForTaking(assessmentId)
@@ -60,6 +92,7 @@ export function StudentQuizTakingModal({
           setQuizData(res);
           const totalSecs = (res.durationMinutes || 60) * 60;
           setSecondsRemaining(totalSecs);
+          setDeadline(Date.now() + totalSecs * 1000);
         }
       })
       .catch((err) => {
@@ -73,31 +106,22 @@ export function StudentQuizTakingModal({
 
     return () => {
       mounted = false;
-      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [assessmentId]);
 
   // Timer countdown
   useEffect(() => {
-    if (!quizData || isLoading || isSubmitting) return;
-
-    timerRef.current = setInterval(() => {
-      setSecondsRemaining((prev) => {
-        if (prev <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          handleAutoSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
+    if (deadline === null || isLoading || isSubmitting) return;
+    const timer = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setSecondsRemaining(remaining);
+      if (remaining === 0) {
+        clearInterval(timer);
+        submitAtTimeout();
+      }
     }, 1000);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [quizData, isLoading, isSubmitting]);
-
-  const questions = useMemo(() => quizData?.questions || [], [quizData]);
+    return () => clearInterval(timer);
+  }, [deadline, isLoading, isSubmitting]);
   const currentQuestion = questions[currentIndex];
 
   const answeredCount = useMemo(() => {
@@ -135,34 +159,6 @@ export function StudentQuizTakingModal({
       ...prev,
       [questionId]: !prev[questionId],
     }));
-  }
-
-  async function performSubmit() {
-    if (isSubmitting || !quizData) return;
-    setIsSubmitting(true);
-    setShowConfirmModal(false);
-
-    try {
-      const payloadAnswers = questions.map((q) => ({
-        questionId: q.id,
-        selectedOptionId: userAnswers[q.id] || undefined,
-      }));
-
-      const result = await assessmentService.submitQuiz(quizData.id, {
-        studentId,
-        answers: payloadAnswers,
-      });
-
-      onSubmitSuccess(result);
-    } catch (err: unknown) {
-      alert("Submission failed: " + (err instanceof Error ? err.message : String(err)));
-      setIsSubmitting(false);
-    }
-  }
-
-  function handleAutoSubmit() {
-    alert("Time has expired! Submitting your answers automatically now.");
-    performSubmit();
   }
 
   if (isLoading) {

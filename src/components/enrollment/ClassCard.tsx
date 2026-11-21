@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Clock, User, ChevronRight, Sparkles, XCircle, LogOut, CheckCircle2 } from "lucide-react";
-import { requestEnrollment, cancelEnrollmentRequest, leaveClass } from "@/services/enrollmentService";
 import type { AvailableBatch } from "@/services/batchService";
+import { cancelEnrollmentRequest, leaveClass, requestEnrollment } from "@/services/enrollmentService";
+import { CheckCircle2, ChevronRight, Clock, LogOut, Sparkles, User, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function ClassCard({
   batch,
@@ -16,13 +16,12 @@ export function ClassCard({
   onStatusChange?: (newStatus: "AVAILABLE" | "PENDING" | "APPROVED" | "REJECTED") => void;
 }) {
   const router = useRouter();
-  const [status, setStatus] = useState(batch.status);
+  const [localStatus, setLocalStatus] = useState<{ source: AvailableBatch; status: AvailableBatch["status"] } | null>(null);
+  const status = localStatus?.source === batch ? localStatus.status : batch.status;
+  function setStatus(next: AvailableBatch["status"]) { setLocalStatus({ source: batch, status: next }); }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    setStatus(batch.status);
-  }, [batch.status]);
 
   function handleCardClick() {
     if (onClick) {

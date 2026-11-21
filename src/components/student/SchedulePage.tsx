@@ -59,7 +59,7 @@ export function SchedulePage() {
 
         // Strictly enforce enrolled classes only
         const enrolledSchedules = (data || []).filter(
-          (item: any) => item.batchId && approvedBatchIds.has(item.batchId)
+          (item) => item.batchId && approvedBatchIds.has(item.batchId)
         );
         setSchedules(enrolledSchedules);
       } catch (err) {
@@ -83,7 +83,7 @@ export function SchedulePage() {
 
   return (
     <div className="schedule-page-wrapper">
-      
+
       <div className="schedule-calendar-strip" role="tablist" aria-label="Select day of the week">
         {WEEK_DAYS.map((day) => {
           const isSelected = day.id === selectedDayId;
@@ -116,9 +116,9 @@ export function SchedulePage() {
       </div>
 
       <div className="schedule-main-layout">
-        
+
         <section className="schedule-left-column">
-          
+
           <div className="selected-day-header">
             <h2 className="selected-day-title">{activeDay.fullDateStr}</h2>
             <span className="classes-count-pill">
@@ -191,7 +191,7 @@ export function SchedulePage() {
         </section>
 
         <aside className="schedule-right-column">
-          
+
           <div className="week-glance-card">
             <h3 className="week-glance-title">Week at a glance</h3>
             <div className="week-glance-list">

@@ -1,19 +1,41 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
+
+import type { ClassScheduleItem } from "@/lib/types/class";
+
+import { QuizResultModal } from "@/components/student/QuizResultModal";
+import { StudentEssaySubmissionModal } from "@/components/student/StudentEssaySubmissionModal";
+import { StudentQuizTakingModal } from "@/components/student/StudentQuizTakingModal";
+import { useAuth } from "@/context/AuthContext";
+import type { LearningResource } from "@/lib/types/student";
+import { getEmbedVideoUrl } from "@/lib/videoUtils";
 import {
+  assessmentService,
+  type AssessmentSummary,
+  type QuizSubmissionResult,
+} from "@/services/assessmentService";
+import {
+  getAvailableBatches,
+  type AvailableBatch,
+} from "@/services/batchService";
+import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
+import {
+  getBatchAnnouncements,
+  getBatchMaterials,
+  getBatchSchedules,
+  type AnnouncementItem,
+} from "@/services/studentService";
+import {
+  AlertCircle,
   ArrowLeft,
   Calendar,
   CheckCircle2,
-  ChevronRight,
   Clock,
   Download,
   ExternalLink,
   FileText,
   GraduationCap,
-  HelpCircle,
   MapPin,
   Megaphone,
   Play,
@@ -22,32 +44,11 @@ import {
   Upload,
   User,
   Video,
-  X,
-  AlertCircle,
-  Sparkles,
+  X
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import {
-  getAvailableBatches,
-  type AvailableBatch,
-} from "@/services/batchService";
-import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
-import {
-  getBatchMaterials,
-  getBatchAnnouncements,
-  getBatchSchedules,
-  type AnnouncementItem,
-} from "@/services/studentService";
-import {
-  assessmentService,
-  type AssessmentSummary,
-  type QuizSubmissionResult,
-} from "@/services/assessmentService";
-import { StudentQuizTakingModal } from "@/components/student/StudentQuizTakingModal";
-import { StudentEssaySubmissionModal } from "@/components/student/StudentEssaySubmissionModal";
-import { QuizResultModal } from "@/components/student/QuizResultModal";
-import type { LearningResource } from "@/lib/types/student";
-import { getEmbedVideoUrl } from "@/lib/videoUtils";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 type ClassroomTab = "recordings" | "schedule" | "assignments" | "announcements" | "results";
 
@@ -86,7 +87,6 @@ interface ClassResult {
 }
 
 export default function StudentClassDetailsPage() {
-  const router = useRouter();
   const params = useParams<{ batchId: string }>();
   const batchId = params?.batchId;
 
@@ -106,7 +106,7 @@ export default function StudentClassDetailsPage() {
   // Dynamic Class Data
   const [materials, setMaterials] = useState<LearningResource[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
-  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<ClassScheduleItem[]>([]);
   const [batchAssessments, setBatchAssessments] = useState<AssessmentSummary[]>([]);
   const [classResults] = useState<ClassResult[]>([]);
 
@@ -788,7 +788,7 @@ export default function StudentClassDetailsPage() {
 
                     <div className="flex items-center gap-2">
                       {asg.fileUrl && (
-                        <a
+                        <AttachmentLink
                           href={asg.fileUrl}
                           target="_blank"
                           rel="noreferrer"
@@ -796,7 +796,7 @@ export default function StudentClassDetailsPage() {
                         >
                           <Download size={13} />
                           <span>Paper</span>
-                        </a>
+                        </AttachmentLink>
                       )}
 
                       {asg.isRealAssessment ? (

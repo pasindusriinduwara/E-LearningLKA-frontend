@@ -4,6 +4,8 @@ export type AccentTone = "coral" | "green" | "yellow";
 export interface ScheduleItem {
   id: number | string;
   batchId?: string;
+  dayOfWeek?: string;
+  deliveryMode?: string;
   day: string;
   date: string;
   title: string;

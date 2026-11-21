@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
+
+import type { Submission } from "@/lib/types/assignment";
+import { assessmentService } from "@/services/assessmentService";
 import {
-  X,
+  AlertCircle,
   Award,
-  FileText,
+  Calendar,
+  CheckCircle2,
   Download,
   ExternalLink,
-  CheckCircle2,
-  AlertCircle,
+  FileText,
   Loader2,
-  User,
-  MessageSquare,
-  Calendar,
+  X
 } from "lucide-react";
-import { assessmentService } from "@/services/assessmentService";
-import type { Submission } from "@/lib/types/assignment";
+import { useState } from "react";
 
 interface TeacherGradingModalProps {
   assessmentId: string;
@@ -132,7 +132,7 @@ export function TeacherGradingModal({
                 </div>
               </div>
 
-              <a
+              <AttachmentLink
                 href={submission.paperUploadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -141,7 +141,7 @@ export function TeacherGradingModal({
                 <Download size={14} />
                 <span>Open Paper</span>
                 <ExternalLink size={12} />
-              </a>
+              </AttachmentLink>
             </div>
           )}
 

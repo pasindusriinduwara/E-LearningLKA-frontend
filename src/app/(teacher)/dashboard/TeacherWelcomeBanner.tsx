@@ -5,6 +5,23 @@ import { useAuth } from "@/context/AuthContext";
 import type { TeacherBatch } from "@/services/teacherService";
 import type { ClassScheduleItem } from "@/lib/types/class";
 
+const DAY_ORDER: Record<string, number> = {
+    MONDAY: 1,
+    MON: 1,
+    TUESDAY: 2,
+    TUE: 2,
+    WEDNESDAY: 3,
+    WED: 3,
+    THURSDAY: 4,
+    THU: 4,
+    FRIDAY: 5,
+    FRI: 5,
+    SATURDAY: 6,
+    SAT: 6,
+    SUNDAY: 7,
+    SUN: 7,
+  };
+
 interface TeacherWelcomeBannerProps {
   batches?: TeacherBatch[];
   schedules?: ClassScheduleItem[];
@@ -42,6 +59,7 @@ export function TeacherWelcomeBanner({
   ];
   const dayNamesShort = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const currentDayIndex = now.getDay();
+  const todayDate = now.toDateString();
   const todayFull = dayNamesFull[currentDayIndex];
   const todayShort = dayNamesShort[currentDayIndex];
 
@@ -52,30 +70,15 @@ export function TeacherWelcomeBanner({
       if (dow === todayFull || dow === todayShort) return true;
       if (s.date) {
         const sDate = new Date(s.date);
-        if (!isNaN(sDate.getTime()) && sDate.toDateString() === now.toDateString()) {
+        if (!isNaN(sDate.getTime()) && sDate.toDateString() === todayDate) {
           return true;
         }
       }
       return false;
     });
-  }, [schedules, todayFull, todayShort]);
+  }, [schedules, todayFull, todayShort, todayDate]);
 
-  const dayOrder: Record<string, number> = {
-    MONDAY: 1,
-    MON: 1,
-    TUESDAY: 2,
-    TUE: 2,
-    WEDNESDAY: 3,
-    WED: 3,
-    THURSDAY: 4,
-    THU: 4,
-    FRIDAY: 5,
-    FRI: 5,
-    SATURDAY: 6,
-    SAT: 6,
-    SUNDAY: 7,
-    SUN: 7,
-  };
+
   const currentIsoDay = currentDayIndex === 0 ? 7 : currentDayIndex;
 
   const totalWeeklyCount = schedules.length;
@@ -83,7 +86,7 @@ export function TeacherWelcomeBanner({
     if (totalWeeklyCount === 0) return 0;
     return schedules.filter((s) => {
       const dow = (s.dayOfWeek || s.day || "").toUpperCase();
-      const order = dayOrder[dow] || 0;
+      const order = DAY_ORDER[dow] || 0;
       return order > 0 && order < currentIsoDay;
     }).length;
   }, [schedules, currentIsoDay, totalWeeklyCount]);

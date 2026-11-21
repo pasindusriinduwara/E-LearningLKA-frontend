@@ -1,20 +1,13 @@
 "use client";
 
-import React from "react";
-import {
-  Award,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  Calendar,
-  Clock,
-  Check,
-  X,
-  ArrowLeft,
-  Share2,
-  FileCheck2,
-} from "lucide-react";
 import { QuizSubmissionResult } from "@/services/assessmentService";
+import {
+  ArrowLeft,
+  Award,
+  Calendar,
+  Check,
+  X
+} from "lucide-react";
 
 interface QuizResultModalProps {
   result: QuizSubmissionResult;

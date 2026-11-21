@@ -1,3 +1,4 @@
+import type { Submission } from "@/lib/types/assignment";
 import { fetchApi, API_BASE_URL } from "@/lib/api";
 import { ParsedQuestion, parseQuizTextLocally } from "@/lib/utils/quizParser";
 
@@ -60,6 +61,21 @@ export interface AssessmentSummary {
   submissionsCount?: number;
   totalStudents?: number;
   createdAt?: string;
+}
+
+export interface AssessmentDetails {
+  id: string;
+  batchId: string;
+  title: string;
+  assessmentType: string;
+  totalMarks: number;
+  durationMinutes: number;
+  dueDate?: string;
+  hidden?: boolean;
+  attachmentUrl?: string;
+  instructions?: string;
+  submissionType?: string;
+  questions: (StudentQuestionDto & { options: (StudentOptionDto & { correct: boolean })[] })[];
 }
 
 export interface StudentQuizTakeResponse {
@@ -137,6 +153,11 @@ export interface UpdateAssessmentPayload {
 }
 
 export const assessmentService = {
+  async uploadAnswer(assessmentId: string, file: File): Promise<{ url: string; fileName: string }> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetchApi(`/assessments/${assessmentId}/upload-answer`, { method: "POST", body: formData });
+  },
   /**
    * Uploads PDF file to backend PDFBox parser
    */
@@ -240,7 +261,7 @@ export const assessmentService = {
   /**
    * Retrieves assessment details with questions and options
    */
-  async getAssessmentDetails(id: string): Promise<any> {
+  async getAssessmentDetails(id: string): Promise<AssessmentDetails> {
     return fetchApi(`/assessments/${id}`);
   },
 
@@ -280,14 +301,14 @@ export const assessmentService = {
   /**
    * Retrieves all student submissions for an assessment (Teacher view)
    */
-  async getAssessmentSubmissions(id: string): Promise<any[]> {
-    return fetchApi<any[]>(`/assessments/${id}/submissions`);
+  async getAssessmentSubmissions(id: string): Promise<Submission[]> {
+    return fetchApi<Submission[]>(`/assessments/${id}/submissions`);
   },
 
   /**
    * Toggles visibility (hide/unhide) of an assessment for students
    */
-  async toggleHideAssessment(id: string): Promise<any> {
+  async toggleHideAssessment(id: string): Promise<AssessmentDetails> {
     return fetchApi(`/assessments/${id}/toggle-hide`, {
       method: "PATCH",
     });
@@ -296,7 +317,7 @@ export const assessmentService = {
   /**
    * Updates an existing assessment
    */
-  async updateAssessment(id: string, payload: UpdateAssessmentPayload): Promise<any> {
+  async updateAssessment(id: string, payload: UpdateAssessmentPayload): Promise<AssessmentDetails> {
     return fetchApi(`/assessments/${id}`, {
       method: "PUT",
       body: JSON.stringify(payload),
@@ -361,7 +382,7 @@ export const assessmentService = {
       scoreObtained: number;
       feedback: string;
     }
-  ): Promise<any> {
+  ): Promise<Submission> {
     return fetchApi(`/assessments/${assessmentId}/submissions/${submissionId}/grade`, {
       method: "POST",
       body: JSON.stringify(payload),

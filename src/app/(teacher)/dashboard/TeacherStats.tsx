@@ -25,7 +25,6 @@ export function TeacherStats({
   useEffect(() => {
     if (externalSummary !== undefined) return;
     let active = true;
-    setInternalLoading(true);
     getTeacherDashboard()
       .then((data) => {
         if (active) {

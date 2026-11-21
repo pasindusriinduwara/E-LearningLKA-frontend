@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Sparkles, CheckCircle, FileText, Loader2, BookOpen } from "lucide-react";
-import { CreateAssignmentForm } from "@/components/assignments/CreateAssignmentForm";
 import { AssignmentListCard } from "@/components/assignments/AssignmentListCard";
-import { SubmissionsView } from "@/components/assignments/SubmissionsView";
+import { CreateAssignmentForm } from "@/components/assignments/CreateAssignmentForm";
+import { EditAssignmentModal } from "@/components/assignments/EditAssignmentModal";
 import { PdfQuizUploadModal } from "@/components/assignments/PdfQuizUploadModal";
 import { QuizReviewStudio } from "@/components/assignments/QuizReviewStudio";
-import { EditAssignmentModal } from "@/components/assignments/EditAssignmentModal";
+import { SubmissionsView } from "@/components/assignments/SubmissionsView";
+import type { Assignment, Submission } from "@/lib/types/assignment";
 import { ParsedQuestion } from "@/lib/utils/quizParser";
 import { assessmentService } from "@/services/assessmentService";
-import type { Assignment, Submission } from "@/lib/types/assignment";
+import { BookOpen, CheckCircle, Loader2, Plus, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -22,13 +22,12 @@ export default function AssignmentsPage() {
   const [reviewTitle, setReviewTitle] = useState("Imported MCQ Quiz");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(null);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{ assessmentId: string; items: Submission[] } | null>(null);
+  const submissions = submissionResult?.assessmentId === activeAssignmentId ? submissionResult.items : [];
 
-  const loadAssessments = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const data = await assessmentService.getAllAssessments();
+  const loadAssessments = useCallback(() => {
+
+    return assessmentService.getAllAssessments().then((data) => {
       if (Array.isArray(data)) {
         const mapped: Assignment[] = data.map((a) => {
           let formattedDate = "No due date";
@@ -74,39 +73,39 @@ export default function AssignmentsPage() {
           setActiveAssignmentId(null);
         }
       }
-    } catch (err) {
+    }).catch((err) => {
       console.warn("Could not load assessments from backend:", err);
-    } finally {
+    }).finally(() => {
       setIsLoading(false);
-    }
+    });
   }, []);
 
   useEffect(() => {
     loadAssessments();
   }, [loadAssessments]);
 
+  function reloadAssessments() { setIsLoading(true); return loadAssessments(); }
+
   useEffect(() => {
-    if (!activeAssignmentId) {
-      setSubmissions([]);
-      return;
-    }
-    setIsLoadingSubmissions(true);
+    if (!activeAssignmentId) return;
+    let active = true;
     assessmentService
       .getAssessmentSubmissions(activeAssignmentId)
       .then((data) => {
+        if (!active) return;
         if (Array.isArray(data)) {
-          setSubmissions(data);
+          setSubmissionResult({ assessmentId: activeAssignmentId, items: data });
         } else {
-          setSubmissions([]);
+          setSubmissionResult({ assessmentId: activeAssignmentId, items: [] });
         }
       })
       .catch((err) => {
+        if (!active) return;
         console.warn("Could not fetch submissions for assessment:", err);
-        setSubmissions([]);
+        setSubmissionResult({ assessmentId: activeAssignmentId, items: [] });
       })
-      .finally(() => {
-        setIsLoadingSubmissions(false);
-      });
+      ;
+    return () => { active = false; };
   }, [activeAssignmentId]);
 
   const activeAssignment = assignments.find((a) => a.id === activeAssignmentId);
@@ -119,14 +118,14 @@ export default function AssignmentsPage() {
   const handleQuizSaved = async () => {
     setReviewQuestions(null);
     setSuccessMsg(`"${reviewTitle}" successfully published and saved to LMS!`);
-    await loadAssessments();
+    await reloadAssessments();
     setTimeout(() => setSuccessMsg(null), 6000);
   };
 
   const handleAssignmentCreated = async () => {
     setIsCreating(false);
     setSuccessMsg("Assignment created and published successfully!");
-    await loadAssessments();
+    await reloadAssessments();
     setTimeout(() => setSuccessMsg(null), 6000);
   };
 
@@ -136,7 +135,7 @@ export default function AssignmentsPage() {
       await assessmentService.toggleHideAssessment(assignment.id);
       const isNowHidden = !assignment.hidden;
       setSuccessMsg(`"${assignment.title}" is now ${isNowHidden ? "hidden from" : "visible to"} students.`);
-      await loadAssessments();
+      await reloadAssessments();
       setTimeout(() => setSuccessMsg(null), 5000);
     } catch (err) {
       console.error("Failed to toggle visibility:", err);
@@ -152,7 +151,7 @@ export default function AssignmentsPage() {
     try {
       await assessmentService.deleteAssessment(assignment.id);
       setSuccessMsg(`"${assignment.title}" was deleted.`);
-      await loadAssessments();
+      await reloadAssessments();
       setTimeout(() => setSuccessMsg(null), 5000);
     } catch (err) {
       console.error("Failed to delete assessment:", err);
@@ -287,10 +286,10 @@ export default function AssignmentsPage() {
                 onRefreshSubmissions={() => {
                   if (activeAssignmentId) {
                     assessmentService.getAssessmentSubmissions(activeAssignmentId).then((data) => {
-                      if (Array.isArray(data)) setSubmissions(data);
+                      if (Array.isArray(data)) setSubmissionResult({ assessmentId: activeAssignmentId, items: data });
                     });
                   }
-                  loadAssessments();
+                  reloadAssessments();
                 }}
               />
             )}
@@ -313,7 +312,7 @@ export default function AssignmentsPage() {
           onClose={() => setEditingAssignment(null)}
           onUpdated={async () => {
             setSuccessMsg("Assignment updated successfully!");
-            await loadAssessments();
+            await reloadAssessments();
             setTimeout(() => setSuccessMsg(null), 5000);
           }}
         />

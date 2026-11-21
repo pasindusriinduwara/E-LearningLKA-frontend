@@ -1,3 +1,4 @@
+import type { ClassScheduleItem } from "@/lib/types/class";
 import { fetchApi } from "@/lib/api";
 import type { LearningResource, ScheduleItem, StudentInvoice, StudentProfile, UpdateStudentProfilePayload } from "@/lib/types/student";
 
@@ -25,8 +26,8 @@ export async function getUpcomingClasses(): Promise<ScheduleItem[]> {
   return fetchApi<ScheduleItem[]>("/schedules/upcoming");
 }
 
-export async function getBatchSchedules(batchId: string): Promise<any[]> {
-  return fetchApi<any[]>(`/schedules/batch/${batchId}`);
+export async function getBatchSchedules(batchId: string): Promise<ClassScheduleItem[]> {
+  return fetchApi<ClassScheduleItem[]>(`/schedules/batch/${batchId}`);
 }
 
 export async function getRecentMaterials(): Promise<LearningResource[]> {

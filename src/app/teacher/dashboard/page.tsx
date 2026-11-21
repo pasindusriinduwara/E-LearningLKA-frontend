@@ -32,27 +32,23 @@ export default function TeacherDashboard() {
   const [announcements, setAnnouncements] = useState<TeacherAnnouncement[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingEnrollmentRequest[]>([]);
 
-  const loadData = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError(null);
+  const loadData = useCallback(() => {
 
-    try {
-      const [
-        summaryRes,
-        batchesRes,
-        schedulesRes,
-        studentsRes,
-        announcementsRes,
-        pendingRes,
-      ] = await Promise.allSettled([
+    return Promise.allSettled([
         getTeacherDashboard(),
         getTeacherBatches(),
         getTeacherSchedules(),
         getTeacherStudents(),
         getTeacherAnnouncements(),
         getTeacherPendingEnrollments(),
-      ]);
+      ]).then(([
+        summaryRes,
+        batchesRes,
+        schedulesRes,
+        studentsRes,
+        announcementsRes,
+        pendingRes,
+      ]) => {
 
       if (summaryRes.status === "fulfilled") setSummary(summaryRes.value);
       if (batchesRes.status === "fulfilled") setBatches(batchesRes.value);
@@ -60,12 +56,12 @@ export default function TeacherDashboard() {
       if (studentsRes.status === "fulfilled") setStudents(studentsRes.value);
       if (announcementsRes.status === "fulfilled") setAnnouncements(announcementsRes.value);
       if (pendingRes.status === "fulfilled") setPendingRequests(pendingRes.value);
-    } catch (err: unknown) {
+    }).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load dashboard data");
-    } finally {
+    }).finally(() => {
       setLoading(false);
       setRefreshing(false);
-    }
+    });
   }, []);
 
   useEffect(() => {
@@ -84,7 +80,7 @@ export default function TeacherDashboard() {
           </h1>
         </div>
         <button
-          onClick={() => loadData(true)}
+          onClick={() => { setRefreshing(true); setError(null); void loadData(); }}
           disabled={loading || refreshing}
           className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-emerald-700 bg-white border border-gray-200 hover:border-emerald-300 px-3 py-1.5 rounded-xl transition-all shadow-sm disabled:opacity-50"
         >

@@ -38,17 +38,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  async function loadUser() {
+  function loadUser() {
     const token = localStorage.getItem("token");
 
-    if (!token) {
-      setUser(null);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const profile = await getCurrentUserProfile();
+    return (token ? getCurrentUserProfile() : Promise.resolve(null)).then((profile) => {
+      if (!profile) { setUser(null); return; }
       const defaultName = profile.role === "TEACHER" ? "Teacher" : "Student";
       const name = profile.name?.trim() || defaultName;
       const initials =
@@ -72,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name,
         initials,
       });
-    } catch (err) {
+    }).catch((err) => {
       console.error("Auth context load error:", err);
       localStorage.removeItem("token");
       if (typeof document !== "undefined") {
@@ -80,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         document.cookie = "user_role=; path=/; max-age=0";
       }
       setUser(null);
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
+    });
   }
 
   useEffect(() => {

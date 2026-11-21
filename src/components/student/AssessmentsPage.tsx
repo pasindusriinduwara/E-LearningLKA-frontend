@@ -1,35 +1,31 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import {
-  ClipboardCheck,
-  Clock3,
-  CheckCircle2,
-  PlayCircle,
-  FileText,
-  Search,
-  ChevronRight,
-  X,
-  Award,
-  HelpCircle,
-  FileCheck,
-  Send,
-  Timer,
-  Loader2,
-  BookOpen,
-  Calendar,
-  GraduationCap,
-  Trophy,
-} from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import {
   assessmentService,
   AssessmentSummary,
   QuizSubmissionResult,
 } from "@/services/assessmentService";
-import { useAuth } from "@/context/AuthContext";
-import { StudentQuizTakingModal } from "./StudentQuizTakingModal";
+import {
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardCheck,
+  Clock3,
+  FileText,
+  GraduationCap,
+  Loader2,
+  PlayCircle,
+  Search,
+  Trophy,
+  X
+} from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { QuizResultModal } from "./QuizResultModal";
 import { StudentEssaySubmissionModal } from "./StudentEssaySubmissionModal";
+import { StudentQuizTakingModal } from "./StudentQuizTakingModal";
 
 export type AssessmentStatus = "To do" | "In progress" | "Graded";
 
@@ -76,7 +72,7 @@ function getGradeBadgeStyle(grade?: string) {
   }
 }
 
-function getSubjectBadge(subjectCode: string, subjectName: string) {
+function getSubjectBadge(subjectCode: string) {
   if (subjectCode === "math") {
     return {
       bg: "bg-blue-50/90 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-200/80 dark:border-blue-800/60",
@@ -114,8 +110,7 @@ export function AssessmentsPage() {
   const [activeResult, setActiveResult] = useState<QuizSubmissionResult | null>(null);
   const [isLoadingResult, setIsLoadingResult] = useState(false);
 
-  const loadAssessments = () => {
-    setIsLoading(true);
+  const loadAssessments = useCallback(() => {
     assessmentService
       .getStudentAssessments(user?.studentId || user?.id)
       .then((data) => {
@@ -173,11 +168,13 @@ export function AssessmentsPage() {
       .finally(() => {
         setIsLoading(false);
       });
-  };
+  }, [user?.studentId, user?.id]);
 
   useEffect(() => {
     loadAssessments();
-  }, [user]);
+  }, [loadAssessments]);
+
+  function reloadAssessments() { setIsLoading(true); return loadAssessments(); }
 
   const filteredAssessments = useMemo(() => {
     return assessments.filter((item) => {
@@ -231,7 +228,7 @@ export function AssessmentsPage() {
     setActiveQuizTakingId(null);
     setActiveResult(result);
     // Reload assessments to refresh statuses and counts from live database
-    loadAssessments();
+    reloadAssessments();
   }
 
   return (
@@ -393,7 +390,7 @@ export function AssessmentsPage() {
           {filteredAssessments.map((item) => {
             const isGraded = item.status === "Graded";
             const isInProgress = item.status === "In progress";
-            const subjBadge = getSubjectBadge(item.subjectCode, item.subject);
+            const subjBadge = getSubjectBadge(item.subjectCode);
 
             return (
               <article
@@ -600,7 +597,7 @@ export function AssessmentsPage() {
           onClose={() => setActiveEssaySubmissionId(null)}
           onSubmitSuccess={() => {
             setActiveEssaySubmissionId(null);
-            loadAssessments();
+            reloadAssessments();
           }}
         />
       )}

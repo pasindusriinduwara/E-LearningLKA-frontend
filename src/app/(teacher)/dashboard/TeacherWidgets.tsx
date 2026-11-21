@@ -47,6 +47,7 @@ export function TeacherWidgets({
   const dayNamesShort = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   const now = new Date();
   const currentDayIndex = now.getDay();
+  const todayDate = now.toDateString();
   const todayFull = dayNamesFull[currentDayIndex];
   const todayShort = dayNamesShort[currentDayIndex];
 
@@ -57,13 +58,13 @@ export function TeacherWidgets({
       if (dow === todayFull || dow === todayShort) return true;
       if (s.date) {
         const sDate = new Date(s.date);
-        if (!isNaN(sDate.getTime()) && sDate.toDateString() === now.toDateString()) {
+        if (!isNaN(sDate.getTime()) && sDate.toDateString() === todayDate) {
           return true;
         }
       }
       return false;
     });
-  }, [schedules, todayFull, todayShort]);
+  }, [schedules, todayFull, todayShort, todayDate]);
 
   // Find next upcoming class in the week if none today
   const nextClass = useMemo(() => {

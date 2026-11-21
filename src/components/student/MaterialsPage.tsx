@@ -1,34 +1,34 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import Link from "next/link";
-import {
-  FileText,
-  Video,
-  Link2,
-  Search,
-  Download,
-  CheckCircle2,
-  X,
-  FileCode,
-  FolderOpen,
-  ExternalLink,
-  Layers,
-  RefreshCw,
-  GraduationCap,
-  Eye,
-  AlertCircle,
-  Copy,
-  Check,
-  Filter,
-  RotateCcw,
-  Play,
-} from "lucide-react";
-import { getRecentMaterials } from "@/services/studentService";
+import type { LearningResource } from "@/lib/types/student";
+import { getEmbedVideoUrl } from "@/lib/videoUtils";
 import { getAvailableBatches, type AvailableBatch } from "@/services/batchService";
 import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
-import { getEmbedVideoUrl } from "@/lib/videoUtils";
-import type { LearningResource } from "@/lib/types/student";
+import { getRecentMaterials } from "@/services/studentService";
+import {
+  AlertCircle,
+  Check,
+  CheckCircle2,
+  Copy,
+  Download,
+  ExternalLink,
+  Eye,
+  FileCode,
+  FileText,
+  Filter,
+  FolderOpen,
+  GraduationCap,
+  Layers,
+  Link2,
+  Play,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  Video,
+  X,
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export interface MaterialItem {
   id: string;
@@ -140,15 +140,13 @@ export function MaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [materialsRes, batchesRes, statusesRes] = await Promise.all([
+  const loadData = useCallback(() => {
+
+    return Promise.all([
         getRecentMaterials(),
         getAvailableBatches().catch(() => []),
         getMyEnrollmentStatuses().catch(() => []),
-      ]);
+      ]).then(([materialsRes, batchesRes, statusesRes]) => {
 
       const approvedBatchIds = new Set(
         statusesRes.filter((s) => s.status === "APPROVED").map((s) => s.batchId)
@@ -161,17 +159,19 @@ export function MaterialsPage() {
         .filter((r) => r.batchId && approvedBatchIds.has(r.batchId))
         .map((r, idx) => mapBackendMaterial(r, idx));
       setMaterials(mapped);
-    } catch (err: unknown) {
+    }).catch((err) => {
       console.error("Failed to load student materials:", err);
       setError(err instanceof Error ? err.message : "Failed to load study materials");
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
+    });
   }, []);
 
   useEffect(() => {
     void loadData();
   }, [loadData]);
+
+  function reloadData() { setLoading(true); setError(null); return loadData(); }
 
   // Dynamically extract subjects from materials and enrolled batches
   const availableSubjects = useMemo(() => {
@@ -262,19 +262,6 @@ export function MaterialsPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   }
 
-  const isVideoUrl = (url?: string) => {
-    if (!url) return false;
-    const lower = url.toLowerCase();
-    return (
-      lower.endsWith(".mp4") ||
-      lower.endsWith(".webm") ||
-      lower.endsWith(".ogg") ||
-      lower.includes("/video/upload/") ||
-      lower.includes("youtube.com") ||
-      lower.includes("youtu.be")
-    );
-  };
-
   const isPdfUrl = (url?: string) => {
     if (!url) return false;
     return url.toLowerCase().includes(".pdf") || url.toLowerCase().includes("/raw/upload/");
@@ -291,7 +278,7 @@ export function MaterialsPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => void loadData()}
+            onClick={() => void reloadData()}
             className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all shadow-sm"
             title="Refresh materials"
           >
@@ -317,7 +304,7 @@ export function MaterialsPage() {
           </div>
           <button
             type="button"
-            onClick={() => void loadData()}
+            onClick={() => void reloadData()}
             className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors"
           >
             Retry
@@ -740,7 +727,7 @@ export function MaterialsPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => void loadData()}
+                  onClick={() => void reloadData()}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
                 >
                   Refresh Library

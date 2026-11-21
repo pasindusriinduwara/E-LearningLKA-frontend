@@ -1,21 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  Calendar,
-  Loader2,
-  UploadCloud,
-  FileText,
-  CheckCircle2,
-  Trash2,
-  Clock,
-  Award,
-  BookOpen,
-  AlertCircle,
-  FileCheck,
-} from "lucide-react";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
+
 import { fetchApi } from "@/lib/api";
 import { assessmentService } from "@/services/assessmentService";
+import {
+  AlertCircle,
+  Award,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  FileCheck,
+  Loader2,
+  Trash2,
+  UploadCloud
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface BatchItem {
   id: string;
@@ -32,7 +32,7 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
   const [batches, setBatches] = useState<BatchItem[]>([]);
   const [title, setTitle] = useState("");
   const [batchId, setBatchId] = useState("");
-  const [dueDate, setDueDate] = useState(
+  const [dueDate, setDueDate] = useState(() =>
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
   const [totalMarks, setTotalMarks] = useState("50");
@@ -101,7 +101,7 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
     try {
       await assessmentService.saveQuiz({
         title: title.trim(),
-        batchId: batchId || (undefined as any),
+        batchId,
         assessmentType: "ESSAY",
         totalMarks: parseFloat(totalMarks) || 50,
         dueDate: dueDate ? `${dueDate}T23:59:59` : undefined,
@@ -271,14 +271,14 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
                   <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                     <CheckCircle2 size={12} /> Ready for students to download
                   </span>
-                  <a
+                  <AttachmentLink
                     href={paperFileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
                   >
                     Preview document
-                  </a>
+                  </AttachmentLink>
                 </div>
               </div>
             </div>

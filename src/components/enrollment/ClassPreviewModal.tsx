@@ -1,29 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import {
-  X,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  GraduationCap,
-  Sparkles,
-  Award,
-  Video,
-  BookOpen,
-  FileText,
-  ShieldCheck,
-  ChevronRight,
-  LogOut,
-  XCircle,
-} from "lucide-react";
 import type { AvailableBatch } from "@/services/batchService";
 import {
-  requestEnrollment,
   cancelEnrollmentRequest,
   leaveClass,
+  requestEnrollment,
 } from "@/services/enrollmentService";
+import {
+  Award,
+  BookOpen,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  FileText,
+  GraduationCap,
+  LogOut,
+  ShieldCheck,
+  Sparkles,
+  Video,
+  X,
+  XCircle
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 interface ClassPreviewModalProps {
   batch: AvailableBatch | null;
@@ -36,25 +35,22 @@ interface ClassPreviewModalProps {
   ) => void;
 }
 
-export function ClassPreviewModal({
+export function ClassPreviewModal(props: ClassPreviewModalProps) {
+  if (!props.isOpen || !props.batch) return null;
+  return <ClassPreviewSession key={props.batch.id + ":" + props.batch.status} {...props} />;
+}
+
+function ClassPreviewSession({
   batch,
   isOpen,
   onClose,
   onEnrollSuccess,
   onStatusChange,
 }: ClassPreviewModalProps) {
-  const [status, setStatus] = useState<string>("AVAILABLE");
+  const [status, setStatus] = useState<string>(batch?.status || "AVAILABLE");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [enrolledSuccess, setEnrolledSuccess] = useState(false);
-
-  useEffect(() => {
-    if (batch) {
-      setStatus(batch.status || "AVAILABLE");
-      setError("");
-      setEnrolledSuccess(false);
-    }
-  }, [batch]);
 
   // Handle escape key
   useEffect(() => {

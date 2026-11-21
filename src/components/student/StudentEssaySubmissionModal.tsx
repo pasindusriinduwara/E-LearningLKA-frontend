@@ -1,29 +1,30 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import {
-  X,
-  FileText,
-  UploadCloud,
-  CheckCircle2,
-  AlertCircle,
-  Calendar,
-  Award,
-  Clock,
-  Download,
-  ExternalLink,
-  Send,
-  Loader2,
-  Trash2,
-  Trophy,
-  BookOpen,
-  FileCheck,
-} from "lucide-react";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
+
 import {
   assessmentService,
-  StudentQuizTakeResponse,
   QuizSubmissionResult,
+  StudentQuizTakeResponse,
 } from "@/services/assessmentService";
+import {
+  AlertCircle,
+  Award,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  FileCheck,
+  FileText,
+  Loader2,
+  Send,
+  Trash2,
+  Trophy,
+  UploadCloud,
+  X
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface StudentEssaySubmissionModalProps {
   assessmentId: string;
@@ -32,7 +33,11 @@ interface StudentEssaySubmissionModalProps {
   onSubmitSuccess: () => void;
 }
 
-export function StudentEssaySubmissionModal({
+export function StudentEssaySubmissionModal(props: StudentEssaySubmissionModalProps) {
+  return <EssaySession key={props.assessmentId + ":" + (props.studentId || "")} {...props} />;
+}
+
+function EssaySession({
   assessmentId,
   studentId,
   onClose,
@@ -55,7 +60,6 @@ export function StudentEssaySubmissionModal({
 
   useEffect(() => {
     let isMounted = true;
-    setIsLoading(true);
 
     Promise.allSettled([
       assessmentService.getAssessmentForTaking(assessmentId),
@@ -68,6 +72,10 @@ export function StudentEssaySubmissionModal({
         if (takeRes.value.submissionType === "TEXT") {
           setActiveTab("text");
         }
+      }
+
+      if (takeRes.status === "rejected") {
+        setErrorMsg(takeRes.reason instanceof Error ? takeRes.reason.message : "Could not load assessment");
       }
 
       if (subRes.status === "fulfilled" && subRes.value) {
@@ -88,7 +96,7 @@ export function StudentEssaySubmissionModal({
     setErrorMsg(null);
 
     try {
-      const res = await assessmentService.uploadPaper(file);
+      const res = await assessmentService.uploadAnswer(assessmentId, file);
       setPaperUploadUrl(res.url);
       setPaperFileName(res.fileName || file.name);
     } catch (err: unknown) {
@@ -270,7 +278,7 @@ export function StudentEssaySubmissionModal({
                     </div>
                   </div>
 
-                  <a
+                  <AttachmentLink
                     href={assessment.attachmentUrl}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -279,7 +287,7 @@ export function StudentEssaySubmissionModal({
                     <Download size={14} />
                     <span>Download Paper</span>
                     <ExternalLink size={12} />
-                  </a>
+                  </AttachmentLink>
                 </div>
               )}
 
@@ -349,14 +357,14 @@ export function StudentEssaySubmissionModal({
                                 <span className="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1">
                                   <CheckCircle2 size={12} /> Ready to submit
                                 </span>
-                                <a
+                                <AttachmentLink
                                   href={paperUploadUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="text-[11px] text-blue-600 hover:underline font-medium"
                                 >
                                   Preview upload
-                                </a>
+                                </AttachmentLink>
                               </div>
                             </div>
                           </div>

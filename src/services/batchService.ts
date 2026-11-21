@@ -46,7 +46,7 @@ export function getAvailableBatches() {
 export async function getBatchById(id: string): Promise<AvailableBatch> {
   try {
     return await fetchApi<AvailableBatch>(`/batches/${id}`);
-  } catch (err) {
+  } catch {
     const all = await getAvailableBatches();
     const found = all.find((b) => b.id === id);
     if (!found) {

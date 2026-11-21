@@ -41,7 +41,7 @@ export function QuizReviewStudio({
   const [title, setTitle] = useState(initialTitle);
   const [batches, setBatches] = useState<BatchItem[]>([]);
   const [batchId, setBatchId] = useState("");
-  const [dueDate, setDueDate] = useState(
+  const [dueDate, setDueDate] = useState(() =>
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
   const [durationMinutes, setDurationMinutes] = useState(60);

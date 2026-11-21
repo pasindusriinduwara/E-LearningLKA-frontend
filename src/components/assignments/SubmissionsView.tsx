@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
+
+import type { Assignment, Submission } from "@/lib/types/assignment";
 import {
+  Award,
+  Download,
+  Edit3,
   Eye,
   EyeOff,
-  Edit3,
-  Trash2,
-  Award,
   FileText,
-  CheckCircle2,
-  Download,
-  Clock,
+  Trash2
 } from "lucide-react";
-import type { Assignment, Submission } from "@/lib/types/assignment";
+import { useState } from "react";
 import { TeacherGradingModal } from "./TeacherGradingModal";
 
 interface SubmissionsViewProps {
@@ -50,14 +50,14 @@ export function SubmissionsView({
               </span>
             )}
             {assignment.attachmentUrl && (
-              <a
+              <AttachmentLink
                 href={assignment.attachmentUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[10px] font-bold px-2.5 py-0.5 rounded-full border bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-1 hover:underline"
               >
                 <FileText size={10} /> View Question Paper
-              </a>
+              </AttachmentLink>
             )}
           </div>
 
@@ -150,7 +150,7 @@ export function SubmissionsView({
                     </td>
                     <td className="px-6 py-4">
                       {sub.paperUploadUrl ? (
-                        <a
+                        <AttachmentLink
                           href={sub.paperUploadUrl}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -159,7 +159,7 @@ export function SubmissionsView({
                           <FileText size={12} />
                           <span>View PDF</span>
                           <Download size={11} />
-                        </a>
+                        </AttachmentLink>
                       ) : sub.answerText ? (
                         <span className="inline-flex items-center gap-1 text-xs text-slate-500 font-medium">
                           <span>Online Text</span>

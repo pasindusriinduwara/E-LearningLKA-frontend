@@ -32,10 +32,10 @@ export function ScheduleClassModal({
     const [startTime, setStartTime] = useState(scheduleToEdit?.startTime || "16:30");
     const [endTime, setEndTime] = useState(scheduleToEdit?.endTime || "18:30");
     const [location, setLocation] = useState(scheduleToEdit?.location || "");
-    const [mode, setMode] = useState<"IN_PERSON" | "ONLINE" | "HYBRID">(
-        (scheduleToEdit?.mode as any) || "IN_PERSON"
+    const [mode, setMode] = useState<DeliveryMode>(
+        scheduleToEdit?.mode === "ONLINE" || scheduleToEdit?.mode === "HYBRID" ? scheduleToEdit.mode : "IN_PERSON"
     );
-    const [repeat, setRepeat] = useState<"ONCE" | "WEEKLY" | "BI_WEEKLY">("WEEKLY");
+    const [repeat, setRepeat] = useState<RepeatInterval>("WEEKLY");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -60,19 +60,9 @@ export function ScheduleClassModal({
         }
 
         // 2. Client-Side Overlap Pre-Check (against current active schedules)
-        if (existingSchedules && existingSchedules.length > 0) {
-            const hasConflict = existingSchedules.some((s) => {
-                if (s.date !== date) return false;
-                if (s.startTime && s.endTime) {
-                    return startTime < s.endTime && s.startTime < endTime;
-                }
-                return false;
-            });
-
-            if (hasConflict) {
-                setError("This time slot conflicts with an already scheduled class on this date.");
-                return;
-            }
+        if (hasConflict) {
+            setError("This time slot conflicts with an already scheduled class on this date.");
+            return;
         }
 
         // 3. Submit to backend

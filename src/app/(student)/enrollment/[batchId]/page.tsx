@@ -1,47 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import {
+  getBatchById,
+  type AvailableBatch
+} from "@/services/batchService";
+import {
+  cancelEnrollmentRequest,
+  getMyEnrollmentStatuses,
+  leaveClass,
+  requestEnrollment,
+} from "@/services/enrollmentService";
+import {
+  AlertCircle,
   ArrowLeft,
+  Award,
+  BookOpen,
   Calendar,
+  Check,
   CheckCircle2,
   ChevronRight,
   Clock,
-  GraduationCap,
-  Sparkles,
-  Award,
-  Video,
-  BookOpen,
   FileText,
-  ShieldCheck,
-  AlertCircle,
-  Users,
+  GraduationCap,
+  HelpCircle,
+  LogOut,
   MapPin,
   RefreshCw,
-  XCircle,
-  HelpCircle,
-  Check,
-  Sparkle,
-  LogOut,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Video,
+  XCircle
 } from "lucide-react";
-import {
-  getBatchById,
-  type AvailableBatch,
-  type ScheduleSummary,
-} from "@/services/batchService";
-import {
-  requestEnrollment,
-  cancelEnrollmentRequest,
-  leaveClass,
-  getMyEnrollmentStatuses,
-} from "@/services/enrollmentService";
-import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 export default function ClassDetailsPage() {
+  const params = useParams<{ batchId: string }>();
+  return <BatchSession key={params.batchId} />;
+}
+
+function BatchSession() {
   const params = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
@@ -57,17 +59,12 @@ export default function ClassDetailsPage() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  async function loadBatchData() {
+  const loadBatchData = useCallback(() => {
     if (!batchId) return;
-
-    try {
-      setLoading(true);
-      setError("");
-
-      const [batchData, enrollmentStatuses] = await Promise.all([
+    return Promise.all([
         getBatchById(batchId),
         getMyEnrollmentStatuses().catch(() => []),
-      ]);
+      ]).then(([batchData, enrollmentStatuses]) => {
 
       const matchingStatus = enrollmentStatuses.find(
         (item) => item.batchId === batchId
@@ -76,18 +73,20 @@ export default function ClassDetailsPage() {
       setBatch(batchData);
       // Backend automatically computes status for authenticated student, fallback to enrollment statuses if available
       setStatus(batchData.status || matchingStatus || "AVAILABLE");
-    } catch (err) {
+    }).catch((err) => {
       setError(
         err instanceof Error ? err.message : "Failed to load class details"
       );
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
-  }
+    });
+  }, [batchId]);
 
   useEffect(() => {
     loadBatchData();
-  }, [batchId]);
+  }, [loadBatchData]);
+
+  function reloadBatchData() { setLoading(true); setError(""); return loadBatchData(); }
 
   async function handleEnroll() {
     if (!batchId) return;
@@ -279,7 +278,7 @@ export default function ClassDetailsPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={loadBatchData}
+            onClick={reloadBatchData}
             title="Refresh class details"
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors"
           >

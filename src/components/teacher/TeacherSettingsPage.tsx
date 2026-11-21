@@ -1,28 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { getTeacherProfile, updateTeacherProfile } from "@/services/teacherService";
 import type { TeacherProfile } from "@/services/teacherService";
+import { getTeacherProfile, updateTeacherProfile } from "@/services/teacherService";
 import {
-  GraduationCap,
-  Award,
-  Phone,
-  Mail,
-  User,
-  ShieldCheck,
-  Save,
-  RotateCcw,
-  Sparkles,
   AlertCircle,
+  Award,
   Check,
-  FileText
+  GraduationCap,
+  Phone,
+  RotateCcw,
+  Save,
+  ShieldCheck,
+  Sparkles,
+  User
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function TeacherSettingsPage() {
   const { user, loading: authLoading, updateUser, refreshUser } = useAuth();
 
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setLoading] = useState(true);
+  const loading = authLoading || (user?.role === "TEACHER" && profileLoading);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,17 +41,12 @@ export function TeacherSettingsPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.role !== "TEACHER") {
-      setLoading(false);
-      return;
-    }
+    if (!user || user.role !== "TEACHER") return;
 
     let cancelled = false;
 
     async function loadData() {
       try {
-        setLoading(true);
-        setError(null);
         const profile = await getTeacherProfile();
 
         if (cancelled) return;
@@ -67,7 +61,7 @@ export function TeacherSettingsPage() {
         setEmail(profile.email || user?.email || "");
 
         setInitialState(profile);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to load teacher profile:", err);
         if (!cancelled && user) {
           setTitle(user.title || "Mr.");
@@ -157,9 +151,9 @@ export function TeacherSettingsPage() {
       setTimeout(() => setSaveSuccess(false), 4000);
 
       refreshUser();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update teacher profile:", err);
-      setError(err?.message || "Failed to update profile details. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to update profile details. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -433,14 +427,14 @@ export function TeacherSettingsPage() {
           <button
             type="button"
             onClick={handleReset}
-            disabled={saving}
+            disabled={saving || loading}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors disabled:opacity-50"
           >
             <RotateCcw size={16} /> Reset
           </button>
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || loading}
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all disabled:opacity-70"
           >
             {saving ? (

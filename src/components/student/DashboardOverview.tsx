@@ -1,35 +1,28 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
 import {
   ArrowUpRight,
   BookOpen,
   CalendarDays,
-  CircleAlert,
-  CircleCheck,
-  Clock3,
-  Globe,
-  GraduationCap,
-  MapPin,
-  Tablet,
   ChevronRight,
-  Sparkles,
+  CircleAlert,
+  Clock3,
   Download,
   FileText,
-  Video,
+  Globe,
+  GraduationCap,
   Link2,
+  MapPin,
   Play,
+  Sparkles,
+  Tablet,
+  Video
 } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
-import {
-  getAnnouncements,
-  getRecentMaterials,
-  getUpcomingClasses,
-  getStudentProfile,
-  type AnnouncementItem,
-} from "@/services/studentService";
+import type { LearningResource, ScheduleItem, StudentProfile } from "@/lib/types/student";
 import {
   getAvailableBatches,
   type AvailableBatch,
@@ -38,7 +31,13 @@ import {
   getMyEnrollmentStatuses,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
-import type { ScheduleItem, StudentProfile, LearningResource } from "@/lib/types/student";
+import {
+  getAnnouncements,
+  getRecentMaterials,
+  getStudentProfile,
+  getUpcomingClasses,
+  type AnnouncementItem,
+} from "@/services/studentService";
 
 export function DashboardOverview() {
   const { user } = useAuth();
@@ -91,7 +90,7 @@ export function DashboardOverview() {
         if (scheduleRes.status === "fulfilled") {
           const allUpcoming = scheduleRes.value || [];
           const enrolledUpcoming = allUpcoming.filter(
-            (c: any) => c.batchId && approvedBatchIds.has(c.batchId)
+            (c) => c.batchId && approvedBatchIds.has(c.batchId)
           );
           setClasses(enrolledUpcoming);
         }
@@ -127,7 +126,7 @@ export function DashboardOverview() {
           const allNotices = noticesRes.value || [];
           // Filter strictly for only enrolled classes (APPROVED)
           const enrolledNotices = allNotices.filter(
-            (n: any) => n.batchId && approvedBatchIds.has(n.batchId)
+            (n) => n.batchId && approvedBatchIds.has(n.batchId)
           );
           setAnnouncements(enrolledNotices);
         }
@@ -367,7 +366,7 @@ export function DashboardOverview() {
             ) : (
               classes.map((cls, index) => {
                 // Safely extract day of week and display text without hardcoding
-                const dayLabel = (cls.day || (cls as any).dayOfWeek || "CLASS")
+                const dayLabel = (cls.day || cls.dayOfWeek || "CLASS")
                   .slice(0, 3)
                   .toUpperCase();
                 const dateParts = cls.date ? cls.date.split(" ") : [];
@@ -376,7 +375,7 @@ export function DashboardOverview() {
 
                 const isOnline =
                   cls.mode?.toLowerCase() === "online" ||
-                  (cls as any).deliveryMode?.toLowerCase() === "online";
+                  cls.deliveryMode?.toLowerCase() === "online";
 
                 return (
                   <article key={cls.id || index} className="class-card-item">

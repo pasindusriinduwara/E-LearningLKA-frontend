@@ -4,20 +4,20 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { getStudentProfile, updateStudentProfile } from "@/services/studentService";
 import type { StudentProfile } from "@/lib/types/student";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  GraduationCap, 
-  BookOpen, 
-  Languages, 
-  ShieldCheck, 
-  Copy, 
-  Check, 
-  Save, 
-  RotateCcw, 
-  Sparkles, 
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  GraduationCap,
+  BookOpen,
+  Languages,
+  ShieldCheck,
+  Copy,
+  Check,
+  Save,
+  RotateCcw,
+  Sparkles,
   AlertCircle,
   Lock
 } from "lucide-react";
@@ -25,7 +25,8 @@ import {
 export function StudentSettingsPage() {
   const { user, loading: authLoading, updateUser, refreshUser } = useAuth();
 
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setLoading] = useState(true);
+  const loading = authLoading || (user?.role === "STUDENT" && profileLoading);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,17 +48,12 @@ export function StudentSettingsPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.role !== "STUDENT") {
-      setLoading(false);
-      return;
-    }
+    if (!user || user.role !== "STUDENT") return;
 
     let cancelled = false;
 
     async function loadData() {
       try {
-        setLoading(true);
-        setError(null);
         const profile = await getStudentProfile();
 
         if (cancelled) return;
@@ -73,7 +69,7 @@ export function StudentSettingsPage() {
         setEmail(profile.email || user?.email || "");
 
         setInitialState(profile);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to load student profile:", err);
         // Fallback to AuthContext values
         if (!cancelled && user) {
@@ -176,9 +172,9 @@ export function StudentSettingsPage() {
 
       // Also trigger refreshUser in background for consistency
       refreshUser();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update profile:", err);
-      setError(err?.message || "Failed to update profile details. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to update profile details. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -511,14 +507,14 @@ export function StudentSettingsPage() {
             type="button"
             className="btn-secondary-custom"
             onClick={handleReset}
-            disabled={saving}
+            disabled={saving || loading}
           >
             <RotateCcw size={16} /> Reset
           </button>
           <button
             type="submit"
             className="btn-primary-custom"
-            disabled={saving}
+            disabled={saving || loading}
           >
             {saving ? (
               <>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 
@@ -54,37 +54,36 @@ export default function MyClassesPage() {
   const [scheduleToDelete, setScheduleToDelete] = useState<ClassScheduleItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  async function loadData() {
-    setPageLoading(true);
-    setPageError("");
+  const loadData = useCallback(() => {
 
-    try {
-      const [batchData, subjectData, scheduleData] = await Promise.all([
+    return Promise.all([
         getTeacherBatches(),
         getSubjects(),
         getTeacherSchedules(),
-      ]);
+      ]).then(([batchData, subjectData, scheduleData]) => {
 
       setBatches(batchData);
       setSubjects(subjectData);
       setSchedule(scheduleData as ClassScheduleItem[]);
-    } catch (error) {
+    }).catch((error) => {
       setPageError(
         error instanceof Error ? error.message : "Failed to load classes"
       );
-    } finally {
+    }).finally(() => {
       setPageLoading(false);
-    }
-  }
+    });
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
+
+  function reloadData() { setPageLoading(true); setPageError(""); return loadData(); }
 
   async function handleCreateSubmit(data: CreateBatchData) {
     try {
       await createNewBatch(data);
-      await loadData();
+      await reloadData();
       setIsCreating(false);
     } catch (error) {
       setPageError(
@@ -104,7 +103,7 @@ export default function MyClassesPage() {
     } else {
       await createTeacherSchedule(data);
     }
-    await loadData();
+    await reloadData();
     setIsScheduling(false);
     setEditingSchedule(null);
   }
@@ -115,7 +114,7 @@ export default function MyClassesPage() {
     try {
       setIsDeleting(true);
       await deleteTeacherSchedule(scheduleToDelete.id);
-      await loadData();
+      await reloadData();
       setScheduleToDelete(null);
     } catch (err) {
       setPageError(err instanceof Error ? err.message : "Failed to remove schedule");

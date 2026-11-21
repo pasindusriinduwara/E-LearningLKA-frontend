@@ -1,14 +1,22 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
-  LayoutDashboard, Calendar, CheckSquare, BookOpen,
-  ClipboardList, LineChart, MessageCircle, Settings,
-  LogOut, Bell, ChevronRight, Menu, GraduationCap
+  Bell,
+  BookOpen,
+  Calendar,CheckSquare,
+  ChevronRight,
+  ClipboardList,
+  GraduationCap,
+  LayoutDashboard,
+  LineChart,
+  LogOut,
+  Menu,
+  Settings
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface NavItem {
   label: string;
@@ -48,7 +56,7 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      
+
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#111827] text-gray-300 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center h-16 px-6 bg-[#111827] border-b border-gray-800">
           <GraduationCap className="text-emerald-500 mr-2" size={24} />

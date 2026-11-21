@@ -1,33 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import {
-  BookOpen,
-  Calendar,
-  ChevronRight,
-  Clock,
-  Plus,
-  Search,
-  Sparkles,
-  User,
-  Video,
-  AlertCircle,
-  GraduationCap,
-  LogOut,
-  XCircle,
-} from "lucide-react";
+import { ClassPreviewModal } from "@/components/enrollment/ClassPreviewModal";
 import {
   getAvailableBatches,
   type AvailableBatch,
 } from "@/services/batchService";
 import {
+  cancelEnrollmentRequest,
   getMyEnrollmentStatuses,
   leaveClass,
-  cancelEnrollmentRequest,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
-import { ClassPreviewModal } from "@/components/enrollment/ClassPreviewModal";
+import {
+  AlertCircle,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  GraduationCap,
+  LogOut,
+  Plus,
+  Search,
+  Sparkles,
+  User,
+  Video,
+  XCircle
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 export default function StudentClassesPage() {
   const [batches, setBatches] = useState<AvailableBatch[]>([]);
