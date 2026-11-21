@@ -251,55 +251,6 @@ button {
   gap: 12px;
 }
 
-.help-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 64px;
-  padding: 12px 14px;
-  border: 1px solid rgba(79, 109, 245, 0.2);
-  border-radius: 14px;
-  background: #141d2f;
-  text-decoration: none;
-  transition: border-color 0.18s ease;
-}
-
-.help-box:hover {
-  border-color: rgba(79, 109, 245, 0.4);
-}
-
-.help-icon {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 9px;
-  background: #1f2b45;
-  color: #6e86ff;
-}
-
-.help-box > span:nth-child(2) {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.help-box strong {
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.help-box span {
-  color: #7b8fae;
-  font-size: 11px;
-}
-
-.help-box > svg {
-  color: #637590;
-}
-
 .logout-button {
   display: flex;
   width: 100%;

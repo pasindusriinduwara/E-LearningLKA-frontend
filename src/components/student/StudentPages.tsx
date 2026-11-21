@@ -1,4 +1,3 @@
-import { BookOpen } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { StatusPill } from "@/components/ui/StatusPill";
 
@@ -58,16 +57,6 @@ export function AttendancePage() {
           </div>
         ))}
       </div>
-    </section>
-  );
-}
-
-export function StudentPlaceholder({ title, description }: { title: string; description: string }) {
-  return (
-    <section className="empty-view">
-      <div className="empty-icon"><BookOpen size={24} /></div>
-      <h2>{title}</h2>
-      <p>{description}</p>
     </section>
   );
 }

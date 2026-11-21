@@ -1,6 +1,6 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, WalletCards, X } from "lucide-react";
+import { Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, Settings, WalletCards, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,7 +15,6 @@ const navItems = [
 ];
 
 const supportItems = [
-  { label: "Messages", href: "/messages", icon: MessageCircle },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -90,11 +89,6 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
 
         <nav className="nav-group nav-group-secondary" aria-label="Support navigation"><p className="nav-label">Support</p>{supportItems.map(({ label, href, icon: Icon }) => { const active = isActivePath(pathname, href); return <Link key={href} className={`nav-item ${active ? "nav-item-active" : ""}`} href={href} onClick={closeMenus} aria-current={active ? "page" : undefined}><Icon size={18} /><span>{label}</span></Link>; })}</nav>
         <div className="sidebar-footer">
-          <Link className="help-box" href="/messages" onClick={closeMenus}>
-            <span className="help-icon"><MessageCircle size={17} /></span>
-            <span><strong>Need help?</strong><span>Message the office</span></span>
-            <ArrowUpRight size={16} />
-          </Link>
           <button className="logout-button" type="button" onClick={signOut}>
             <span className="avatar avatar-tiny">N</span>
             <span>Sign out</span>

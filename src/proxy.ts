@@ -8,7 +8,6 @@ const STUDENT_ROUTES = [
   "/materials",
   "/assessments",
   "/enrollment",
-  "/messages",
   "/settings",
 ];
 
@@ -61,7 +60,6 @@ export const config = {
     "/materials/:path*",
     "/assessments/:path*",
     "/enrollment/:path*",
-    "/messages/:path*",
     "/settings/:path*",
     "/teacher/:path*",
     "/login",
