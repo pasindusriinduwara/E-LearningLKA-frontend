@@ -51,6 +51,8 @@ export interface AssessmentSummary {
   status: string;
   hidden?: boolean;
   submitted?: boolean;
+  resultPublished?: boolean;
+  resultPublishedAt?: string;
   scoreObtained?: number;
   grade?: string;
   attachmentUrl?: string;
@@ -119,11 +121,15 @@ export interface QuizSubmissionResult {
   submissionId: string;
   assessmentId: string;
   title: string;
-  scoreObtained: number;
+  scoreObtained: number | null;
   totalMarks: number;
-  percentage: number;
-  grade: string;
-  correctCount: number;
+  percentage: number | null;
+  grade: string | null;
+  correctCount: number | null;
+  status: string;
+  resultPublished: boolean;
+  resultPublishedAt?: string;
+  feedback?: string;
   totalQuestions: number;
   submittedAt: string;
   answers: ReviewAnswer[];

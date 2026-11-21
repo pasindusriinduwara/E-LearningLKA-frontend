@@ -108,6 +108,7 @@ export function TeacherGradingModal({
 
         {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
+          <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">Saving this grade keeps the result private. Publish it from the Results page when you are ready to release it to the student.</p>
           {errorMsg && (
             <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 rounded-2xl text-xs flex items-center gap-2">
               <AlertCircle size={16} className="shrink-0" />

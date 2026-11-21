@@ -30,4 +30,7 @@ export interface Submission {
   paperUploadUrl?: string;
   answerText?: string;
   feedback?: string;
+  resultPublished?: boolean;
+  resultPublishedAt?: string | null;
+  rank?: number | null;
 }

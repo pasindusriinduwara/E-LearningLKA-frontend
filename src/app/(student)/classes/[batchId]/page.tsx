@@ -1,5 +1,7 @@
 "use client";
 
+import { studentAssessmentStatus } from "@/lib/utils/resultVisibility";
+
 import { AttachmentLink } from "@/components/common/AttachmentLink";
 
 import type { ClassScheduleItem } from "@/lib/types/class";
@@ -67,7 +69,7 @@ interface ClassAssignment {
   title: string;
   dueDate: string;
   totalMarks: number;
-  status: "To do" | "Submitted" | "Graded";
+  status: "To do" | "Submitted" | "Awaiting results" | "Graded";
   fileUrl?: string;
   score?: number;
   grade?: string;
@@ -78,10 +80,11 @@ interface ClassAssignment {
 }
 
 interface ClassResult {
+  id: string;
   examName: string;
   date: string;
   marks: number;
-  rank: number;
+  totalMarks: number;
   grade: string;
   feedback: string;
 }
@@ -108,7 +111,6 @@ export default function StudentClassDetailsPage() {
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [schedules, setSchedules] = useState<ClassScheduleItem[]>([]);
   const [batchAssessments, setBatchAssessments] = useState<AssessmentSummary[]>([]);
-  const [classResults] = useState<ClassResult[]>([]);
 
   // Assessment Interaction Modals
   const [activeQuizTakingId, setActiveQuizTakingId] = useState<string | null>(null);
@@ -221,13 +223,13 @@ export default function StudentClassDetailsPage() {
           formattedDue = a.dueDate;
         }
       }
-      const isGraded = a.submitted || a.status === "Graded";
+      const resultStatus = studentAssessmentStatus(a);
       return {
         id: a.id,
         title: a.title,
         dueDate: formattedDue,
         totalMarks: a.totalMarks || 100,
-        status: isGraded ? ("Graded" as const) : ("To do" as const),
+        status: resultStatus,
         fileUrl: a.attachmentUrl || a.paperUploadUrl,
         score: a.scoreObtained != null ? Number(a.scoreObtained) : undefined,
         grade: a.grade,
@@ -259,18 +261,18 @@ export default function StudentClassDetailsPage() {
   }, [batchAssessments, materials, submittedAsgIds]);
 
   const allResults: ClassResult[] = useMemo(() => {
-    const fromAsg: ClassResult[] = batchAssessments
-      .filter((a) => a.submitted || a.status === "Graded")
-      .map((a, idx) => ({
+    return batchAssessments
+      .filter((a) => a.resultPublished === true)
+      .map((a) => ({
+        id: a.id,
         examName: a.title,
-        date: a.dueDate ? new Date(a.dueDate).toLocaleDateString("en-GB") : "Recently",
+        date: a.resultPublishedAt ? new Date(a.resultPublishedAt).toLocaleDateString("en-GB") : "Recently",
         marks: a.scoreObtained != null ? Number(a.scoreObtained) : 0,
-        rank: idx + 1,
-        grade: a.grade || "A",
+        totalMarks: a.totalMarks,
+        grade: a.grade || "—",
         feedback: a.feedback || "Evaluated by teacher",
       }));
-    return [...fromAsg, ...classResults];
-  }, [batchAssessments, classResults]);
+  }, [batchAssessments]);
 
   function handleOpenSubmitModal(asg: ClassAssignment) {
     setSelectedAssignment(asg);
@@ -755,7 +757,7 @@ export default function StudentClassDetailsPage() {
             {classAssignments.length > 0 ? (
               classAssignments.map((asg) => {
                 const isGraded = asg.status === "Graded";
-                const isSubmitted = asg.status === "Submitted";
+                const isSubmitted = asg.status === "Submitted" || asg.status === "Awaiting results";
                 const isQuiz = asg.type === "MCQ Quiz";
 
                 return (
@@ -801,7 +803,7 @@ export default function StudentClassDetailsPage() {
 
                       {asg.isRealAssessment ? (
                         isQuiz ? (
-                          isGraded ? (
+                          isGraded || isSubmitted ? (
                             <button
                               type="button"
                               onClick={() => {
@@ -811,7 +813,7 @@ export default function StudentClassDetailsPage() {
                               }}
                               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-colors cursor-pointer"
                             >
-                              <span>View Result</span>
+                              <span>{isGraded ? "View Result" : "Submission status"}</span>
                             </button>
                           ) : (
                             <button
@@ -928,7 +930,7 @@ export default function StudentClassDetailsPage() {
       {activeTab === "results" && (
         <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-4">
           <h3 className="text-lg font-bold text-gray-900 font-serif mb-1">Assessment Performance</h3>
-          <p className="text-xs text-gray-500 mb-4">Your evaluated papers and term test scores for {batch.name}.</p>
+          <p className="text-xs text-gray-500 mb-4">Your published assessment marks and feedback for {batch.name}.</p>
 
           {allResults.length > 0 ? (
             <div className="overflow-x-auto">
@@ -936,20 +938,18 @@ export default function StudentClassDetailsPage() {
                 <thead className="border-b border-gray-100 text-gray-400 uppercase tracking-wider font-bold">
                   <tr>
                     <th className="py-3 px-3">Examination / Test</th>
-                    <th className="py-3 px-3">Date</th>
+                    <th className="py-3 px-3">Published</th>
                     <th className="py-3 px-3 text-center">Score</th>
-                    <th className="py-3 px-3 text-center">Batch Rank</th>
                     <th className="py-3 px-3 text-center">Grade</th>
                     <th className="py-3 px-3">Instructor Remark</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-gray-700">
-                  {allResults.map((r, i) => (
-                    <tr key={i} className="hover:bg-gray-50/80 transition-colors">
+                  {allResults.map((r) => (
+                    <tr key={r.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="py-4 px-3 font-bold text-gray-900">{r.examName}</td>
                       <td className="py-4 px-3 text-gray-500">{r.date}</td>
-                      <td className="py-4 px-3 text-center font-bold text-[#4f6df5]">{r.marks}/100</td>
-                      <td className="py-4 px-3 text-center font-semibold">#{r.rank}</td>
+                      <td className="py-4 px-3 text-center font-bold text-[#4f6df5]">{r.marks}/{r.totalMarks}</td>
                       <td className="py-4 px-3 text-center">
                         <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">
                           {r.grade}
@@ -968,7 +968,7 @@ export default function StudentClassDetailsPage() {
               </div>
               <h4 className="text-sm font-bold text-gray-900">No assessment results released yet</h4>
               <p className="text-xs text-gray-500 max-w-sm mx-auto mt-1">
-                Scores, rank analysis, and instructor remarks will appear here after term tests or homework assignments are evaluated.
+                Your marks and instructor remarks will appear here after your teacher publishes the assessment results.
               </p>
             </div>
           )}

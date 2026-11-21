@@ -15,6 +15,17 @@ interface QuizResultModalProps {
 }
 
 export function QuizResultModal({ result, onClose }: QuizResultModalProps) {
+  if (!result.resultPublished) {
+    return <div role="dialog" aria-modal="true" aria-labelledby="pending-result-title" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4">
+      <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-900 p-8 text-center text-white shadow-2xl">
+        <Check className="mx-auto mb-4 text-emerald-400" size={40} />
+        <h2 id="pending-result-title" className="text-xl font-bold">Submission received</h2>
+        <p className="mt-2 font-semibold text-slate-200">{result.title}</p>
+        <p className="mt-4 text-sm leading-relaxed text-slate-400">Your answers have been saved. Your marks, feedback and answer review will appear after your teacher publishes the results.</p>
+        <button type="button" onClick={onClose} className="mt-6 rounded-xl bg-blue-600 px-6 py-2.5 text-sm font-semibold hover:bg-blue-500">Back to assessments</button>
+      </div>
+    </div>;
+  }
   const isPass = (result.percentage || 0) >= 40.0;
   const isDistinction = (result.percentage || 0) >= 75.0;
 
@@ -123,6 +134,7 @@ export function QuizResultModal({ result, onClose }: QuizResultModalProps) {
           </div>
         </div>
 
+        {result.feedback && <div className="mx-6 mb-5 rounded-xl border border-emerald-800 bg-emerald-950/30 p-4 text-sm text-emerald-100"><strong className="mb-2 block">Teacher feedback</strong><p className="whitespace-pre-wrap">{result.feedback}</p></div>}
         {/* Question Breakdown List */}
         <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 border-t border-slate-800/80 bg-slate-950/40">
           <div className="flex items-center justify-between">

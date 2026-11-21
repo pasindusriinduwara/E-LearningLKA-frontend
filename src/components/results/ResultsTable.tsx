@@ -1,81 +1,20 @@
-import type { StudentResult } from "@/lib/types/results";
+import type { Submission } from "@/lib/types/assignment";
 
-export function ResultsTable({ results }: { results: StudentResult[] }) {
-  const getGradeStyles = (grade: string) => {
-    if (grade.includes("A")) return "text-emerald-600 bg-emerald-50";
-    if (grade.includes("B")) return "text-blue-600 bg-blue-50";
-    if (grade.includes("C")) return "text-amber-600 bg-amber-50";
-    return "text-gray-600 bg-gray-50";
-  };
-
-  const getRankColor = (rank: number) => {
-    if (rank <= 3) return "text-[#2D9F75]";
-    return "text-gray-400";
-  };
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[800px]">
-          <thead>
-            <tr className="border-b border-gray-100 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
-              <th className="px-6 py-5">Rank</th>
-              <th className="px-6 py-5">Student</th>
-              <th className="px-6 py-5">Term 1</th>
-              <th className="px-6 py-5">Term 2</th>
-              <th className="px-6 py-5">Assignment</th>
-              <th className="px-6 py-5">Total</th>
-              <th className="px-6 py-5">Grade</th>
-              <th className="px-6 py-5 text-right"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50 text-sm">
-            {results.map((result) => (
-              <tr key={result.id} className="hover:bg-gray-50/50 transition-colors">
-                
-                <td className="px-6 py-4">
-                  <span className={`font-bold font-serif text-lg ${getRankColor(result.rank)}`}>
-                    #{result.rank}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <div className="font-bold text-gray-900">{result.studentName}</div>
-                  <div className="text-xs text-gray-400">ID {result.studentId}</div>
-                </td>
-
-                <td className="px-6 py-4 text-gray-600">
-                  {result.term1}<span className="text-gray-400 text-xs">/100</span>
-                </td>
-
-                <td className="px-6 py-4 text-gray-600">
-                  {result.term2}<span className="text-gray-400 text-xs">/100</span>
-                </td>
-
-                <td className="px-6 py-4 text-gray-600">
-                  {result.assignment}<span className="text-gray-400 text-xs">/50 +proj</span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className="font-extrabold text-gray-900 text-base">{result.total}</span>
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${getGradeStyles(result.grade)}`}>
-                    {result.grade}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-right">
-                  <button className="text-xs font-bold text-[#2D9F75] hover:text-emerald-700 transition-colors">
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+export function ResultsTable({ results, onGrade, disabled = false }: { results: Submission[]; onGrade: (result: Submission) => void; disabled?: boolean }) {
+  return <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"><div className="overflow-x-auto">
+    <table className="w-full min-w-[760px] text-left text-sm">
+      <thead className="border-b border-gray-100 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-400"><tr>{["Rank", "Student", "Marks", "Grade", "Publication", "Action"].map((title) => <th key={title} scope="col" className="px-5 py-4">{title}</th>)}</tr></thead>
+      <tbody className="divide-y divide-gray-100">
+        {results.map((result) => <tr key={result.id} className="hover:bg-gray-50/60">
+          <td className="px-5 py-4 font-bold text-emerald-700">{result.rank ? `#${result.rank}` : "—"}</td>
+          <td className="px-5 py-4"><p className="font-semibold text-gray-900">{result.studentName}</p><p className="mt-1 text-xs text-gray-400">ID {result.studentId}</p></td>
+          <td className="px-5 py-4 font-semibold text-gray-900">{result.marks === null ? "Not graded" : <>{result.marks}<span className="text-xs font-normal text-gray-400"> / {result.totalMarks}</span></>}</td>
+          <td className="px-5 py-4"><span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${result.grade && result.grade !== "F" && result.grade !== "N/A" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{result.marks === null ? "—" : result.grade || "—"}</span></td>
+          <td className="px-5 py-4"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${result.resultPublished ? "bg-emerald-50 text-emerald-700" : result.status === "Graded" ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-500"}`}>{result.resultPublished ? "Published" : result.status === "Graded" ? "Ready to publish" : "Awaiting grading"}</span></td>
+          <td className="px-5 py-4"><button type="button" disabled={disabled} onClick={() => onGrade(result)} className="rounded-lg border border-emerald-100 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">{result.status === "Graded" ? "Review grade" : "Grade submission"}</button></td>
+        </tr>)}
+        {results.length === 0 && <tr><td colSpan={6} className="px-6 py-14 text-center text-gray-500">No student submissions match this view.</td></tr>}
+      </tbody>
+    </table>
+  </div></div>;
 }

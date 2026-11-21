@@ -2,8 +2,9 @@
 
 import { AttachmentLink } from "@/components/common/AttachmentLink";
 
-import { fetchApi } from "@/lib/api";
 import { assessmentService } from "@/services/assessmentService";
+import { getTeacherBatches, type TeacherBatch } from "@/services/teacherService";
+import Link from "next/link";
 import {
   AlertCircle,
   Award,
@@ -17,21 +18,18 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-interface BatchItem {
-  id: string;
-  name: string;
-  subject?: string;
-}
-
 interface CreateAssignmentFormProps {
   onCancel: () => void;
   onSuccess?: () => void;
 }
 
 export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFormProps) {
-  const [batches, setBatches] = useState<BatchItem[]>([]);
+  const [batches, setBatches] = useState<TeacherBatch[]>([]);
   const [title, setTitle] = useState("");
   const [batchId, setBatchId] = useState("");
+  const [batchesLoading, setBatchesLoading] = useState(true);
+  const [batchLoadError, setBatchLoadError] = useState<string | null>(null);
+  const [batchLoadAttempt, setBatchLoadAttempt] = useState(0);
   const [dueDate, setDueDate] = useState(() =>
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
@@ -51,17 +49,26 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchApi<BatchItem[]>("/batches")
+    let active = true;
+    getTeacherBatches()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBatches(data);
-          setBatchId(data[0].id);
-        }
+        if (!active) return;
+        setBatches(data);
+        setBatchId(data[0]?.id || "");
+        setBatchLoadError(null);
       })
-      .catch((err) => {
-        console.warn("Could not load batches:", err);
-      });
-  }, []);
+      .catch((err: unknown) => {
+        if (active) setBatchLoadError(err instanceof Error ? err.message : "Could not load your batches.");
+      })
+      .finally(() => { if (active) setBatchesLoading(false); });
+    return () => { active = false; };
+  }, [batchLoadAttempt]);
+  const hasSelectedBatch = batches.some((batch) => batch.id === batchId);
+  const reloadBatches = () => {
+    setBatchesLoading(true);
+    setBatchLoadError(null);
+    setBatchLoadAttempt((attempt) => attempt + 1);
+  };
 
   const handleFileUpload = async (file: File) => {
     if (!file) return;
@@ -92,6 +99,10 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
     e.preventDefault();
     if (!title.trim()) {
       setErrorMsg("Please enter an assignment title");
+      return;
+    }
+    if (batchesLoading || batchLoadError || !hasSelectedBatch) {
+      setErrorMsg("Select one of your batches before publishing this assignment.");
       return;
     }
 
@@ -179,18 +190,20 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
           </label>
           <div className="relative">
             <select
+              aria-label="Target Batch"
               value={batchId}
               onChange={(e) => setBatchId(e.target.value)}
+              disabled={batchesLoading || batches.length === 0 || isSubmitting}
               className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-900 dark:text-white text-sm appearance-none cursor-pointer transition-all shadow-xs"
             >
               {batches.length > 0 ? (
                 batches.map((b) => (
                   <option key={b.id} value={b.id}>
-                    {b.name} {b.subject ? `(${b.subject})` : ""}
+                    {b.name}
                   </option>
                 ))
               ) : (
-                <option value="">A/L 2026 Batch A (Default)</option>
+                <option value="">{batchesLoading ? "Loading your batches..." : batchLoadError ? "Could not load batches" : "No batches available"}</option>
               )}
             </select>
             <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
@@ -199,6 +212,8 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
               </svg>
             </div>
           </div>
+          {batchLoadError ? <p role="alert" className="mt-2 text-xs text-rose-700">{batchLoadError} <button type="button" className="font-bold underline" onClick={reloadBatches}>Retry</button></p>
+            : !batchesLoading && batches.length === 0 && <p className="mt-2 text-xs text-amber-700">Create a batch in <Link href="/teacher/classes" target="_blank" rel="noopener noreferrer" className="font-bold underline">My Classes</Link>, then <button type="button" className="font-bold underline" onClick={reloadBatches}>Reload batches</button> to publish this assignment.</p>}
         </div>
 
         <div>
@@ -441,7 +456,7 @@ export function CreateAssignmentForm({ onCancel, onSuccess }: CreateAssignmentFo
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || isUploadingFile}
+          disabled={isSubmitting || isUploadingFile || batchesLoading || Boolean(batchLoadError) || !hasSelectedBatch}
           className="px-6 py-2.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-xl transition-all shadow-sm hover:shadow flex items-center gap-2 active:scale-98"
         >
           {isSubmitting ? (

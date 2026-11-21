@@ -142,3 +142,25 @@ test("local attachments use the backend origin and bearer authentication", async
   await assert.rejects(api.downloadAssessmentFile(new URL("https://external.test/private.pdf")));
   assert.equal(requests.length, 1);
 });
+
+test("student assessment states distinguish submitted work from published results", () => {
+  const { studentAssessmentStatus } = compile("src/lib/utils/resultVisibility.ts", {});
+  assert.equal(studentAssessmentStatus({ submitted: false, resultPublished: false }), "To do");
+  assert.equal(studentAssessmentStatus({ submitted: true, resultPublished: false }), "Awaiting results");
+  assert.equal(studentAssessmentStatus({ submitted: true, resultPublished: true }), "Graded");
+});
+
+test("the pending result view never renders scores, feedback or answer keys", () => {
+  const jsx = (type, props) => ({ type, props });
+  const { QuizResultModal } = compile("src/components/student/QuizResultModal.tsx", {
+    "react/jsx-runtime": { jsx, jsxs: jsx, Fragment: "fragment" },
+    "lucide-react": new Proxy({}, { get: (_, name) => name }),
+  });
+  const result = { title: "Assessment", resultPublished: false, status: "GRADED", scoreObtained: 87,
+    grade: "A", feedback: "PRIVATE_FEEDBACK", answers: [{ questionText: "PRIVATE_ANSWER_KEY" }] };
+  const rendered = JSON.stringify(QuizResultModal({ result, onClose() {} }));
+  assert.ok(rendered.includes("Submission received"));
+  assert.ok(!rendered.includes("PRIVATE_FEEDBACK"));
+  assert.ok(!rendered.includes("PRIVATE_ANSWER_KEY"));
+  assert.ok(!rendered.includes('"87"'));
+});

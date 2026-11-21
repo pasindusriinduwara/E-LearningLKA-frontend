@@ -1,5 +1,7 @@
 "use client";
 
+import { studentAssessmentStatus } from "@/lib/utils/resultVisibility";
+
 import { useAuth } from "@/context/AuthContext";
 import {
   assessmentService,
@@ -27,7 +29,7 @@ import { QuizResultModal } from "./QuizResultModal";
 import { StudentEssaySubmissionModal } from "./StudentEssaySubmissionModal";
 import { StudentQuizTakingModal } from "./StudentQuizTakingModal";
 
-export type AssessmentStatus = "To do" | "In progress" | "Graded";
+export type AssessmentStatus = "To do" | "In progress" | "Awaiting results" | "Graded";
 
 export interface QuestionItem {
   id: number;
@@ -140,7 +142,7 @@ export function AssessmentsPage() {
               }
             }
 
-            const isGraded = a.submitted || a.status === "Graded";
+            const resultStatus = studentAssessmentStatus(a);
 
             return {
               id: a.id,
@@ -152,8 +154,8 @@ export function AssessmentsPage() {
               questionsCount: a.questionCount || 0,
               duration: `${a.durationMinutes || 60} mins`,
               dueDate: formattedDue,
-              status: isGraded ? "Graded" : "To do",
-              progress: isGraded ? 100 : 0,
+              status: resultStatus,
+              progress: a.submitted ? 100 : 0,
               totalMarks: a.totalMarks || 100,
               score: a.scoreObtained != null ? Number(a.scoreObtained) : undefined,
               grade: a.grade,
@@ -186,7 +188,7 @@ export function AssessmentsPage() {
       const matchesStatus =
         selectedStatus === "All" ||
         (selectedStatus === "To do" && item.status === "To do") ||
-        (selectedStatus === "In progress" && item.status === "In progress") ||
+        (selectedStatus === "Awaiting results" && item.status === "Awaiting results") ||
         (selectedStatus === "Graded" && item.status === "Graded");
 
       const matchesSubject =
@@ -198,7 +200,7 @@ export function AssessmentsPage() {
 
   const stats = useMemo(() => {
     const todo = assessments.filter((a) => a.status === "To do").length;
-    const inProgress = assessments.filter((a) => a.status === "In progress").length;
+    const inProgress = assessments.filter((a) => a.status === "Awaiting results").length;
     const graded = assessments.filter((a) => a.status === "Graded").length;
     const total = assessments.length;
     return { todo, inProgress, graded, total };
@@ -267,15 +269,15 @@ export function AssessmentsPage() {
 
         <button
           type="button"
-          className={`assessment-stat-card ${selectedStatus === "In progress" ? "assessment-stat-active" : ""}`}
-          onClick={() => setSelectedStatus(selectedStatus === "In progress" ? "All" : "In progress")}
+          className={`assessment-stat-card ${selectedStatus === "Awaiting results" ? "assessment-stat-active" : ""}`}
+          onClick={() => setSelectedStatus(selectedStatus === "Awaiting results" ? "All" : "Awaiting results")}
         >
           <div className="asm-stat-icon asm-stat-blue">
             <PlayCircle size={22} />
           </div>
           <div className="asm-stat-info">
             <strong className="asm-stat-number">{String(stats.inProgress).padStart(2, "0")}</strong>
-            <span className="asm-stat-label">In progress</span>
+            <span className="asm-stat-label">Awaiting results</span>
           </div>
         </button>
 
@@ -332,7 +334,7 @@ export function AssessmentsPage() {
         </div>
 
         <div className="subject-filter-tabs">
-          {["All", "To do", "In progress", "Graded"].map((statusTab) => {
+          {["All", "To do", "Awaiting results", "Graded"].map((statusTab) => {
             const isActive = selectedStatus === statusTab;
             return (
               <button
@@ -390,6 +392,7 @@ export function AssessmentsPage() {
           {filteredAssessments.map((item) => {
             const isGraded = item.status === "Graded";
             const isInProgress = item.status === "In progress";
+            const isAwaitingResults = item.status === "Awaiting results";
             const subjBadge = getSubjectBadge(item.subjectCode);
 
             return (
@@ -425,7 +428,9 @@ export function AssessmentsPage() {
                       </span>
 
                       {/* Smart Status Pill */}
-                      {isGraded ? (
+                      {isAwaitingResults ? (
+                        <span className="rounded-md border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">Awaiting results</span>
+                      ) : isGraded ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 ml-auto sm:ml-0">
                           <CheckCircle2 size={12} className="text-emerald-500" />
                           Graded
@@ -438,7 +443,7 @@ export function AssessmentsPage() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/60 ml-auto sm:ml-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                          Available
+                          {isAwaitingResults ? "Awaiting results" : "Available"}
                         </span>
                       )}
                     </div>
@@ -492,7 +497,9 @@ export function AssessmentsPage() {
 
                   {/* Actions & Result Capsule */}
                   <div className="flex items-center justify-between lg:justify-end gap-3.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 dark:border-slate-800/80 shrink-0">
-                    {isGraded ? (
+                    {isAwaitingResults ? (
+                      <button type="button" onClick={() => handleViewResult(item.id, item.type)} disabled={isLoadingResult} className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-2.5 text-xs font-semibold text-amber-700">View submission status</button>
+                    ) : isGraded ? (
                       <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end">
                         {/* Score Capsule */}
                         {item.score !== undefined && (

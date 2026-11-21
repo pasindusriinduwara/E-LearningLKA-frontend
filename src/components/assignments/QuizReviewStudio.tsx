@@ -17,13 +17,8 @@ import {
 } from "lucide-react";
 import { ParsedQuestion } from "@/lib/utils/quizParser";
 import { assessmentService, SaveQuizPayload } from "@/services/assessmentService";
-import { fetchApi } from "@/lib/api";
-
-interface BatchItem {
-  id: string;
-  name: string;
-  subject?: string;
-}
+import { getTeacherBatches, type TeacherBatch } from "@/services/teacherService";
+import Link from "next/link";
 
 interface QuizReviewStudioProps {
   initialQuestions: ParsedQuestion[];
@@ -39,8 +34,11 @@ export function QuizReviewStudio({
   onSaved,
 }: QuizReviewStudioProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [batches, setBatches] = useState<BatchItem[]>([]);
+  const [batches, setBatches] = useState<TeacherBatch[]>([]);
   const [batchId, setBatchId] = useState("");
+  const [batchesLoading, setBatchesLoading] = useState(true);
+  const [batchLoadError, setBatchLoadError] = useState<string | null>(null);
+  const [batchLoadAttempt, setBatchLoadAttempt] = useState(0);
   const [dueDate, setDueDate] = useState(() =>
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
@@ -50,17 +48,26 @@ export function QuizReviewStudio({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchApi<BatchItem[]>("/batches")
+    let active = true;
+    getTeacherBatches()
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBatches(data);
-          setBatchId(data[0].id);
-        }
+        if (!active) return;
+        setBatches(data);
+        setBatchId(data[0]?.id || "");
+        setBatchLoadError(null);
       })
-      .catch((err) => {
-        console.warn("Could not load batches:", err);
-      });
-  }, []);
+      .catch((err: unknown) => {
+        if (active) setBatchLoadError(err instanceof Error ? err.message : "Could not load your batches.");
+      })
+      .finally(() => { if (active) setBatchesLoading(false); });
+    return () => { active = false; };
+  }, [batchLoadAttempt]);
+  const hasSelectedBatch = batches.some((batch) => batch.id === batchId);
+  const reloadBatches = () => {
+    setBatchesLoading(true);
+    setBatchLoadError(null);
+    setBatchLoadAttempt((attempt) => attempt + 1);
+  };
 
   // Calculations
   const totalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || 1), 0);
@@ -168,6 +175,10 @@ export function QuizReviewStudio({
       setSaveError("Please provide at least one question.");
       return;
     }
+    if (batchesLoading || batchLoadError || !hasSelectedBatch) {
+      setSaveError("Select one of your batches before publishing this quiz.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -193,7 +204,6 @@ export function QuizReviewStudio({
       await assessmentService.saveQuiz(payload);
       onSaved();
     } catch (err: unknown) {
-      console.error(err);
       setSaveError(err instanceof Error ? err.message : "Failed to persist quiz into database.");
     } finally {
       setIsSaving(false);
@@ -233,7 +243,7 @@ export function QuizReviewStudio({
           </button>
           <button
             onClick={handleSaveToLms}
-            disabled={isSaving}
+            disabled={isSaving || batchesLoading || Boolean(batchLoadError) || !hasSelectedBatch}
             className="px-6 py-2.5 text-xs font-bold text-white bg-[#2D9F75] hover:bg-emerald-600 disabled:opacity-50 rounded-xl transition-all shadow-sm flex items-center gap-2"
           >
             {isSaving ? (
@@ -278,20 +288,24 @@ export function QuizReviewStudio({
             Target Batch
           </label>
           <select
+            aria-label="Target Batch"
             value={batchId}
             onChange={(e) => setBatchId(e.target.value)}
+            disabled={batchesLoading || batches.length === 0 || isSaving}
             className="w-full px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer"
           >
             {batches.length > 0 ? (
               batches.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {b.name} {b.subject ? `• ${b.subject}` : ""}
+                  {b.name}
                 </option>
               ))
             ) : (
-              <option value="">A/L 2026 Batch A (Default)</option>
+              <option value="">{batchesLoading ? "Loading your batches..." : batchLoadError ? "Could not load batches" : "No batches available"}</option>
             )}
           </select>
+          {batchLoadError ? <p role="alert" className="mt-2 text-xs text-rose-700">{batchLoadError} <button type="button" className="font-bold underline" onClick={reloadBatches}>Retry</button></p>
+            : !batchesLoading && batches.length === 0 && <p className="mt-2 text-xs text-amber-700">Create a batch in <Link href="/teacher/classes" target="_blank" rel="noopener noreferrer" className="font-bold underline">My Classes</Link>, then <button type="button" className="font-bold underline" onClick={reloadBatches}>Reload batches</button> to publish this quiz.</p>}
         </div>
 
         <div>
