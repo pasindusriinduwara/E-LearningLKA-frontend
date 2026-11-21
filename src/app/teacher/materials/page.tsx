@@ -13,7 +13,8 @@ import {
 } from "@/services/teacherService";
 
 function toMaterialType(type?: string): Material["type"] {
-  return type?.toLowerCase().includes("video") ? "video" : "document";
+  const t = type?.toLowerCase() || "";
+  return t.includes("video") || t.includes("recording") ? "video" : "document";
 }
 
 function mapMaterial(material: TeacherMaterial, batches: TeacherBatch[]): Material {
@@ -40,27 +41,27 @@ export default function MaterialsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadMaterials = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [batchResponse, materialResponse] = await Promise.all([
+  const loadMaterials = useCallback(() => {
+
+    return Promise.all([
         getTeacherBatches(),
         getTeacherMaterials(),
-      ]);
+      ]).then(([batchResponse, materialResponse]) => {
       setBatches(batchResponse);
       setMaterials(materialResponse.map((material) => mapMaterial(material, batchResponse)));
-    } catch (err: unknown) {
+    }).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load materials");
-    } finally {
+    }).finally(() => {
       setLoading(false);
-    }
+    });
   }, []);
 
   useEffect(() => {
 
     void loadMaterials();
   }, [loadMaterials]);
+
+  function reloadMaterials() { setLoading(true); setError(null); return loadMaterials(); }
 
   const filteredMaterials = materials.filter((material) => {
     const matchesBatch = activeBatch === "All batches" || material.batch === activeBatch;
@@ -86,7 +87,7 @@ export default function MaterialsPage() {
       {isUploading && (
         <UploadMaterialForm
           onCancel={() => setIsUploading(false)}
-          onUploaded={() => void loadMaterials()}
+          onUploaded={() => void reloadMaterials()}
         />
       )}
 

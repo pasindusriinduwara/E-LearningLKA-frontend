@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Clock3, MapPin, Video, Loader2 } from "lucide-react";
 import { getUpcomingClasses } from "@/services/studentService";
+import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
 import type { ScheduleItem } from "@/lib/types/student";
 
 export interface ScheduleDayTab {
@@ -44,8 +45,23 @@ export function SchedulePage() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getUpcomingClasses();
-        setSchedules(data || []);
+        const [data, statuses] = await Promise.all([
+          getUpcomingClasses().catch(() => []),
+          getMyEnrollmentStatuses().catch(() => []),
+        ]);
+
+        const approvedBatchIds = new Set<string>();
+        statuses.forEach((item) => {
+          if (item.status === "APPROVED") {
+            approvedBatchIds.add(item.batchId);
+          }
+        });
+
+        // Strictly enforce enrolled classes only
+        const enrolledSchedules = (data || []).filter(
+          (item) => item.batchId && approvedBatchIds.has(item.batchId)
+        );
+        setSchedules(enrolledSchedules);
       } catch (err) {
         console.error("Failed to load schedules:", err);
         setError("Failed to load schedule from server.");
@@ -67,7 +83,7 @@ export function SchedulePage() {
 
   return (
     <div className="schedule-page-wrapper">
-      
+
       <div className="schedule-calendar-strip" role="tablist" aria-label="Select day of the week">
         {WEEK_DAYS.map((day) => {
           const isSelected = day.id === selectedDayId;
@@ -100,9 +116,9 @@ export function SchedulePage() {
       </div>
 
       <div className="schedule-main-layout">
-        
+
         <section className="schedule-left-column">
-          
+
           <div className="selected-day-header">
             <h2 className="selected-day-title">{activeDay.fullDateStr}</h2>
             <span className="classes-count-pill">
@@ -175,7 +191,7 @@ export function SchedulePage() {
         </section>
 
         <aside className="schedule-right-column">
-          
+
           <div className="week-glance-card">
             <h3 className="week-glance-title">Week at a glance</h3>
             <div className="week-glance-list">

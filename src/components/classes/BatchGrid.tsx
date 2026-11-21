@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, ArrowUpRight } from "lucide-react";
+import { Clock, ArrowUpRight, ExternalLink } from "lucide-react";
 import type { TeacherBatch } from "@/services/teacherService";
 
 const modeStyles: Record<string, string> = {
@@ -86,9 +86,20 @@ export function BatchGrid({
                 <ArrowUpRight size={17} className="text-[#2D9F75]" />
               </div>
 
-              <p className="mt-3 text-xs font-semibold text-[#2D9F75]">
-                Click to view enrollments
-              </p>
+              <div className="mt-3 flex items-center justify-between text-xs font-semibold">
+                <span className="text-[#2D9F75]">Click to view enrollments</span>
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`/enrollment/${batch.id}?preview=teacher`, "_blank");
+                  }}
+                  className="text-gray-400 hover:text-emerald-700 flex items-center gap-1 transition-colors"
+                  title="Preview student enrollment page"
+                >
+                  <ExternalLink size={12} />
+                  <span>Preview Page</span>
+                </span>
+              </div>
             </div>
           </button>
         );

@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Teacher result publication
+
+Open `/teacher/results`, select a batch and assessment, and review the student submissions.
+Use **Grade submission** or **Review grade** to save marks and feedback privately, then
+**Publish results** to release completed grades. Ungraded submissions stay private.
+**Unpublish** hides the released results without deleting grades. Saving a revised grade
+requires publishing that student's result again.
+
+Students see **Awaiting results** after submitting. Once published, their own marks,
+feedback and quiz review appear in Assessments and the class Results tab. Other students'
+results are never returned by the student API. This page requires the backend result
+publication endpoints and database migration `005_submission_result_publication.sql`
+when automatic schema updates are disabled.

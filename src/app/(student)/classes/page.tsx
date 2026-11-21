@@ -1,35 +1,81 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import {
-  BookOpen,
-  Calendar,
-  ChevronRight,
-  Clock,
-  Plus,
-  Search,
-  Sparkles,
-  User,
-  Video,
-  AlertCircle,
-  GraduationCap,
-} from "lucide-react";
+import { ClassPreviewModal } from "@/components/enrollment/ClassPreviewModal";
 import {
   getAvailableBatches,
   type AvailableBatch,
 } from "@/services/batchService";
 import {
+  cancelEnrollmentRequest,
   getMyEnrollmentStatuses,
+  leaveClass,
   type EnrollmentStatus,
 } from "@/services/enrollmentService";
+import {
+  AlertCircle,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  GraduationCap,
+  LogOut,
+  Plus,
+  Search,
+  Sparkles,
+  User,
+  Video,
+  XCircle
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
 export default function StudentClassesPage() {
   const [batches, setBatches] = useState<AvailableBatch[]>([]);
+  const [previewBatch, setPreviewBatch] = useState<AvailableBatch | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"enrolled" | "pending">("enrolled");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionBatchId, setActionBatchId] = useState<string | null>(null);
+
+  async function handleLeaveClass(batchId: string) {
+    if (!confirm("Are you sure you want to leave this class? You will lose access to class materials, assessments, and live sessions.")) {
+      return;
+    }
+    setActionBatchId(batchId);
+    setError("");
+
+    try {
+      await leaveClass(batchId);
+      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      if (previewBatch?.id === batchId) {
+        setPreviewBatch(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to leave class");
+    } finally {
+      setActionBatchId(null);
+    }
+  }
+
+  async function handleCancelRequest(batchId: string) {
+    if (!confirm("Are you sure you want to cancel your pending enrollment request?")) {
+      return;
+    }
+    setActionBatchId(batchId);
+    setError("");
+
+    try {
+      await cancelEnrollmentRequest(batchId);
+      setBatches((prev) => prev.filter((b) => b.id !== batchId));
+      if (previewBatch?.id === batchId) {
+        setPreviewBatch(null);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel request");
+    } finally {
+      setActionBatchId(null);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -104,7 +150,7 @@ export default function StudentClassesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-            <GraduationCap size={14} className="text-[#2D9F75]" />
+            <GraduationCap size={14} className="text-[#4f6df5]" />
             My Studies
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-serif">
@@ -118,7 +164,7 @@ export default function StudentClassesPage() {
         {/* Button to go to Browse/Enroll page */}
         <Link
           href="/enrollment"
-          className="inline-flex items-center justify-center gap-2 bg-[#2D9F75] hover:bg-emerald-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all shrink-0 hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 bg-[#4f6df5] hover:bg-[#3b5ce8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-sm transition-all shrink-0 hover:shadow-md hover:shadow-blue-500/20"
         >
           <Plus size={18} />
           <span>Enroll in Classes</span>
@@ -133,7 +179,7 @@ export default function StudentClassesPage() {
             onClick={() => setActiveTab("enrolled")}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-2 ${
               activeTab === "enrolled"
-                ? "bg-[#F0FDF4] text-[#2D9F75] border border-[#2D9F75]/30 shadow-sm"
+                ? "bg-[#edf2ff] text-[#4f6df5] border border-[#4f6df5]/30 shadow-sm"
                 : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
             }`}
           >
@@ -141,7 +187,7 @@ export default function StudentClassesPage() {
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 activeTab === "enrolled"
-                  ? "bg-[#2D9F75] text-white"
+                  ? "bg-[#4f6df5] text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
             >
@@ -184,7 +230,7 @@ export default function StudentClassesPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search class or teacher..."
-            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D9F75]/20 focus:border-[#2D9F75]"
+            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#4f6df5]/20 focus:border-[#4f6df5]"
           />
         </div>
       </div>
@@ -192,7 +238,7 @@ export default function StudentClassesPage() {
       {/* Loading state */}
       {loading && (
         <div className="py-16 text-center">
-          <div className="w-8 h-8 border-3 border-[#2D9F75] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-3 border-[#4f6df5] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm text-gray-500">Loading your enrolled classes...</p>
         </div>
       )}
@@ -208,7 +254,7 @@ export default function StudentClassesPage() {
       {/* Empty State when no classes found */}
       {!loading && !error && displayedBatches.length === 0 && (
         <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center max-w-lg mx-auto shadow-sm my-8">
-          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#2D9F75] mx-auto mb-4">
+          <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-[#4f6df5] mx-auto mb-4">
             <BookOpen size={28} />
           </div>
 
@@ -225,7 +271,7 @@ export default function StudentClassesPage() {
 
           <Link
             href="/enrollment"
-            className="inline-flex items-center gap-2 bg-[#2D9F75] hover:bg-emerald-700 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm"
+            className="inline-flex items-center gap-2 bg-[#4f6df5] hover:bg-[#3b5ce8] text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-all shadow-sm shadow-blue-500/20"
           >
             <Sparkles size={16} />
             <span>Browse Classes</span>
@@ -244,12 +290,13 @@ export default function StudentClassesPage() {
             return (
               <div
                 key={batch.id}
-                className="bg-white rounded-2xl border border-gray-200 hover:border-emerald-300 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group"
+                onClick={() => setPreviewBatch(batch)}
+                className="bg-white rounded-2xl border border-gray-200 hover:border-[#4f6df5]/60 hover:shadow-lg transition-all flex flex-col justify-between overflow-hidden group cursor-pointer"
               >
                 {/* Top Accent bar */}
                 <div
                   className={`h-1.5 w-full ${
-                    isApproved ? "bg-[#2D9F75]" : "bg-amber-400"
+                    isApproved ? "bg-[#4f6df5]" : "bg-amber-400"
                   }`}
                 />
 
@@ -257,7 +304,7 @@ export default function StudentClassesPage() {
                   <div>
                     {/* Badges: Subject & Delivery Mode */}
                     <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-[#2D9F75] border border-emerald-100">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#4f6df5] border border-blue-100">
                         {batch.subject || "Subject"}
                       </span>
 
@@ -275,39 +322,58 @@ export default function StudentClassesPage() {
                     </div>
 
                     {/* Batch Name */}
-                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#2D9F75] transition-colors leading-snug mb-2">
+                    <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#4f6df5] transition-colors leading-snug mb-2">
                       {batch.name}
                     </h3>
 
                     {/* Class Details list */}
-                    <div className="space-y-2 mb-4 text-xs text-gray-600">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-xs text-gray-600 gap-2">
                         <User size={14} className="text-gray-400 shrink-0" />
-                        <span className="font-medium text-gray-700">
-                          {batch.teacher || "Assigned Teacher"}
-                        </span>
+                        <span className="font-medium text-gray-800">{batch.teacher || "Assigned Teacher"}</span>
+                        {batch.teacherQualification && (
+                          <span className="text-[10px] text-gray-400 truncate max-w-[140px]">
+                            ({batch.teacherQualification})
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center text-xs text-gray-600 gap-2">
                         <Clock size={14} className="text-gray-400 shrink-0" />
-                        <span>{batch.schedule || "Schedule announced soon"}</span>
+                        <span>{batch.schedule || "Schedule announced by teacher"}</span>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-gray-400 shrink-0" />
+                      <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
                         <span>Exam Year: {batch.examYear}</span>
+                        {batch.monthlyFee !== undefined && batch.monthlyFee !== null && (
+                          <span className="font-semibold text-gray-800">
+                            LKR {Number(batch.monthlyFee || 0).toLocaleString()} / mo
+                          </span>
+                        )}
                       </div>
+                    </div>
+
+                    {/* Click preview prompt */}
+                    <div className="text-[11px] font-semibold text-[#4f6df5] flex items-center justify-between pt-2 pb-1 border-t border-gray-100 group-hover:text-[#3b5ce8] transition-colors">
+                      <span className="flex items-center gap-1">
+                        <Sparkles size={12} />
+                        <span>Preview class & teacher profile</span>
+                      </span>
+                      <ChevronRight size={14} className="transform group-hover:translate-x-0.5 transition-transform" />
                     </div>
                   </div>
 
                   {/* Status Banner / Card Actions */}
-                  <div className="pt-4 border-t border-gray-100 space-y-2.5">
+                  <div
+                    className="pt-3 border-t border-gray-100 space-y-2.5"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {isApproved ? (
                       <>
                         <div className="flex items-center gap-2">
                           <Link
                             href={`/classes/${batch.id}`}
-                            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-[#2D9F75] hover:bg-emerald-700 text-white shadow-sm transition-all"
+                            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold bg-[#4f6df5] hover:bg-[#3b5ce8] text-white shadow-sm transition-all"
                           >
                             <span>Enter Class</span>
                             <ChevronRight size={16} />
@@ -331,7 +397,16 @@ export default function StudentClassesPage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                             Enrolled
                           </span>
-                          <span>Monthly Fee: LKR {batch.monthlyFee}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleLeaveClass(batch.id)}
+                            disabled={actionBatchId === batch.id}
+                            className="inline-flex items-center gap-1 text-gray-400 hover:text-red-600 transition-colors font-medium hover:underline disabled:opacity-50"
+                            title="Leave this class"
+                          >
+                            <LogOut size={12} />
+                            <span>{actionBatchId === batch.id ? "Leaving..." : "Leave Class"}</span>
+                          </button>
                         </div>
                       </>
                     ) : (
@@ -343,6 +418,19 @@ export default function StudentClassesPage() {
                         <p className="text-[11px] text-center text-gray-400">
                           You will gain full access once your teacher approves.
                         </p>
+                        <button
+                          type="button"
+                          onClick={() => handleCancelRequest(batch.id)}
+                          disabled={actionBatchId === batch.id}
+                          className="w-full py-2 rounded-xl text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                          <XCircle size={14} />
+                          <span>
+                            {actionBatchId === batch.id
+                              ? "Cancelling..."
+                              : "Cancel Enrollment Request"}
+                          </span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -352,6 +440,22 @@ export default function StudentClassesPage() {
           })}
         </div>
       )}
+
+      {/* Class Details & Teacher Profile Preview Modal */}
+      <ClassPreviewModal
+        batch={previewBatch}
+        isOpen={Boolean(previewBatch)}
+        onClose={() => setPreviewBatch(null)}
+        onStatusChange={(batchId, newStatus) => {
+          if (newStatus === "AVAILABLE") {
+            setBatches((prev) => prev.filter((b) => b.id !== batchId));
+          } else {
+            setBatches((prev) =>
+              prev.map((b) => (b.id === batchId ? { ...b, status: newStatus } : b))
+            );
+          }
+        }}
+      />
     </div>
   );
 }

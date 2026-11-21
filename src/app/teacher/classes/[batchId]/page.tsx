@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import {
+  AlertCircle,
   ArrowLeft,
   Check,
   Clock3,
@@ -20,28 +18,28 @@ import {
   Users,
   Video,
   Wallet,
-  X,
-  AlertCircle,
-  Sparkles,
-  Info,
+  X
 } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   approveEnrollment,
-  getBatchEnrollments,
-  getTeacherBatches,
-  rejectEnrollment,
-  getBatchMaterials,
+  createTeacherAnnouncement,
   createTeacherMaterial,
-  uploadTeacherMaterial,
+  deleteTeacherAnnouncement,
   deleteTeacherMaterial,
   getBatchAnnouncements,
-  createTeacherAnnouncement,
-  deleteTeacherAnnouncement,
+  getBatchEnrollments,
+  getBatchMaterials,
+  getTeacherBatches,
+  rejectEnrollment,
+  uploadTeacherMaterial,
   type BatchEnrollment,
+  type TeacherAnnouncement,
   type TeacherBatch,
   type TeacherMaterial,
-  type TeacherAnnouncement,
 } from "@/services/teacherService";
 
 import {
@@ -55,6 +53,11 @@ import { getEmbedVideoUrl } from "@/lib/videoUtils";
 type ActiveTab = "students" | "recordings" | "materials" | "announcements" | "zoom";
 
 export default function BatchDetailsPage() {
+  const params = useParams<{ batchId: string }>();
+  return <BatchSession key={params.batchId} />;
+}
+
+function BatchSession() {
   const router = useRouter();
   const params = useParams<{ batchId: string }>();
   const batchId = params.batchId;
@@ -64,7 +67,7 @@ export default function BatchDetailsPage() {
   const [enrollments, setEnrollments] = useState<BatchEnrollment[]>([]);
   const [materials, setMaterials] = useState<TeacherMaterial[]>([]);
   const [announcements, setAnnouncements] = useState<TeacherAnnouncement[]>([]);
-  
+
   const [activeTab, setActiveTab] = useState<ActiveTab>("students");
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -95,7 +98,7 @@ export default function BatchDetailsPage() {
 
   // Form states: Material
   const [matTitle, setMatTitle] = useState("");
-  const [matType, setMatType] = useState<"PDF" | "DOCUMENT" | "LINK">("PDF");
+  const [matType] = useState<"PDF" | "DOCUMENT" | "LINK">("PDF");
   const [matFile, setMatFile] = useState<File | null>(null);
   const [matUrl, setMatUrl] = useState("");
   const [isSubmittingMat, setIsSubmittingMat] = useState(false);
@@ -133,44 +136,29 @@ export default function BatchDetailsPage() {
     [materials]
   );
 
-  async function loadPage() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const [batchList, subjectList, enrollmentList, materialsList, announcementsList] =
-        await Promise.all([
-          getTeacherBatches(),
-          getSubjects(),
-          getBatchEnrollments(batchId),
-          getBatchMaterials(batchId).catch(() => []),
-          getBatchAnnouncements(batchId).catch(() => []),
-        ]);
-
+  const loadPage = useCallback(() => {
+    return Promise.all([
+      getTeacherBatches(), getSubjects(), getBatchEnrollments(batchId),
+      getBatchMaterials(batchId).catch(() => []), getBatchAnnouncements(batchId).catch(() => []),
+    ]).then(([batchList, subjectList, enrollmentList, materialsList, announcementsList]) => {
       const selected = batchList.find((item) => item.id === batchId);
-      if (!selected) {
-        throw new Error("Batch not found or you do not have permission.");
-      }
-
+      if (!selected) throw new Error("Batch not found or you do not have permission.");
+      setError("");
       setBatch(selected);
       setSubjects(subjectList);
       setEnrollments(enrollmentList);
       setMaterials(materialsList);
       setAnnouncements(announcementsList);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load batch details"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+    }).catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : "Failed to load batch details");
+    }).finally(() => setLoading(false));
+  }, [batchId]);
 
   useEffect(() => {
-    if (batchId) {
-      loadPage();
-    }
-  }, [batchId]);
+    if (batchId) void loadPage();
+  }, [batchId, loadPage]);
+
+  function reloadPage() { setLoading(true); setError(""); return loadPage(); }
 
   function showBanner(msg: string) {
     setSuccessMessage(msg);
@@ -184,7 +172,7 @@ export default function BatchDetailsPage() {
     try {
       await approveEnrollment(requestId);
       showBanner("Student enrollment approved successfully.");
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to approve request");
     } finally {
@@ -198,7 +186,7 @@ export default function BatchDetailsPage() {
     try {
       await rejectEnrollment(requestId);
       showBanner("Student enrollment rejected.");
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reject request");
     } finally {
@@ -229,7 +217,7 @@ export default function BatchDetailsPage() {
       setRecUrl("");
       setRecTopic("");
       setRecDuration("");
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add recording");
     } finally {
@@ -272,7 +260,7 @@ export default function BatchDetailsPage() {
       setMatTitle("");
       setMatFile(null);
       setMatUrl("");
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload material");
     } finally {
@@ -299,7 +287,7 @@ export default function BatchDetailsPage() {
       setIsCreateAnnouncementOpen(false);
       setAnnTitle("");
       setAnnDesc("");
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post announcement");
     } finally {
@@ -320,7 +308,7 @@ export default function BatchDetailsPage() {
         showBanner("Announcement removed.");
       }
       setItemToDelete(null);
-      await loadPage();
+      await reloadPage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete item.");
     } finally {

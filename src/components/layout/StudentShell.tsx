@@ -1,9 +1,9 @@
 "use client";
+import { useAuth } from "@/context/AuthContext";
+import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, WalletCards, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { ArrowUpRight, Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, CircleCheck, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, MessageCircle, Settings, UserPlus, WalletCards, X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -42,8 +42,12 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
     setProfileOpen(false);
   }
   useEffect(() => {
-    if (!loading && user && user.role === "TEACHER") {
-      router.replace("/teacher/dashboard");
+    if (!loading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (user.role === "TEACHER") {
+        router.replace("/teacher/dashboard");
+      }
     }
   }, [user, loading, router]);
 
@@ -52,7 +56,12 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
       {mobileOpen && <button className="drawer-scrim" type="button" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} aria-label="Student navigation">
         <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
-        <Link className="student-chip" href="/settings" onClick={closeMenus}>
+        <Link
+          className={`student-chip ${isActivePath(pathname, "/settings") ? "student-chip-active" : ""}`}
+          href="/settings"
+          onClick={closeMenus}
+          title="Manage Profile Details"
+        >
           <div className="avatar avatar-small">{user?.initials || "ST"}</div>
           <div>
             <strong>{user?.name || "Student"}</strong>
@@ -74,7 +83,6 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
               >
                 <Icon size={18} />
                 <span>{label}</span>
-                {label === "Materials" && !active && <span className="nav-count">3</span>}
               </Link>
             );
           })}
