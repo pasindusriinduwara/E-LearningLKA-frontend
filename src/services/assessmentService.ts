@@ -1,5 +1,5 @@
 import type { Submission } from "@/lib/types/assignment";
-import { fetchApi, API_BASE_URL } from "@/lib/api";
+import { fetchApi } from "@/lib/api";
 import { ParsedQuestion, parseQuizTextLocally } from "@/lib/utils/quizParser";
 
 export interface BackendParsedQuestion {
@@ -88,6 +88,9 @@ export interface StudentQuizTakeResponse {
   assessmentType: string;
   totalMarks: number;
   durationMinutes: number;
+  startedAt?: string | null;
+  expiresAt?: string | null;
+  serverTime: string;
   dueDate: string;
   attachmentUrl?: string;
   instructions?: string;
@@ -286,6 +289,11 @@ export const assessmentService = {
     return fetchApi<StudentQuizTakeResponse>(`/assessments/${id}/take`);
   },
 
+  /** Starts or resumes the student's existing server-timed quiz attempt. */
+  async startQuizAttempt(id: string): Promise<StudentQuizTakeResponse> {
+    return fetchApi<StudentQuizTakeResponse>(`/assessments/${id}/start`, { method: "POST" });
+  },
+
   /**
    * Submits student quiz answers for server-side grading
    */
@@ -345,19 +353,10 @@ export const assessmentService = {
   async uploadPaper(file: File): Promise<{ url: string; fileName: string }> {
     const formData = new FormData();
     formData.append("file", file);
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE_URL}/assessments/upload-paper`, {
+    return fetchApi("/assessments/upload-paper", {
       method: "POST",
-      headers,
       body: formData,
     });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || "Failed to upload file");
-    }
-    return res.json();
   },
 
   /**

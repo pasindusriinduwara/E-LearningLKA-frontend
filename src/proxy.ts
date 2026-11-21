@@ -18,8 +18,8 @@ const TEACHER_ROUTES = [
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const token = request.cookies.get("token")?.value;
-  const role = request.cookies.get("user_role")?.value?.toUpperCase();
+  const token = request.cookies.get("lms_session")?.value;
+  const role = request.cookies.get("lms_role")?.value?.toUpperCase();
 
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const isTeacherRoute = TEACHER_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));

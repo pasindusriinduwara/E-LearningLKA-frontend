@@ -593,15 +593,15 @@ export default function StudentClassDetailsPage() {
                       </div>
                     </div>
 
-                    <a
+                    <AttachmentLink
                       href={item.fileUrl || "#"}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <Download size={14} />
                       <span>Download</span>
-                    </a>
+                    </AttachmentLink>
                   </div>
                 ))
               ) : (
@@ -1003,7 +1003,7 @@ export default function StudentClassDetailsPage() {
                     <a
                       href={videoInfo.originalUrl}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-200 hover:text-white transition-colors flex items-center gap-1.5 text-xs font-semibold"
                       title="Open original video source"
                     >
@@ -1036,7 +1036,9 @@ export default function StudentClassDetailsPage() {
                       src={videoInfo.embedUrl}
                       title={activeRecording.title}
                       className="w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                       allowFullScreen
                     />
                   )

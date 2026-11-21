@@ -11,9 +11,11 @@ import { TeacherDetailsStep } from "@/components/auth/TeacherDetailsStep";
 import { AccountDetailsStep } from "@/components/auth/AccountDetailsStep";
 import type { RegisterFormData } from "@/lib/types/auth";
 import { registerUser, type RegisterPayload } from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 export default function MultiStepRegister() {
     const router = useRouter();
+    const { refreshUser } = useAuth();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -48,11 +50,10 @@ export default function MultiStepRegister() {
                 institute: formData.institute
             };
             const res = await registerUser(payload);
-            localStorage.setItem("token", res.token);
-            const userRole = (res.role || (formData.role === "teacher" ? "TEACHER" : "STUDENT")).toUpperCase();
-            document.cookie = `token=${res.token}; path=/; max-age=86400; SameSite=Lax`;
-            document.cookie = `user_role=${userRole}; path=/; max-age=86400; SameSite=Lax`;
-            router.push(formData.role === "teacher" ? "/teacher/dashboard" : "/dashboard");
+            localStorage.removeItem("token");
+            await refreshUser();
+            router.push(res.role === "TEACHER" ? "/teacher/dashboard" : "/dashboard");
+            router.refresh();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Registration failed. Please try again.");
         } finally {

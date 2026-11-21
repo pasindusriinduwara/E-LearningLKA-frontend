@@ -1,5 +1,6 @@
 import { FileText, Video, Link2, Lock } from "lucide-react";
 import type { Material } from "@/lib/types/materials";
+import { getSafeResourceUrl } from "@/lib/videoUtils";
 
 const typeConfig = {
   document: { icon: FileText, colorClass: "text-red-500", bgClass: "bg-red-50" },
@@ -17,6 +18,7 @@ const batchColors: Record<string, string> = {
 export function MaterialCard({ material }: { material: Material }) {
   const { icon: Icon, colorClass, bgClass } = typeConfig[material.type];
   const batchColor = batchColors[material.batch] || "text-gray-500";
+  const fileUrl = getSafeResourceUrl(material.fileUrl);
 
   return (
     <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col h-full hover:shadow-md transition-shadow cursor-pointer">
@@ -47,11 +49,11 @@ export function MaterialCard({ material }: { material: Material }) {
           </span>
         </div>
 
-        {material.fileUrl && (
+        {fileUrl && (
           <a
-            href={material.fileUrl}
+            href={fileUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline"
           >
             Open material

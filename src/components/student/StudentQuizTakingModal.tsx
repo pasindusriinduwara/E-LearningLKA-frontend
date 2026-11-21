@@ -26,6 +26,10 @@ interface StudentQuizTakingModalProps {
   onSubmitSuccess: (result: QuizSubmissionResult) => void;
 }
 
+function quizDeadlinePassed(deadline: number | null) {
+  return deadline === null || performance.now() >= deadline;
+}
+
 export function StudentQuizTakingModal(props: StudentQuizTakingModalProps) {
   return <QuizSession key={props.assessmentId} {...props} />;
 }
@@ -39,13 +43,14 @@ function QuizSession({
   const [quizData, setQuizData] = useState<StudentQuizTakeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, string>>({}); // questionId -> selectedOptionId
   const [flaggedQuestions, setFlaggedQuestions] = useState<Record<string, boolean>>({});
 
   // Countdown Timer
-  const [secondsRemaining, setSecondsRemaining] = useState(60 * 60);
+  const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -59,6 +64,7 @@ function QuizSession({
     if (submissionInFlight.current || !quizData) return;
     submissionInFlight.current = true;
     setIsSubmitting(true);
+    setSubmissionError(null);
     setShowConfirmModal(false);
     try {
       const answers = questions.map((q) => ({
@@ -68,7 +74,7 @@ function QuizSession({
       const result = await assessmentService.submitQuiz(quizData.id, { studentId, answers });
       onSubmitSuccess(result);
     } catch (err: unknown) {
-      alert("Submission failed: " + (err instanceof Error ? err.message : String(err)));
+      setSubmissionError(err instanceof Error ? err.message : "Submission failed. Please try again.");
       submissionInFlight.current = false;
       setIsSubmitting(false);
     }
@@ -78,21 +84,28 @@ function QuizSession({
   const submitAtTimeout = useEffectEvent(() => {
     if (timeoutAttempted.current) return;
     timeoutAttempted.current = true;
-    alert("Time has expired! Submitting your answers automatically now.");
     void performSubmit();
   });
 
   useEffect(() => {
     let mounted = true;
+    const requestStarted = performance.now();
 
     assessmentService
-      .getAssessmentForTaking(assessmentId)
+      .startQuizAttempt(assessmentId)
       .then((res) => {
         if (mounted) {
+          const expiresAt = res.expiresAt ? Date.parse(res.expiresAt) : NaN;
+          const serverTime = Date.parse(res.serverTime);
+          if (!Number.isFinite(expiresAt) || !Number.isFinite(serverTime) || !res.startedAt) {
+            throw new Error("The server did not provide a valid quiz timer. Please reopen the assessment.");
+          }
+          const now = performance.now();
+          // Use the server's remaining duration and a monotonic clock, allowing for network travel.
+          const remainingMs = Math.max(0, expiresAt - serverTime - (now - requestStarted));
           setQuizData(res);
-          const totalSecs = (res.durationMinutes || 60) * 60;
-          setSecondsRemaining(totalSecs);
-          setDeadline(Date.now() + totalSecs * 1000);
+          setSecondsRemaining(Math.ceil(remainingMs / 1000));
+          setDeadline(now + remainingMs);
         }
       })
       .catch((err) => {
@@ -113,13 +126,13 @@ function QuizSession({
   useEffect(() => {
     if (deadline === null || isLoading || isSubmitting) return;
     const timer = setInterval(() => {
-      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.ceil((deadline - performance.now()) / 1000));
       setSecondsRemaining(remaining);
       if (remaining === 0) {
         clearInterval(timer);
         submitAtTimeout();
       }
-    }, 1000);
+    }, 250);
     return () => clearInterval(timer);
   }, [deadline, isLoading, isSubmitting]);
   const currentQuestion = questions[currentIndex];
@@ -148,6 +161,7 @@ function QuizSession({
   const isCriticalTime = secondsRemaining < 60; // < 1 min
 
   function handleSelectOption(questionId: string, optionId: string) {
+    if (submissionInFlight.current || quizDeadlinePassed(deadline)) return;
     setUserAnswers((prev) => ({
       ...prev,
       [questionId]: optionId,
@@ -240,6 +254,13 @@ function QuizSession({
         </div>
       </header>
 
+      {(submissionError || secondsRemaining === 0) && (
+        <div role="status" className="px-6 py-3 border-b border-amber-500/30 bg-amber-500/10 text-sm text-amber-200">
+          {submissionError ? `Submission failed: ${submissionError} Use Finish & Submit to retry immediately.`
+            : "Time has expired. Submitting your saved answers automatically..."}
+        </div>
+      )}
+
       {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Question Area */}
@@ -285,6 +306,7 @@ function QuizSession({
                   <button
                     key={opt.id}
                     onClick={() => handleSelectOption(currentQuestion.id, opt.id)}
+                    disabled={isSubmitting || secondsRemaining === 0}
                     className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-4 group ${isSelected
                       ? "bg-blue-600/15 border-blue-500/70 shadow-md shadow-blue-900/20"
                       : "bg-slate-900/70 border-slate-800 hover:border-slate-700 hover:bg-slate-850"
@@ -340,6 +362,7 @@ function QuizSession({
             ) : (
               <button
                 onClick={() => setShowConfirmModal(true)}
+                disabled={isSubmitting}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm shadow-lg shadow-emerald-900/30 transition-all flex items-center gap-2"
               >
                 <Send className="w-4 h-4" />
@@ -464,7 +487,7 @@ function QuizSession({
             <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-white mb-2">Exit Assessment?</h3>
             <p className="text-sm text-slate-300 mb-6">
-              Your exam progress will be lost if you leave without submitting. Are you sure you want to exit?
+              Your selected answers will be lost if you leave without submitting. The quiz timer keeps running and will not reset when you return.
             </p>
 
             <div className="flex items-center gap-3">

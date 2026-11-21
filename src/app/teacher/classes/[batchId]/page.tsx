@@ -48,6 +48,7 @@ import {
 } from "@/services/subjectService";
 
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
 import { getEmbedVideoUrl } from "@/lib/videoUtils";
 
 type ActiveTab = "students" | "recordings" | "materials" | "announcements" | "zoom";
@@ -743,7 +744,7 @@ function BatchSession() {
 
                       <div className="flex items-center gap-2">
                         {mat.fileUrl && (
-                          <a
+                          <AttachmentLink
                             href={mat.fileUrl}
                             target="_blank"
                             rel="noreferrer"
@@ -751,7 +752,7 @@ function BatchSession() {
                             title="Download/Open"
                           >
                             <Download size={16} />
-                          </a>
+                          </AttachmentLink>
                         )}
 
                         <button
@@ -1167,16 +1168,16 @@ function BatchSession() {
                   <h4 className="text-sm font-bold truncate max-w-md">{previewVideoTitle || "Video Preview"}</h4>
                 </div>
                 <div className="flex items-center gap-3">
-                  <a
+                  {videoInfo.originalUrl && <a
                     href={videoInfo.originalUrl}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-colors flex items-center gap-1 text-xs font-semibold"
                     title="Open original link"
                   >
-                    <span>Open in YouTube</span>
+                    <span>Open Video Link</span>
                     <ExternalLink size={13} />
-                  </a>
+                  </a>}
                   <button
                     type="button"
                     onClick={() => setPreviewVideoUrl(null)}
@@ -1195,14 +1196,18 @@ function BatchSession() {
                     autoPlay
                     className="w-full h-full object-contain"
                   />
-                ) : (
+                ) : videoInfo.embedUrl ? (
                   <iframe
                     src={videoInfo.embedUrl}
                     title={previewVideoTitle}
                     className="w-full h-full border-0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    sandbox="allow-scripts allow-same-origin allow-presentation"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                     allowFullScreen
                   />
+                ) : (
+                  <p className="p-6 text-center text-sm text-gray-400">Preview unavailable. Use the original video link when available.</p>
                 )}
               </div>
 

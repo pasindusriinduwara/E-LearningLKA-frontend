@@ -19,9 +19,9 @@ function compile(file, dependencies, globals = {}) {
 
 // Exercise the actual component with deterministic hook lifecycles and a fake clock.
 // Effects commit after render; Effect Events keep their identity and read the latest callback.
-function quizHarness({ failFirstSubmission = false } = {}) {
+function quizHarness({ failFirstSubmission = false, remainingMs = 60_000, missingTimer = false } = {}) {
   const slots = [], effects = [], timers = new Map(), payloads = [];
-  let cursor = 0, dirty = false, tree, clock = 0, nextTimer = 0;
+  let cursor = 0, dirty = false, tree, clock = 0, wallClockOffset = 0, nextTimer = 0;
   const equalDeps = (left, right) => left?.length === right?.length && left.every((v, i) => Object.is(v, right[i]));
   const hooks = {
     useState(initial) {
@@ -52,7 +52,9 @@ function quizHarness({ failFirstSubmission = false } = {}) {
     },
   };
   const service = {
-    getAssessmentForTaking: async () => ({ id: "quiz", title: "Test", durationMinutes: 1,
+    startQuizAttempt: async () => ({ id: "quiz", title: "Test", durationMinutes: 1,
+      startedAt: missingTimer ? null : new Date(0).toISOString(),
+      serverTime: new Date(0).toISOString(), expiresAt: missingTimer ? null : new Date(remainingMs).toISOString(),
       questions: [{ id: "question", questionText: "Choose", marks: 1,
         options: [{ id: "option-a", optionText: "A" }, { id: "option-b", optionText: "B" }] }] }),
     submitQuiz: async (id, payload) => {
@@ -67,7 +69,9 @@ function quizHarness({ failFirstSubmission = false } = {}) {
     "lucide-react": new Proxy({}, { get: (_, name) => name }),
     "@/services/assessmentService": { assessmentService: service },
   }, {
-    Date: class extends Date { static now() { return clock; } }, alert() {},
+    Date: class extends Date { static now() { return clock + wallClockOffset; } },
+    performance: { now: () => clock },
+    alert() { throw new Error("Quiz flow must not block on browser alerts"); },
     setInterval(callback) { timers.set(++nextTimer, callback); return nextTimer; },
     clearInterval(id) { timers.delete(id); },
   });
@@ -92,8 +96,12 @@ function quizHarness({ failFirstSubmission = false } = {}) {
   }
   return {
     payloads,
+    getText() { return text(tree); },
+    shiftWallClock(ms) { wallClockOffset += ms; },
     async start() { render(); await flush(); },
+    async chooseA() { const button = find((n) => n.type === "button" && n.key === "option-a", tree); assert.ok(button); button.props.onClick(); await flush(); },
     async chooseB() { const button = find((n) => n.type === "button" && n.key === "option-b", tree); assert.ok(button); button.props.onClick(); await flush(); },
+    optionsDisabled() { return find((n) => n.type === "button" && n.key === "option-a", tree)?.props.disabled; },
     async advance(ms) { clock += ms; for (const callback of [...timers.values()]) callback(); await flush(); },
     async click(label) { const button = find((n) => n.type === "button" && text(n).includes(label), tree); assert.ok(button); assert.ok(!button.props.disabled); await button.props.onClick(); await flush(); },
     unmount() { for (const slot of slots) slot?.cleanup?.(); },
@@ -110,9 +118,29 @@ test("quiz timeout submits the latest selected option exactly once", async () =>
 test("failed timeout submission permits a manual retry with the selected answers", async () => {
   const quiz = quizHarness({ failFirstSubmission: true }); await quiz.start(); await quiz.chooseB();
   await quiz.advance(60_000); await quiz.advance(2_000); assert.equal(quiz.payloads.length, 1);
+  assert.equal(quiz.optionsDisabled(), true);
+  await quiz.chooseA(); // A stale click handler cannot change the locked answers after expiry.
   await quiz.click("Finish & Submit"); await quiz.click("Submit Exam");
   assert.equal(quiz.payloads.length, 2);
   assert.equal(quiz.payloads[1].payload.answers[0].selectedOptionId, "option-b"); quiz.unmount();
+});
+
+test("resumed quiz uses server remaining time instead of restarting the configured duration", async () => {
+  const quiz = quizHarness({ remainingMs: 10_000 }); await quiz.start(); await quiz.chooseB();
+  await quiz.advance(10_000);
+  assert.equal(quiz.payloads.length, 1);
+  assert.equal(quiz.payloads[0].payload.answers[0].selectedOptionId, "option-b"); quiz.unmount();
+});
+
+test("changing the computer wall clock cannot extend a quiz attempt", async () => {
+  const quiz = quizHarness(); await quiz.start(); quiz.shiftWallClock(-3_600_000);
+  await quiz.advance(60_000); assert.equal(quiz.payloads.length, 1); quiz.unmount();
+});
+
+test("missing server attempt timestamps never fall back to a fresh client timer", async () => {
+  const quiz = quizHarness({ missingTimer: true }); await quiz.start(); await quiz.advance(60_000);
+  assert.match(quiz.getText(), /server did not provide a valid quiz timer/);
+  assert.equal(quiz.payloads.length, 0); quiz.unmount();
 });
 
 test("closing the quiz clears the countdown without submitting", async () => {
@@ -120,7 +148,7 @@ test("closing the quiz clears the countdown without submitting", async () => {
   assert.equal(quiz.payloads.length, 0);
 });
 
-test("local attachments use the backend origin and bearer authentication", async () => {
+test("local attachments use the same-origin proxy and HttpOnly session credentials", async () => {
   const requests = [], downloaded = [];
   class BrowserURL extends URL {
     static createObjectURL() { return "blob:attachment"; }
@@ -128,16 +156,19 @@ test("local attachments use the backend origin and bearer authentication", async
   }
   const api = compile("src/lib/api.ts", {}, {
     process: { env: { NEXT_PUBLIC_API_URL: "http://localhost:8080/api/v1" } }, URL: BrowserURL,
-    window: {}, localStorage: { getItem: () => "test-token" },
+    window: { location: { origin: "https://school.test" } },
     document: { body: { appendChild() {} }, createElement: () => ({ click() { downloaded.push(this.href); }, remove() {} }) },
     setTimeout(callback) { callback(); },
     fetch: async (url, options) => { requests.push({ url: url.href, options }); return { ok: true, blob: async () => ({}) }; },
   });
   const url = api.getLocalAssessmentFileUrl("/api/v1/assessments/files/paper.pdf");
-  assert.equal(url.origin, "http://localhost:8080");
+  assert.equal(url.origin, "https://school.test");
+  assert.equal(url.pathname, "/api/backend/assessments/files/paper.pdf");
+  assert.equal(api.getLocalAssessmentFileUrl("http://localhost:8080/api/v1/assessments/files/paper.pdf").origin, "https://school.test");
   assert.equal(api.getLocalAssessmentFileUrl("https://external.test/api/v1/assessments/files/paper.pdf"), null);
   await api.downloadAssessmentFile(url);
-  assert.equal(requests[0].options.headers.Authorization, "Bearer test-token");
+  assert.equal(requests[0].options.credentials, "same-origin");
+  assert.equal(requests[0].options.headers, undefined);
   assert.deepEqual(downloaded, ["blob:attachment"]);
   await assert.rejects(api.downloadAssessmentFile(new URL("https://external.test/private.pdf")));
   assert.equal(requests.length, 1);

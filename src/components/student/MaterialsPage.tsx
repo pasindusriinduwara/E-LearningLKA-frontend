@@ -1,7 +1,7 @@
 "use client";
 
 import type { LearningResource } from "@/lib/types/student";
-import { getEmbedVideoUrl } from "@/lib/videoUtils";
+import { getEmbedVideoUrl, getSafeResourceUrl } from "@/lib/videoUtils";
 import { getAvailableBatches, type AvailableBatch } from "@/services/batchService";
 import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
 import { getRecentMaterials } from "@/services/studentService";
@@ -59,7 +59,7 @@ function getSubjectBadgeColors(subject: string) {
 
 function mapBackendMaterial(resource: LearningResource, index: number): MaterialItem {
   const rawType = (resource.type || "").toUpperCase();
-  const fileUrl = (resource.fileUrl || "").trim();
+  const fileUrl = getSafeResourceUrl(resource.fileUrl);
 
   let type: MaterialItem["type"] = "PDF";
   if (
@@ -117,10 +117,10 @@ function mapBackendMaterial(resource: LearningResource, index: number): Material
     teacher: resource.teacherName || "Instructor",
     type,
     isNew,
-    hasAction: Boolean(resource.fileUrl),
+    hasAction: Boolean(fileUrl),
     date: resource.time || "Recently uploaded",
     size: displaySize,
-    downloadUrl: resource.fileUrl,
+    downloadUrl: fileUrl || undefined,
     description: `Official study resource for ${resource.batchName || "your class"}. Provided by ${resource.teacherName || "your instructor"}.`,
     createdAt: resource.createdAt,
   };
@@ -244,8 +244,9 @@ export function MaterialsPage() {
   }
 
   function handleDownload(item: MaterialItem) {
-    if (item.downloadUrl) {
-      window.open(item.downloadUrl, "_blank", "noopener,noreferrer");
+    const url = getSafeResourceUrl(item.downloadUrl);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
       setDownloadToast(`Opening "${item.title}"...`);
     } else {
       setDownloadToast(`File link unavailable for "${item.title}".`);
@@ -256,8 +257,9 @@ export function MaterialsPage() {
   }
 
   function handleCopyLink(url?: string) {
-    if (!url) return;
-    navigator.clipboard.writeText(url);
+    const safeUrl = getSafeResourceUrl(url);
+    if (!safeUrl) return;
+    navigator.clipboard.writeText(safeUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   }
@@ -841,7 +843,9 @@ export function MaterialsPage() {
                             <iframe
                               src={embedUrl}
                               className="w-full h-full border-0"
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              referrerPolicy="strict-origin-when-cross-origin"
+                              sandbox="allow-scripts allow-same-origin allow-presentation"
+                              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
                               allowFullScreen
                               title={previewMaterial.title}
                             />
@@ -850,14 +854,14 @@ export function MaterialsPage() {
                               <Video size={32} className="mx-auto mb-2 text-blue-400" />
                               <p className="font-bold mb-1">Class Video Recording</p>
                               <p className="text-gray-400 mb-3">{previewMaterial.title}</p>
-                              <a
-                                href={originalUrl || previewMaterial.downloadUrl}
+                              {originalUrl && <a
+                                href={originalUrl}
                                 target="_blank"
-                                rel="noreferrer"
+                                rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold transition-colors"
                               >
                                 <ExternalLink size={14} /> Open Recording Stream
-                              </a>
+                              </a>}
                             </div>
                           )}
                         </div>
@@ -882,7 +886,7 @@ export function MaterialsPage() {
                       <a
                         href={previewMaterial.downloadUrl}
                         target="_blank"
-                        rel="noreferrer"
+                        rel="noopener noreferrer"
                         className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-red-200 rounded-lg shadow-sm"
                       >
                         <ExternalLink size={13} /> Open in New Tab

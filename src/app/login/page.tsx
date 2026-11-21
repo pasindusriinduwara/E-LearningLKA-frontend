@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { GraduationCap, CalendarDays, BookOpen, CreditCard, Megaphone } from "lucide-react";
 import { loginUser } from "@/services/authService";
 import { LoginRoleSelector } from "@/components/auth/LoginSelector";
+import { useAuth } from "@/context/AuthContext";
 export default function LoginPage() {
     const router = useRouter();
+    const { refreshUser } = useAuth();
     const [role, setRole] = useState<"student" | "teacher">("student");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -22,11 +24,11 @@ export default function LoginPage() {
 
         try {
             const data = await loginUser({ email, password });
-            localStorage.setItem("token", data.token);
-            const userRole = (data.role || (role === "teacher" ? "TEACHER" : "STUDENT")).toUpperCase();
-            document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
-            document.cookie = `user_role=${userRole}; path=/; max-age=86400; SameSite=Lax`;
+            localStorage.removeItem("token");
+            const userRole = data.role;
+            await refreshUser();
             router.push(userRole === "TEACHER" ? "/teacher/dashboard" : "/dashboard");
+            router.refresh();
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : "Failed to login. Please try again.");
         } finally {

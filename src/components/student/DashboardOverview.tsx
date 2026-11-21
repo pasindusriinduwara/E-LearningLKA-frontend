@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
+import { AttachmentLink } from "@/components/common/AttachmentLink";
 import type { LearningResource, ScheduleItem, StudentProfile } from "@/lib/types/student";
 import {
   getAvailableBatches,
@@ -603,7 +604,7 @@ export function DashboardOverview() {
                     </span>
 
                     {res.fileUrl ? (
-                      <a
+                      <AttachmentLink
                         href={res.fileUrl}
                         target="_blank"
                         rel="noreferrer"
@@ -620,7 +621,7 @@ export function DashboardOverview() {
                             <span>Download</span>
                           </>
                         )}
-                      </a>
+                      </AttachmentLink>
                     ) : (
                       <Link
                         href="/materials"

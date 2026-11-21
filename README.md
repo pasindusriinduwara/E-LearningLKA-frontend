@@ -48,3 +48,34 @@ feedback and quiz review appear in Assessments and the class Results tab. Other 
 results are never returned by the student API. This page requires the backend result
 publication endpoints and database migration `005_submission_result_publication.sql`
 when automatic schema updates are disabled.
+
+## Session and API deployment
+
+Set `BACKEND_API_URL=http://localhost:8080` in the Next server environment (an optional
+`/api/v1` suffix is accepted). Browser requests now use `/api/backend` and
+`/api/auth`; JWTs stay in an expiring `HttpOnly`, `SameSite=Lax` cookie and are never
+returned in browser JSON or stored in localStorage. Production cookies require
+HTTPS. Existing users must sign in again after this upgrade. `NEXT_PUBLIC_API_URL`
+and `NEXT_PUBLIC_API_BASE_URL` remain legacy backend configuration fallbacks, but
+`BACKEND_API_URL` is preferred and is never bundled into browser JavaScript.
+
+The proxy forwards credentials only to the configured backend and refuses upstream
+redirects. State-changing requests require a matching `Origin`. When running behind
+a reverse proxy with a different internal host, set `APP_ORIGIN` to the public
+origin, for example `https://classroom.example`. Keep the backend network private
+where possible. The in-memory backend login limiter sees the Next server IP; adjust
+its IP limits for shared traffic and configure an edge/distributed limiter for
+multiple application instances. Client-supplied forwarded IP headers are not trusted.
+
+MCQ attempts start through `POST /api/v1/assessments/{id}/start` and resume the same
+server deadline. Refreshing or reopening cannot restart the timer. The UI uses
+`expiresAt` and `serverTime` with a monotonic clock, locks answers at expiry and
+auto-submits. The backend permits only a fixed 15-second submission transport grace.
+Assessment due dates use `Asia/Colombo`; attempt timestamps are UTC ISO instants.
+Apply backend migrations `006_server_timed_quiz_attempts.sql` and
+`007_announcement_author.sql` when automatic schema updates are disabled.
+
+New student answer sheets use authenticated backend storage rather than public
+Cloudinary URLs. Mount the backend upload directory on a persistent private volume.
+Already published Cloudinary assets need a separate migration/removal at the storage
+provider; changing the application cannot revoke their old public URLs.

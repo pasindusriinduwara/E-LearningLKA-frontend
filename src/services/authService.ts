@@ -1,6 +1,5 @@
 
-const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-const API_BASE_URL = configuredBaseUrl.replace(/\/api\/v1\/?$/, "");
+const API_BASE_URL = "/api";
 
 export interface RegisterPayload {
     email: string;
@@ -26,8 +25,7 @@ export interface LoginPayload {
 }
 
 export interface AuthenticationResponse {
-    token: string;
-    role?: "STUDENT" | "TEACHER" | string;
+    role: "STUDENT" | "TEACHER";
     email?: string;
     name?: string;
 }
@@ -35,6 +33,7 @@ export interface AuthenticationResponse {
 export async function registerUser(data: RegisterPayload): Promise<AuthenticationResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
@@ -69,6 +68,7 @@ export async function registerUser(data: RegisterPayload): Promise<Authenticatio
 export async function loginUser(data: LoginPayload): Promise<AuthenticationResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
     });
@@ -87,4 +87,9 @@ export async function loginUser(data: LoginPayload): Promise<AuthenticationRespo
     }
 
     return response.json() as Promise<AuthenticationResponse>;
+}
+
+export async function logoutUser(): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, { method: "POST", credentials: "same-origin" });
+    if (!response.ok) throw new Error("Could not sign out. Please try again.");
 }
