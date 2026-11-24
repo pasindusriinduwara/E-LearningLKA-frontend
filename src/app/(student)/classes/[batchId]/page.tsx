@@ -17,17 +17,9 @@ import {
   type AssessmentSummary,
   type QuizSubmissionResult,
 } from "@/services/assessmentService";
-import {
-  getAvailableBatches,
-  type AvailableBatch,
-} from "@/services/batchService";
-import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
-import {
-  getBatchAnnouncements,
-  getBatchMaterials,
-  getBatchSchedules,
-  type AnnouncementItem,
-} from "@/services/studentService";
+import type { AvailableBatch } from "@/services/batchService";
+import { getApprovedClassroomBatch, getStudentClassroom } from "@/services/classroomService";
+import type { AnnouncementItem } from "@/services/studentService";
 import {
   AlertCircle,
   ArrowLeft,
@@ -49,10 +41,11 @@ import {
   X
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 type ClassroomTab = "recordings" | "schedule" | "assignments" | "announcements" | "results";
+const classroomTabs: ClassroomTab[] = ["recordings", "schedule", "assignments", "announcements", "results"];
 
 interface ClassRecording {
   id: string;
@@ -91,10 +84,25 @@ interface ClassResult {
 
 export default function StudentClassDetailsPage() {
   const params = useParams<{ batchId: string }>();
+  const { user } = useAuth();
+  return <Suspense fallback={<div role="status" className="p-8 text-center text-sm text-gray-500">Loading classroom...</div>}><StudentClassDetails key={`${params?.batchId}:${user?.id || "anonymous"}`} /></Suspense>;
+}
+
+function StudentClassDetails() {
+  const params = useParams<{ batchId: string }>();
   const batchId = params?.batchId;
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = classroomTabs.find((tab) => tab === searchParams.get("tab")) || "recordings";
+
+  function setActiveTab(tab: ClassroomTab) {
+    const query = new URLSearchParams(searchParams.toString());
+    query.set("tab", tab);
+    router.replace(`${pathname}?${query.toString()}`, { scroll: false });
+  }
 
   const [batch, setBatch] = useState<AvailableBatch | null>(null);
-  const [activeTab, setActiveTab] = useState<ClassroomTab>("recordings");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -116,53 +124,66 @@ export default function StudentClassDetailsPage() {
   const [activeQuizTakingId, setActiveQuizTakingId] = useState<string | null>(null);
   const [activeEssaySubmissionId, setActiveEssaySubmissionId] = useState<string | null>(null);
   const [activeResult, setActiveResult] = useState<QuizSubmissionResult | null>(null);
+  const currentSession = useRef<object | null>(null);
+  const [classroomSession, setClassroomSession] = useState<object | null>(null);
+
+  function isCurrentClassroom() {
+    return classroomSession !== null && currentSession.current === classroomSession;
+  }
 
   useEffect(() => {
     let cancelled = false;
+    let running = false;
+    let classroomReady = false;
 
     async function loadClassroom() {
-      if (!batchId) return;
+      if (!batchId || !user?.id || running || cancelled) return;
+      running = true;
 
       try {
+        if (classroomReady) {
+          const currentBatch = await getApprovedClassroomBatch(batchId);
+          if (!cancelled) setBatch(currentBatch);
+          return;
+        }
         setLoading(true);
-        setError("");
-
-        const [batches, myStatuses, batchMats, batchNotices, batchScheds, batchAsgs] = await Promise.all([
-          getAvailableBatches(),
-          getMyEnrollmentStatuses(),
-          getBatchMaterials(batchId).catch(() => []),
-          getBatchAnnouncements(batchId).catch(() => []),
-          getBatchSchedules(batchId).catch(() => []),
-          assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id).catch(() => []),
-        ]);
-
-        const currentBatch = batches.find((b) => b.id === batchId);
-        if (!currentBatch) {
-          throw new Error("Class not found or you do not have permission to view it.");
-        }
-
-        const enrollmentStatus = myStatuses.find((s) => s.batchId === batchId)?.status;
-        if (enrollmentStatus && enrollmentStatus !== "APPROVED") {
-          throw new Error("Your enrollment in this class is pending teacher approval.");
-        }
-
+        const classroom = await getStudentClassroom(batchId, user?.studentId || user?.id);
         if (!cancelled) {
-          setBatch({
-            ...currentBatch,
-            status: enrollmentStatus || currentBatch.status,
-          });
-          setMaterials(batchMats);
-          setAnnouncements(batchNotices);
-          setSchedules(batchScheds);
-          setBatchAssessments(Array.isArray(batchAsgs) ? batchAsgs : []);
+          classroomReady = true;
+          const session = {};
+          currentSession.current = session;
+          setClassroomSession(session);
+          setError("");
+          setBatch(classroom.batch);
+          setMaterials(classroom.materials);
+          setAnnouncements(classroom.announcements);
+          setSchedules(classroom.schedules);
+          setBatchAssessments(Array.isArray(classroom.assessments) ? classroom.assessments : []);
         }
       } catch (err) {
         if (!cancelled) {
+          classroomReady = false;
+          currentSession.current = null;
+          setClassroomSession(null);
+          setBatch(null);
+          setMaterials([]);
+          setAnnouncements([]);
+          setSchedules([]);
+          setBatchAssessments([]);
+          setActiveRecording(null);
+          setIsSubmitModalOpen(false);
+          setSelectedAssignment(null);
+          setSubmissionSuccess(false);
+          setSubmittedAsgIds(new Set());
+          setActiveQuizTakingId(null);
+          setActiveEssaySubmissionId(null);
+          setActiveResult(null);
           setError(
             err instanceof Error ? err.message : "Failed to load classroom details."
           );
         }
       } finally {
+        running = false;
         if (!cancelled) {
           setLoading(false);
         }
@@ -170,11 +191,21 @@ export default function StudentClassDetailsPage() {
     }
 
     loadClassroom();
+    const refreshAccess = () => {
+      if (document.visibilityState === "visible") void loadClassroom();
+    };
+    const interval = window.setInterval(refreshAccess, 30_000);
+    window.addEventListener("focus", refreshAccess);
+    document.addEventListener("visibilitychange", refreshAccess);
 
     return () => {
       cancelled = true;
+      currentSession.current = null;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshAccess);
+      document.removeEventListener("visibilitychange", refreshAccess);
     };
-  }, [batchId, user]);
+  }, [batchId, user?.id, user?.studentId]);
 
   // 100% Dynamic Recordings uploaded by the teacher
   const classRecordings: ClassRecording[] = useMemo(() => {
@@ -285,6 +316,7 @@ export default function StudentClassDetailsPage() {
     setSubmittedAsgIds((prev) => new Set(prev).add(selectedAssignment.id));
     setSubmissionSuccess(true);
     setTimeout(() => {
+      if (!isCurrentClassroom()) return;
       setIsSubmitModalOpen(false);
       setSelectedAssignment(null);
       setSubmissionSuccess(false);
@@ -808,8 +840,8 @@ export default function StudentClassDetailsPage() {
                               type="button"
                               onClick={() => {
                                 assessmentService.getStudentSubmission(asg.id, user?.studentId || user?.id)
-                                  .then(setActiveResult)
-                                  .catch(() => alert("Could not load submission result"));
+                                  .then((result) => { if (isCurrentClassroom()) setActiveResult(result); })
+                                  .catch(() => { if (isCurrentClassroom()) alert("Could not load submission result"); });
                               }}
                               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-colors cursor-pointer"
                             >
@@ -1127,11 +1159,12 @@ export default function StudentClassDetailsPage() {
           studentId={user?.studentId || user?.id}
           onClose={() => setActiveQuizTakingId(null)}
           onSubmitSuccess={(result) => {
+            if (!isCurrentClassroom()) return;
             setActiveQuizTakingId(null);
             setActiveResult(result);
             if (batchId) {
               assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id)
-                .then((data) => setBatchAssessments(Array.isArray(data) ? data : []))
+                .then((data) => { if (isCurrentClassroom()) setBatchAssessments(Array.isArray(data) ? data : []); })
                 .catch(console.warn);
             }
           }}
@@ -1145,10 +1178,11 @@ export default function StudentClassDetailsPage() {
           studentId={user?.studentId || user?.id}
           onClose={() => setActiveEssaySubmissionId(null)}
           onSubmitSuccess={() => {
+            if (!isCurrentClassroom()) return;
             setActiveEssaySubmissionId(null);
             if (batchId) {
               assessmentService.getBatchAssessments(batchId, user?.studentId || user?.id)
-                .then((data) => setBatchAssessments(Array.isArray(data) ? data : []))
+                .then((data) => { if (isCurrentClassroom()) setBatchAssessments(Array.isArray(data) ? data : []); })
                 .catch(console.warn);
             }
           }}

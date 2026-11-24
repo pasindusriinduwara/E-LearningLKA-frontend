@@ -1,4 +1,5 @@
 import { StudentSettingsPage } from "@/components/student/StudentSettingsPage";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 
 export const metadata = {
   title: "Profile & Settings | Classroom",
@@ -6,5 +7,5 @@ export const metadata = {
 };
 
 export default function SettingsRoute() {
-  return <StudentSettingsPage />;
+  return <><StudentSettingsPage /><ChangePasswordForm /></>;
 }

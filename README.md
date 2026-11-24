@@ -1,5 +1,24 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Completion features and verification
+
+Student schedules use the current Sri Lankan calendar week, including Sunday, with
+previous/next week navigation and correctly anchored weekly, biweekly and single
+occurrences. Dashboard and schedule failures have visible retry states.
+
+`/forgot-password` and `/reset-password` provide email recovery; both Settings pages
+offer authenticated password changes. Deploy the matching backend and configure SMTP
+and `APP_PUBLIC_URL`. Successful password changes revoke existing sessions.
+
+Teacher class details include **Edit class**, **Archive class** and **Restore class**.
+Archiving pauses student access while retaining existing work and enrollment records.
+
+Run `npm run lint`, `npm test` and `npm run build`. Browser acceptance is available
+through `npm run test:e2e`; it requires an isolated PostgreSQL-backed backend and
+`E2E_ALLOW_WRITES=1`. See the workspace `DEPLOYMENT.md` for the complete setup and
+optional SMTP inbox test. CI runs checks in this repository and full acceptance in
+the workspace repository.
+
 ## Getting Started
 
 First, run the development server:
@@ -79,3 +98,42 @@ New student answer sheets use authenticated backend storage rather than public
 Cloudinary URLs. Mount the backend upload directory on a persistent private volume.
 Already published Cloudinary assets need a separate migration/removal at the storage
 provider; changing the application cannot revoke their old public URLs.
+
+## Teacher and student notifications
+
+Both portals share an authenticated notification bell with a real unread count,
+paginated history, individual read actions and **Mark all as read**. Opening the
+bell refreshes the list; unread counts refresh while the tab is visible and when
+the window regains focus. Loading, empty and retry states use the backend response;
+there are no sample notifications. Notifications persist per account across devices.
+
+Teachers receive enrollment requests and first assessment submissions. Students
+receive enrollment decisions, available assessments, published results, batch
+announcements, new materials and schedule changes. Private grades are never included
+in notifications. Opening an item marks it read and navigates to its relevant page.
+Classroom links support validated `?tab=announcements`, `results`, `assignments`,
+`schedule` and `recordings` deep links.
+
+The frontend uses `/api/backend/notifications` through the existing HttpOnly session
+proxy; it sends no recipient IDs. Deploy the matching backend and apply migration
+`008_notifications.sql` when automatic schema updates are disabled. Notifications
+cover new activity after deployment; previous activity is not backfilled.
+
+## Teacher-controlled student access
+
+Open **Student access** (`/teacher/enrollments`) to manage requests for your own
+classes. Search or filter All, Pending, Allowed and Denied students. **Allow access**
+approves or restores access; **Deny access** rejects requests or revokes existing
+access. Decisions remain in the list so they can be changed later. Inactive classes
+cannot grant access. The dashboard **Review** action and enrollment notifications
+open this page. Student class discovery remains at `/enrollment`.
+
+Deploy the matching backend for `GET /api/v1/enrollments/teacher/requests` and
+`PUT /api/v1/enrollments/teacher/requests/{id}/access` with `{ "allowed": true|false }`.
+Classroom content loads only after current approval is verified. An open classroom
+rechecks access on focus and every 30 seconds while visible, clearing content and
+closing its modals if access is lost. Backend authorization applies to every request.
+
+Payments are temporarily disabled: the Fees page, payment controls and class prices
+are removed. New classes use a zero legacy fee value. Existing billing records are
+preserved, and the former invoice endpoint returns HTTP 410.

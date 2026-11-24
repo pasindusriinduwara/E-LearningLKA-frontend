@@ -343,7 +343,7 @@ export function TeacherWidgets({
                 </div>
               </div>
               <Link
-                href="/teacher/classes"
+                href="/teacher/enrollments"
                 className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
               >
                 Review

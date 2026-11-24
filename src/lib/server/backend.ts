@@ -88,6 +88,7 @@ export async function proxyBackend(request: NextRequest, segments: string[]): Pr
         }
         if (upstream.status >= 500) return jsonError("The service is temporarily unavailable. Please try again.", upstream.status);
         const response = new NextResponse(upstream.body, { status: upstream.status, headers: responseHeaders });
+        if (upstream.ok && request.method === "POST" && segments.join("/") === "account/password") clearSession(response);
         const deniedProfile = upstream.status === 403 && request.method === "GET" && segments.length === 2 && segments[0] === "users" && segments[1] === "me";
         if (upstream.status === 401 || deniedProfile) clearSession(response);
         return response;
@@ -103,7 +104,8 @@ export async function authenticate(request: NextRequest, action: string): Promis
         clearSession(response);
         return response;
     }
-    if (action !== "login" && action !== "register") return jsonError("Not found", 404);
+    const recovery = action === "forgot-password" || action === "reset-password";
+    if (action !== "login" && action !== "register" && !recovery) return jsonError("Not found", 404);
     try {
         const body = await readLimitedBody(request, 64 * 1024);
         const upstream = await fetch(`${backendOrigin()}/auth/${action}`, {
@@ -119,6 +121,11 @@ export async function authenticate(request: NextRequest, action: string): Promis
             return failure;
         }
         const data = await upstream.json() as { token?: string; role?: string; email?: string; name?: string };
+        if (recovery) {
+            const response = NextResponse.json({ message: (data as { message?: string }).message || "Request completed" }, { status: upstream.status, headers: { "Cache-Control": "no-store" } });
+            if (action === "reset-password") clearSession(response);
+            return response;
+        }
         if (!data.token || !["STUDENT", "TEACHER"].includes(data.role || "")) return jsonError("Invalid authentication response", 502);
         const response = NextResponse.json({ role: data.role, email: data.email, name: data.name }, { headers: { "Cache-Control": "no-store" } });
         setSession(response, data.token, data.role!);

@@ -31,6 +31,24 @@ function request(path, { method = "POST", cookie = "lms_session=private-token", 
   });
 }
 
+test("recovery responses do not issue sessions or expose upstream tokens", async () => {
+  const api = harness(() => Response.json({ message: "Check your inbox", token: "must-not-escape" }, { status: 202 }));
+  const response = await api.authenticate(request("/api/auth/forgot-password", {cookie:""}), "forgot-password");
+  assert.equal(response.status,202); assert.deepEqual(await response.json(),{message:"Check your inbox"});
+  assert.equal(response.cookies.get("lms_session"),undefined);
+  assert.equal((await api.authenticate(request("/api/auth/forgot-password", {requestOrigin:"https://evil.test"}), "forgot-password")).status,403);
+});
+
+test("reset and authenticated password change clear browser sessions only on success", async () => {
+  const api = harness(() => Response.json({message:"Password changed"}));
+  const reset = await api.authenticate(request("/api/auth/reset-password"),"reset-password");
+  assert.equal(reset.cookies.get("lms_session").maxAge,0);
+  const changed = await api.proxyBackend(request("/api/backend/account/password"),["account","password"]);
+  assert.equal(changed.cookies.get("lms_session").maxAge,0);
+  const failed = harness(() => Response.json({message:"Wrong password"},{status:400}));
+  assert.equal((await failed.proxyBackend(request("/api/backend/account/password"),["account","password"])).cookies.get("lms_session"),undefined);
+});
+
 test("authentication keeps JWT out of JSON and sets expiring HttpOnly Secure session cookies", async () => {
   const api = harness(() => Response.json({ token: jwt, role: "STUDENT", email: "student@test" }));
   const response = await api.authenticate(request("/api/auth/login"), "login");

@@ -345,11 +345,6 @@ export default function StudentClassesPage() {
 
                       <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
                         <span>Exam Year: {batch.examYear}</span>
-                        {batch.monthlyFee !== undefined && batch.monthlyFee !== null && (
-                          <span className="font-semibold text-gray-800">
-                            LKR {Number(batch.monthlyFee || 0).toLocaleString()} / mo
-                          </span>
-                        )}
                       </div>
                     </div>
 

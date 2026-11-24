@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
-  Bell,
   BookOpen,
   Calendar,CheckSquare,
   ChevronRight,
@@ -28,7 +28,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/teacher/dashboard", icon: LayoutDashboard },
   { label: "My classes", href: "/teacher/classes", icon: Calendar },
-  { label: "Enrollments", href: "/teacher/enrollments", icon: CheckSquare },
+  { label: "Student access", href: "/teacher/enrollments", icon: CheckSquare },
   { label: "Materials", href: "/teacher/materials", icon: BookOpen },
   { label: "Assignments", href: "/teacher/assignments", icon: ClipboardList },
   { label: "Results", href: "/teacher/results", icon: LineChart },
@@ -41,6 +41,7 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
   const { user, loading, signOut } = useAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const activeLabel = navItems.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.label || "Dashboard";
   const teacherName = user?.name || "Teacher";
   const teacherInitials = user?.initials || teacherName.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase() || "TC";
   const teacherRole = user?.qualification || "Teacher";
@@ -111,20 +112,17 @@ export function TeacherShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-8 z-10">
+        <header className="relative z-20 h-16 shrink-0 bg-white border-b border-gray-100 flex items-center justify-between px-4 lg:px-8">
           <div className="flex items-center">
             <button className="lg:hidden mr-4 text-gray-500" onClick={() => setSidebarOpen(!sidebarOpen)}>
               <Menu size={24} />
             </button>
             <div className="text-sm text-gray-500">
-              Teacher portal <span className="mx-2">›</span> <strong className="text-gray-900">{pathname.startsWith("/teacher/settings") ? "Settings" : "Dashboard"}</strong>
+              Teacher portal <span className="mx-2">›</span> <strong className="text-gray-900">{activeLabel}</strong>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="relative p-2 text-gray-400 hover:text-gray-600 border border-gray-200 rounded-full">
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-            </button>
+            <NotificationBell key={user?.userId ?? user?.id ?? user?.email ?? "signed-out"} enabled={!loading && user?.role === "TEACHER"} />
             <Link href="/teacher/settings" className="flex items-center gap-2 cursor-pointer border border-gray-200 hover:border-gray-300 rounded-full pl-1 pr-3 py-1 transition-colors">
               <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">{teacherInitials}</div>
               <span className="text-sm font-medium text-gray-700">{teacherName}</span>

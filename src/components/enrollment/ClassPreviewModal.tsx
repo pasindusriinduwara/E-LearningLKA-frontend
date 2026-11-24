@@ -220,18 +220,13 @@ function ClassPreviewSession({
             </p>
           </div>
 
-          {/* Pricing Banner */}
+          {/* Class access information */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50/60 border border-blue-200/70 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <p className="text-xs font-bold text-blue-900 uppercase tracking-wider">
-                Monthly Tuition Fee
+                Teacher-approved access
               </p>
-              <div className="flex items-baseline gap-1.5 mt-0.5">
-                <span className="text-2xl font-black text-gray-900">
-                  LKR {Number(batch.monthlyFee || 0).toLocaleString()}
-                </span>
-                <span className="text-xs text-gray-500 font-medium">/ month</span>
-              </div>
+              <p className="text-sm text-blue-800 mt-1">Request access to join this class. Your teacher will review your request.</p>
             </div>
 
             <div className="text-xs text-blue-700 font-medium bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-blue-200 self-start sm:self-auto flex items-center gap-1.5">
@@ -483,7 +478,7 @@ function ClassPreviewSession({
                   <>
                     <Sparkles size={14} />
                     <span>
-                      Enroll in Class • LKR {Number(batch.monthlyFee || 0).toLocaleString()}
+                      Request Class Access
                     </span>
                   </>
                 )}

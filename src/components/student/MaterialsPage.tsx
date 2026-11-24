@@ -770,14 +770,14 @@ export function MaterialsPage() {
       {/* Production-Grade Preview & Resource Modal */}
       {previewMaterial && (
         <div
-          className="payment-modal-backdrop"
+          className="resource-modal-backdrop"
           onClick={() => setPreviewMaterial(null)}
         >
           <div
-            className="payment-modal-card max-w-2xl w-full"
+            className="resource-modal-card max-w-2xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="payment-modal-head">
+            <div className="resource-modal-head">
               <div>
                 <span className="text-[11px] font-bold text-[#4f6df5] uppercase tracking-wider">
                   {previewMaterial.batchName}
@@ -799,7 +799,7 @@ export function MaterialsPage() {
               </button>
             </div>
 
-            <div className="payment-modal-body">
+            <div className="resource-modal-body">
               {/* Meta Grid */}
               <div className="material-preview-meta">
                 <div>
@@ -920,7 +920,7 @@ export function MaterialsPage() {
 
                   <button
                     type="button"
-                    className="confirm-pay-btn cursor-pointer"
+                    className="resource-primary-action cursor-pointer"
                     onClick={() => {
                       handleDownload(previewMaterial);
                     }}

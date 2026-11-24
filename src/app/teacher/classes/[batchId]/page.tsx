@@ -17,7 +17,6 @@ import {
   Upload,
   Users,
   Video,
-  Wallet,
   X
 } from "lucide-react";
 import Link from "next/link";
@@ -48,6 +47,7 @@ import {
 } from "@/services/subjectService";
 
 import { ConfirmModal } from "@/components/common/ConfirmModal";
+import { BatchManagement } from "@/components/classes/BatchManagement";
 import { AttachmentLink } from "@/components/common/AttachmentLink";
 import { getEmbedVideoUrl } from "@/lib/videoUtils";
 
@@ -348,6 +348,7 @@ function BatchSession() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pb-12">
+      <BatchManagement batch={batch} subjects={subjects} onSaved={loadPage} />
       {/* Breadcrumb Navigation */}
       <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400">
         <Link href="/teacher/dashboard" className="hover:text-gray-800 transition-colors">
@@ -416,9 +417,8 @@ function BatchSession() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-gray-100 pt-6">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-gray-100 pt-6">
           <InfoItem icon={<Clock3 size={18} />} label="Exam Year" value={batch.examYear} />
-          <InfoItem icon={<Wallet size={18} />} label="Monthly Fee" value={`LKR ${batch.monthlyFee}`} />
           <InfoItem icon={<Monitor size={18} />} label="Delivery Mode" value={batch.deliveryMode || "HYBRID"} />
         </div>
       </section>

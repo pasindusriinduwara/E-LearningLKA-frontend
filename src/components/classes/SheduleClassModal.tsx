@@ -28,14 +28,14 @@ export function ScheduleClassModal({
         scheduleToEdit?.batchId || initialBatchId || batches[0]?.id || ""
     );
     const [title, setTitle] = useState(scheduleToEdit?.title || "");
-    const [date, setDate] = useState(scheduleToEdit?.date || "");
+    const [date, setDate] = useState(scheduleToEdit?.effectiveDate || scheduleToEdit?.date || "");
     const [startTime, setStartTime] = useState(scheduleToEdit?.startTime || "16:30");
     const [endTime, setEndTime] = useState(scheduleToEdit?.endTime || "18:30");
     const [location, setLocation] = useState(scheduleToEdit?.location || "");
     const [mode, setMode] = useState<DeliveryMode>(
         scheduleToEdit?.mode === "ONLINE" || scheduleToEdit?.mode === "HYBRID" ? scheduleToEdit.mode : "IN_PERSON"
     );
-    const [repeat, setRepeat] = useState<RepeatInterval>("WEEKLY");
+    const [repeat, setRepeat] = useState<RepeatInterval>(scheduleToEdit?.recurrence || "WEEKLY");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 

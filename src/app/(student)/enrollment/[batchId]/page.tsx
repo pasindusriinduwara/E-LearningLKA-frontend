@@ -655,17 +655,12 @@ function BatchSession() {
         {/* Right Column: Sticky Enrollment Box */}
         <div className="lg:col-span-1 space-y-6">
           <div className="sticky top-6 bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/90 shadow-lg space-y-6">
-            {/* Price Header */}
+            {/* Class access information */}
             <div>
               <p className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">
-                Monthly Tuition Fee
+                Class access
               </p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-3xl sm:text-4xl font-black text-gray-900">
-                  LKR {Number(batch.monthlyFee || 0).toLocaleString()}
-                </span>
-                <span className="text-xs text-gray-500 font-semibold">/ month</span>
-              </div>
+              <p className="text-lg font-bold text-gray-900 mt-1">Teacher approval required</p>
               <p className="text-xs text-emerald-700 font-medium mt-1 flex items-center gap-1.5">
                 <ShieldCheck size={14} className="text-[#4f6df5]" />
                 <span>Full curriculum & digital materials included</span>
@@ -781,14 +776,14 @@ function BatchSession() {
                       <>
                         <Sparkles size={16} />
                         <span>
-                          Enroll in Class • LKR {Number(batch.monthlyFee || 0).toLocaleString()}
+                          Request Class Access
                         </span>
                       </>
                     )}
                   </button>
 
                   <p className="text-[11px] text-center text-gray-400 leading-normal">
-                    No upfront payment required to request. The educator will review and approve your seat.
+                    Your teacher will review your request and allow or deny access to this class.
                   </p>
                 </div>
               )}

@@ -19,8 +19,8 @@ const serifFont = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Classroom | Fees & payments",
-  description: "Student portal billing and fee payments.",
+  title: "Classroom | Learning portal",
+  description: "Classes, learning materials, assessments, and updates for students and teachers.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

@@ -24,21 +24,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { AttachmentLink } from "@/components/common/AttachmentLink";
 import type { LearningResource, ScheduleItem, StudentProfile } from "@/lib/types/student";
-import {
-  getAvailableBatches,
-  type AvailableBatch,
-} from "@/services/batchService";
-import {
-  getMyEnrollmentStatuses,
-  type EnrollmentStatus,
-} from "@/services/enrollmentService";
-import {
-  getAnnouncements,
-  getRecentMaterials,
-  getStudentProfile,
-  getUpcomingClasses,
-  type AnnouncementItem,
-} from "@/services/studentService";
+import type { AvailableBatch } from "@/services/batchService";
+import type { AnnouncementItem } from "@/services/studentService";
+import { loadStudentDashboard } from "@/services/dashboardService";
 
 export function DashboardOverview() {
   const { user } = useAuth();
@@ -53,105 +41,31 @@ export function DashboardOverview() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [failures, setFailures] = useState<string[]>([]);
+  const [refresh, setRefresh] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
-
-    async function loadDashboardData() {
+    async function load() {
+      setLoading(true); setError(null);
       try {
-        setLoading(true);
-        setError(null);
-
-        const [
-          scheduleRes,
-          materialsRes,
-          noticesRes,
-          profileRes,
-          batchesRes,
-          statusesRes,
-        ] = await Promise.allSettled([
-          getUpcomingClasses(),
-          getRecentMaterials(),
-          getAnnouncements(),
-          getStudentProfile(),
-          getAvailableBatches(),
-          getMyEnrollmentStatuses(),
-        ]);
-
+        const data = await loadStudentDashboard();
         if (cancelled) return;
-
-        const approvedBatchIds = new Set<string>();
-        if (statusesRes.status === "fulfilled") {
-          (statusesRes.value || []).forEach((item) => {
-            if (item.status === "APPROVED") {
-              approvedBatchIds.add(item.batchId);
-            }
-          });
-        }
-
-        if (scheduleRes.status === "fulfilled") {
-          const allUpcoming = scheduleRes.value || [];
-          const enrolledUpcoming = allUpcoming.filter(
-            (c) => c.batchId && approvedBatchIds.has(c.batchId)
-          );
-          setClasses(enrolledUpcoming);
-        }
-
-        if (batchesRes.status === "fulfilled") {
-          const allBatches = batchesRes.value || [];
-          const statusMap = new Map<string, EnrollmentStatus>();
-
-          if (statusesRes.status === "fulfilled") {
-            (statusesRes.value || []).forEach((item) => {
-              statusMap.set(item.batchId, item.status);
-            });
-          }
-
-          const enriched = allBatches.map((b) => ({
-            ...b,
-            status: statusMap.get(b.id) || b.status,
-          }));
-
-          setBatches(enriched);
-        }
-
-        if (materialsRes.status === "fulfilled") {
-          const allMaterials = materialsRes.value || [];
-          // Filter strictly for only enrolled classes (APPROVED)
-          const enrolledMaterials = allMaterials.filter(
-            (m) => m.batchId && approvedBatchIds.has(m.batchId)
-          );
-          setResources(enrolledMaterials);
-          setMaterialsCount(enrolledMaterials.length);
-        }
-        if (noticesRes.status === "fulfilled") {
-          const allNotices = noticesRes.value || [];
-          // Filter strictly for only enrolled classes (APPROVED)
-          const enrolledNotices = allNotices.filter(
-            (n) => n.batchId && approvedBatchIds.has(n.batchId)
-          );
-          setAnnouncements(enrolledNotices);
-        }
-        if (profileRes.status === "fulfilled") {
-          setProfile(profileRes.value);
-        }
-      } catch (err) {
-        console.error("Dashboard data load error:", err);
+        setClasses(data.classes); setResources(data.resources); setMaterialsCount(data.resources.length);
+        setAnnouncements(data.announcements); setProfile(data.profile); setBatches(data.batches);
+        setFailures(data.failures);
+        if (data.failures.length) setError("Could not load: " + data.failures.join(", ") + ". Retry to refresh these sections.");
+      } catch {
         if (!cancelled) {
-          setError("Failed to load dashboard data from backend server.");
+          setClasses([]); setResources([]); setMaterialsCount(0); setAnnouncements([]); setBatches([]); setProfile(null);
+          setFailures(["Schedule", "Materials", "Announcements", "Classes", "Profile"]);
+          setError("Could not load your dashboard. Please try again.");
         }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+      } finally { if (!cancelled) setLoading(false); }
     }
-
-    loadDashboardData();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void load();
+    return () => { cancelled = true; };
+  }, [refresh, user?.userId]);
 
   // Derived dynamic counts
   const enrolledBatches = useMemo(() => {
@@ -201,6 +115,7 @@ export function DashboardOverview() {
 
   return (
     <div className="dashboard-page-wrapper">
+      {error && <div role="alert" className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 flex flex-wrap items-center justify-between gap-3"><span>{error}</span><button disabled={loading} onClick={() => setRefresh(value => value + 1)} className="rounded-lg bg-white border border-amber-300 px-4 py-2 font-semibold disabled:opacity-50">Retry dashboard</button></div>}
       {/* 1. Welcome Hero Banner */}
       <section className="dashboard-welcome-banner" aria-label="Welcome banner">
         <div className="welcome-banner-left">
@@ -233,7 +148,7 @@ export function DashboardOverview() {
           <div className="focus-card-top">
             <span className="focus-label">ACTIVE STUDIES</span>
             <strong className="focus-percentage">
-              {enrolledCount > 0 ? `${enrolledCount}` : "0"}
+              {loading ? "..." : failures.includes("Classes") ? "—" : enrolledCount > 0 ? `${enrolledCount}` : "0"}
             </strong>
           </div>
           <div className="focus-meter-track">
@@ -243,7 +158,7 @@ export function DashboardOverview() {
             />
           </div>
           <div className="focus-card-bottom">
-            {enrolledCount > 0 ? (
+            {failures.includes("Classes") ? <span className="focus-trend-label">Class data unavailable</span> : enrolledCount > 0 ? (
               <>
                 <span className="focus-trend">
                   {enrolledCount} {enrolledCount === 1 ? "Class" : "Classes"}
@@ -272,9 +187,9 @@ export function DashboardOverview() {
             </div>
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
-          <span className="metric-card-label">Weekly Lectures</span>
-          <strong className="metric-card-number">{formatCount(classes.length)}</strong>
-          <span className="metric-card-subtext">Upcoming sessions this week</span>
+          <span className="metric-card-label">Upcoming sessions</span>
+          <strong className="metric-card-number">{loading ? "..." : failures.includes("Schedule") ? "—" : formatCount(classes.length)}</strong>
+          <span className="metric-card-subtext">Your next scheduled occurrences</span>
         </Link>
 
         {/* Metric 2: Enrolled Classes (Dynamic, replaces dead attendance link) */}
@@ -286,7 +201,7 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">Enrolled Classes</span>
-          <strong className="metric-card-number">{formatCount(enrolledCount)}</strong>
+          <strong className="metric-card-number">{loading ? "..." : failures.includes("Classes") ? "—" : formatCount(enrolledCount)}</strong>
           <div className="attendance-progress-track">
             <div
               className="attendance-progress-fill"
@@ -294,7 +209,7 @@ export function DashboardOverview() {
             />
           </div>
           <span className="attendance-status-text">
-            {pendingCount > 0
+            {failures.includes("Classes") ? "Class data unavailable" : pendingCount > 0
               ? `${pendingCount} pending approval`
               : enrolledCount > 0
               ? "All enrolled classes active"
@@ -311,7 +226,7 @@ export function DashboardOverview() {
             <ArrowUpRight size={18} className="metric-card-arrow" />
           </div>
           <span className="metric-card-label">Learning Materials</span>
-          <strong className="metric-card-number">{formatCount(materialsCount)}</strong>
+          <strong className="metric-card-number">{loading ? "..." : failures.includes("Materials") ? "—" : formatCount(materialsCount)}</strong>
           <span className="metric-card-subtext">Notes, tutorials & playbacks</span>
         </Link>
       </section>
@@ -339,7 +254,7 @@ export function DashboardOverview() {
                 <div className="w-6 h-6 border-2 border-[#4f6df5] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                 <p className="text-xs text-gray-500">Loading upcoming timetable...</p>
               </div>
-            ) : error ? (
+            ) : failures.includes("Schedule") ? (
               <div className="p-6 bg-red-50 text-red-700 rounded-2xl border border-red-100 text-xs">
                 {error}
               </div>
@@ -444,7 +359,7 @@ export function DashboardOverview() {
               <div className="p-6 text-center bg-white rounded-2xl border border-gray-100">
                 <p className="text-xs text-gray-400">Loading notices...</p>
               </div>
-            ) : announcements.length === 0 ? (
+            ) : failures.includes("Announcements") ? <p className="p-5 text-sm text-amber-800">Announcements unavailable. Use Retry dashboard above.</p> : announcements.length === 0 ? (
               <div className="p-8 text-center bg-white rounded-2xl border border-gray-100">
                 <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-2">
                   <CircleAlert size={20} />
@@ -510,7 +425,7 @@ export function DashboardOverview() {
               </div>
             ))}
           </div>
-        ) : resources.length === 0 ? (
+        ) : failures.includes("Materials") ? <p className="p-5 text-sm text-amber-800">Materials unavailable. Use Retry dashboard above.</p> : resources.length === 0 ? (
           <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-xs">
             <div className="w-12 h-12 rounded-2xl bg-[#edf2ff] text-[#4f6df5] flex items-center justify-center mx-auto mb-3">
               <BookOpen size={24} />

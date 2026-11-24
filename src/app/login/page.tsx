@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GraduationCap, CalendarDays, BookOpen, CreditCard, Megaphone } from "lucide-react";
+import { GraduationCap, CalendarDays, BookOpen, ShieldCheck, Megaphone } from "lucide-react";
 import { loginUser } from "@/services/authService";
 import { LoginRoleSelector } from "@/components/auth/LoginSelector";
 import { useAuth } from "@/context/AuthContext";
@@ -66,8 +66,8 @@ export default function LoginPage() {
                             <span className="text-sm font-medium text-gray-300">Course materials and assignments</span>
                         </div>
                         <div className="flex items-center gap-4">
-                            <CreditCard className="text-blue-400" size={20} />
-                            <span className="text-sm font-medium text-gray-300">Fee tracking in LKR</span>
+                            <ShieldCheck className="text-blue-400" size={20} />
+                            <span className="text-sm font-medium text-gray-300">Teacher-approved class access</span>
                         </div>
                         <div className="flex items-center gap-4">
                             <Megaphone className="text-pink-400" size={20} />
@@ -77,7 +77,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="relative z-10 text-xs text-gray-600 font-medium tracking-wide mt-auto">
-                    © 2026 classroom. · Asia/Colombo · LKR
+                    © 2026 classroom. · Asia/Colombo
                 </div>
             </div>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
                                 <label className="block text-xs font-bold text-gray-400 tracking-wider uppercase">
                                     Password
                                 </label>
-                                <Link href="#" className="text-xs font-bold text-[#4F46E5] hover:underline">
+                                <Link href="/forgot-password" className="text-xs font-bold text-[#4F46E5] hover:underline">
                                     Forgot password?
                                 </Link>
                             </div>

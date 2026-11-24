@@ -85,6 +85,15 @@ export interface PendingEnrollmentRequest {
   batchId: string;
   status: string;
   createdAt: string;
+  studentName?: string;
+  studentNumber?: string;
+  batchName?: string;
+  subject?: string;
+}
+
+export interface StudentAccessRequest extends PendingEnrollmentRequest {
+  accessGranted: boolean;
+  batchActive?: boolean;
 }
 
 export function getTeacherProfile() {
@@ -122,8 +131,19 @@ export function getTeacherAnnouncements() {
   return fetchApi<TeacherAnnouncement[]>("/teacher/announcements");
 }
 
-export function getTeacherPendingEnrollments() {
-  return fetchApi<PendingEnrollmentRequest[]>("/enrollments/pending");
+export function getTeacherPendingEnrollments(signal?: AbortSignal) {
+  return fetchApi<PendingEnrollmentRequest[]>("/enrollments/pending", { signal });
+}
+
+export function getTeacherEnrollmentRequests(signal?: AbortSignal) {
+  return fetchApi<StudentAccessRequest[]>("/enrollments/teacher/requests", { signal });
+}
+
+export function setStudentClassAccess(requestId: string, allowed: boolean) {
+  return fetchApi<{ message: string; accessGranted: boolean; status?: string }>(
+    `/enrollments/teacher/requests/${encodeURIComponent(requestId)}/access`,
+    { method: "PUT", body: JSON.stringify({ allowed }) },
+  );
 }
 
 export function getBatchEnrollments(batchId: string) {

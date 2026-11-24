@@ -143,9 +143,6 @@ export function ClassCard({
 
           <div className="flex items-center justify-between text-xs text-gray-500 pt-1">
             <span>Exam year: {batch.examYear}</span>
-            <span className="font-semibold text-gray-800">
-              LKR {Number(batch.monthlyFee || 0).toLocaleString()} / mo
-            </span>
           </div>
         </div>
       </div>

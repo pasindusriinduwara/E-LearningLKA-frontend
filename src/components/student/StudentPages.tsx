@@ -4,7 +4,6 @@ import { StatusPill } from "@/components/ui/StatusPill";
 export { SchedulePage } from "@/components/student/SchedulePage";
 export { MaterialsPage } from "@/components/student/MaterialsPage";
 export { AssessmentsPage } from "@/components/student/AssessmentsPage";
-export { FeesPage } from "@/components/student/FeesPage";
 
 const sampleAttendanceRows = [
   { title: "Pure Mathematics", subject: "Combined Mathematics", date: "25 AUG" },

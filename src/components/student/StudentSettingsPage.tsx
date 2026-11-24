@@ -478,7 +478,7 @@ export function StudentSettingsPage() {
                     disabled
                   />
                 </div>
-                <p className="form-help-text">Assigned unique identifier for all tuition invoices and class attendance.</p>
+                <p className="form-help-text">Assigned unique identifier for class enrollment and attendance.</p>
               </div>
 
               <div className="form-field-group">

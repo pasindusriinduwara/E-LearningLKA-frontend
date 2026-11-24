@@ -1,4 +1,4 @@
-export type DeliveryMode = "In person" | "Online";
+export type DeliveryMode = "In person" | "Online" | "Hybrid";
 export type AccentTone = "coral" | "green" | "yellow";
 
 export interface ScheduleItem {
@@ -14,7 +14,7 @@ export interface ScheduleItem {
   time: string;
   location: string;
   mode: DeliveryMode;
-  accent: AccentTone;
+  accent: string;
 }
 
 export interface LearningResource {
@@ -30,13 +30,6 @@ export interface LearningResource {
   fileUrl?: string;
   cloudinaryPublicId?: string;
   createdAt?: string;
-}
-
-export interface StudentInvoice {
-  month: string;
-  batch: string;
-  amount: string;
-  status: string;
 }
 
 export interface StudentProfile {

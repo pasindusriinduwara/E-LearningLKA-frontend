@@ -1,230 +1,79 @@
 "use client";
-
-import { useState, useEffect } from "react";
-import { Clock3, MapPin, Video, Loader2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Clock3, MapPin, Video, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { getUpcomingClasses } from "@/services/studentService";
 import { getMyEnrollmentStatuses } from "@/services/enrollmentService";
-import type { ScheduleItem } from "@/lib/types/student";
-
-export interface ScheduleDayTab {
-  id: string;
-  dayShort: string;
-  dateNum: number;
-  monthShort: string;
-  fullDateStr: string;
-  dayKey: string;
-}
-
-const WEEK_DAYS: ScheduleDayTab[] = [
-  { id: "mon-25", dayShort: "Mon", dateNum: 25, monthShort: "Aug", fullDateStr: "Mon, Aug 25", dayKey: "Mon" },
-  { id: "tue-26", dayShort: "Tue", dateNum: 26, monthShort: "Aug", fullDateStr: "Tue, Aug 26", dayKey: "Tue" },
-  { id: "wed-27", dayShort: "Wed", dateNum: 27, monthShort: "Aug", fullDateStr: "Wed, Aug 27", dayKey: "Wed" },
-  { id: "thu-28", dayShort: "Thu", dateNum: 28, monthShort: "Aug", fullDateStr: "Thu, Aug 28", dayKey: "Thu" },
-  { id: "fri-29", dayShort: "Fri", dateNum: 29, monthShort: "Aug", fullDateStr: "Fri, Aug 29", dayKey: "Fri" },
-  { id: "sat-30", dayShort: "Sat", dateNum: 30, monthShort: "Aug", fullDateStr: "Sat, Aug 30", dayKey: "Sat" },
-];
-
-function getSubjectColor(accent?: string, subject?: string): "blue" | "green" | "yellow" {
-  if (accent === "green" || accent === "yellow" || accent === "blue") {
-    return accent;
-  }
-  if (accent === "coral") return "blue";
-  if (subject?.toLowerCase().includes("chem")) return "green";
-  if (subject?.toLowerCase().includes("phys")) return "yellow";
-  return "blue";
-}
+import { colomboDateKey, getWeekDays, occurrencesForWeek, type ScheduleDefinition } from "@/lib/schedules";
 
 export function SchedulePage() {
-  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
-  const [selectedDayId, setSelectedDayId] = useState<string>("mon-25");
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const [schedules, setSchedules] = useState<ScheduleDefinition[]>([]);
+  const [now, setNow] = useState(() => new Date());
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
   useEffect(() => {
-    async function loadSchedule() {
+    let cancelled = false;
+    async function load() {
+      setLoading(true); setError("");
       try {
-        setLoading(true);
-        setError(null);
-        const [data, statuses] = await Promise.all([
-          getUpcomingClasses().catch(() => []),
-          getMyEnrollmentStatuses().catch(() => []),
-        ]);
-
-        const approvedBatchIds = new Set<string>();
-        statuses.forEach((item) => {
-          if (item.status === "APPROVED") {
-            approvedBatchIds.add(item.batchId);
-          }
-        });
-
-        // Strictly enforce enrolled classes only
-        const enrolledSchedules = (data || []).filter(
-          (item) => item.batchId && approvedBatchIds.has(item.batchId)
-        );
-        setSchedules(enrolledSchedules);
-      } catch (err) {
-        console.error("Failed to load schedules:", err);
-        setError("Failed to load schedule from server.");
-      } finally {
-        setLoading(false);
-      }
+        const [data, statuses] = await Promise.all([getUpcomingClasses(), getMyEnrollmentStatuses()]);
+        if (cancelled) return;
+        const approved = new Set(statuses.filter(item => item.status === "APPROVED").map(item => item.batchId));
+        setSchedules(data.filter(item => item.batchId && approved.has(item.batchId)));
+      } catch (failure) {
+        if (!cancelled) {
+          setSchedules([]);
+          setError(failure instanceof Error ? failure.message : "Could not load your schedule.");
+        }
+      } finally { if (!cancelled) setLoading(false); }
     }
-
-    loadSchedule();
+    void load();
+    return () => { cancelled = true; };
+  }, [refresh]);
+  useEffect(() => {
+    const focus = () => { setNow(new Date()); setRefresh(value => value + 1); };
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    window.addEventListener("focus", focus);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", focus); };
   }, []);
-
-  const activeDay = WEEK_DAYS.find((d) => d.id === selectedDayId) || WEEK_DAYS[0];
-
-  const activeDayClasses = schedules.filter((item) => {
-    const dayMatch = item.day?.toLowerCase() === activeDay.dayKey.toLowerCase();
-    const dateMatch = item.date?.toLowerCase().includes(String(activeDay.dateNum));
-    return dayMatch || dateMatch;
-  });
-
-  return (
-    <div className="schedule-page-wrapper">
-
-      <div className="schedule-calendar-strip" role="tablist" aria-label="Select day of the week">
-        {WEEK_DAYS.map((day) => {
-          const isSelected = day.id === selectedDayId;
-          const dayClassesCount = schedules.filter((item) => {
-            const dayMatch = item.day?.toLowerCase() === day.dayKey.toLowerCase();
-            const dateMatch = item.date?.toLowerCase().includes(String(day.dateNum));
-            return dayMatch || dateMatch;
-          }).length;
-          const hasClasses = dayClassesCount > 0;
-
-          return (
-            <button
-              key={day.id}
-              type="button"
-              role="tab"
-              aria-selected={isSelected}
-              className={`calendar-day-tab ${isSelected ? "calendar-day-tab-active" : ""}`}
-              onClick={() => setSelectedDayId(day.id)}
-            >
-              <span className="calendar-day-name">{day.dayShort}</span>
-              <strong className="calendar-day-number">{day.dateNum}</strong>
-              <span className="calendar-day-dot-wrap">
-                {hasClasses && (
-                  <span className={`calendar-day-dot ${isSelected ? "dot-white" : "dot-blue"}`} />
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="schedule-main-layout">
-
-        <section className="schedule-left-column">
-
-          <div className="selected-day-header">
-            <h2 className="selected-day-title">{activeDay.fullDateStr}</h2>
-            <span className="classes-count-pill">
-              {activeDayClasses.length === 1
-                ? "1 class"
-                : `${activeDayClasses.length} classes`}
-            </span>
-          </div>
-
-          {loading ? (
-            <div className="schedule-no-classes-card">
-              <Loader2 className="animate-spin text-blue-600 mb-2" size={24} />
-              <p>Loading schedule from server...</p>
-            </div>
-          ) : error ? (
-            <div className="schedule-no-classes-card">
-              <p className="text-red-500">{error}</p>
-            </div>
-          ) : (
-            <div className="schedule-cards-list">
-              {activeDayClasses.map((cls, index) => {
-                const color = getSubjectColor(cls.accent, cls.subject);
-                return (
-                  <article
-                    className={`schedule-class-card class-card-accent-${color}`}
-                    key={cls.id || `${cls.title}-${index}`}
-                  >
-                    <div className="class-card-inner">
-                      <div className="class-card-top-line">
-                        <h3 className="class-card-title">{cls.title}</h3>
-                        <span
-                          className={`schedule-mode-pill ${
-                            cls.mode === "In person"
-                              ? "mode-pill-inperson"
-                              : "mode-pill-online"
-                          }`}
-                        >
-                          {cls.mode === "Online" && <Video size={12} style={{ marginRight: 4 }} />}
-                          {cls.mode}
-                        </span>
-                      </div>
-
-                      <p className="class-card-instructor">
-                        {cls.subject ? `${cls.subject} • ` : ""}{cls.teacher}
-                      </p>
-
-                      <div className="class-card-meta-line">
-                        <span className="meta-item">
-                          <Clock3 size={15} />
-                          <span>{cls.time}</span>
-                        </span>
-                        <span className="meta-item">
-                          <MapPin size={15} />
-                          <span>{cls.location}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-
-              {activeDayClasses.length === 0 && (
-                <div className="schedule-no-classes-card">
-                  <p>No classes scheduled for this day.</p>
-                  <span>Enjoy your self-study time!</span>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
-        <aside className="schedule-right-column">
-
-          <div className="week-glance-card">
-            <h3 className="week-glance-title">Week at a glance</h3>
-            <div className="week-glance-list">
-              {schedules.length === 0 && !loading ? (
-                <p className="text-xs text-gray-400 p-2">No weekly classes scheduled.</p>
-              ) : (
-                schedules.map((item, idx) => {
-                  const color = getSubjectColor(item.accent, item.subject);
-                  return (
-                    <div className="glance-item" key={item.id || idx}>
-                      <span className={`glance-color-bar bar-${color}`} />
-                      <div className="glance-info">
-                        <strong className="glance-item-title">{item.title}</strong>
-                        <span className="glance-item-time">
-                          {item.day} {item.date ? `${item.date.split(" ")[0]} • ` : "• "}{item.time}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          <div className="this-week-summary-card">
-            <span className="this-week-label">THIS WEEK</span>
-            <strong className="this-week-number">
-              {loading ? "..." : schedules.length > 0 ? (schedules.length < 10 ? `0${schedules.length}` : schedules.length) : "0"}
-            </strong>
-            <p className="this-week-subtext">classes scheduled</p>
-          </div>
-        </aside>
+  const days = useMemo(() => getWeekDays(now, weekOffset), [now, weekOffset]);
+  const occurrences = useMemo(() => occurrencesForWeek(schedules, now, weekOffset), [schedules, now, weekOffset]);
+  const active = days.find(day => day.dateKey === selectedDate) || days.find(day => day.isToday) || days[0];
+  const classes = occurrences.filter(item => item.dateKey === active.dateKey);
+  function navigate(offset: number) { setWeekOffset(offset); setSelectedDate(null); }
+  return <div className="schedule-page-wrapper">
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+      <div><h1 className="text-2xl font-bold text-slate-900">My schedule</h1><p className="text-sm text-slate-500">{days[0].label} – {days[6].label}, {days[6].dateKey.slice(0,4)} · Sri Lanka time</p></div>
+      <div className="flex gap-2">
+        <button onClick={() => navigate(weekOffset - 1)} aria-label="Previous week" className="p-2 rounded-lg border border-slate-200"><ChevronLeft size={18} /></button>
+        <button onClick={() => navigate(0)} className="px-3 rounded-lg border border-slate-200 text-sm font-medium">This week</button>
+        <button onClick={() => navigate(weekOffset + 1)} aria-label="Next week" className="p-2 rounded-lg border border-slate-200"><ChevronRight size={18} /></button>
       </div>
     </div>
-  );
+    <div className="schedule-calendar-strip" role="tablist" aria-label="Select schedule date" style={{ gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}>
+      {days.map(day => <button key={day.dateKey} type="button" role="tab" aria-selected={active.dateKey === day.dateKey} aria-controls="schedule-day-panel" id={`schedule-tab-${day.dateKey}`} onClick={() => setSelectedDate(day.dateKey)} className={`calendar-day-tab ${active.dateKey === day.dateKey ? "calendar-day-tab-active" : ""}`}>
+        <span className="calendar-day-name">{day.day}</span><strong className="calendar-day-number">{day.dateNum}</strong>
+        <span className="calendar-day-dot-wrap">{!loading && !error && occurrences.some(item => item.dateKey === day.dateKey) && <span className={`calendar-day-dot ${active.dateKey === day.dateKey ? "dot-white" : "dot-blue"}`} />}</span>
+      </button>)}
+    </div>
+    <div className="schedule-main-layout">
+      <section className="schedule-left-column" id="schedule-day-panel" role="tabpanel" aria-labelledby={`schedule-tab-${active.dateKey}`}>
+        <div className="selected-day-header"><h2 className="selected-day-title">{active.day}, {active.label}</h2><span className="classes-count-pill">{loading || error ? "—" : `${classes.length} ${classes.length === 1 ? "class" : "classes"}`}</span></div>
+        {loading ? <div className="schedule-no-classes-card" role="status"><Loader2 className="animate-spin" size={24} /><p>Loading your schedule...</p></div> : error ? <div className="schedule-no-classes-card"><p role="alert" className="text-red-700">{error}</p><button onClick={() => setRefresh(value => value + 1)} className="mt-3 px-4 py-2 rounded-lg bg-indigo-600 text-white">Retry schedule</button></div> : <div className="schedule-cards-list">
+          {classes.map(item => <article key={item.occurrenceId} className="schedule-class-card class-card-accent-blue"><div className="class-card-inner">
+            <div className="class-card-top-line"><h3 className="class-card-title">{item.title}</h3><span className={`schedule-mode-pill ${item.mode === "In person" ? "mode-pill-inperson" : "mode-pill-online"}`}>{item.mode !== "In person" && <Video size={12} />}{item.mode}</span></div>
+            <p className="class-card-instructor">{[item.subject,item.teacher].filter(Boolean).join(" · ")}</p>
+            <div className="class-card-meta-line"><span className="meta-item"><Clock3 size={15} />{item.time}</span><span className="meta-item"><MapPin size={15} />{item.location || "Location to be confirmed"}</span></div>
+          </div></article>)}
+          {classes.length === 0 && <div className="schedule-no-classes-card"><p>No classes scheduled for this date.</p>{active.dateKey === colomboDateKey(now) && <span>Check the rest of your week or browse your classes.</span>}</div>}
+        </div>}
+      </section>
+      <aside className="schedule-right-column"><div className="week-glance-card"><h3 className="week-glance-title">Week at a glance</h3>
+        {!loading && !error && occurrences.map(item => <div key={item.occurrenceId} className="glance-item"><span className="glance-color-bar bar-blue" /><div className="glance-info"><strong className="glance-item-title">{item.title}</strong><span className="glance-item-time">{item.day} {item.date} · {item.time}</span></div></div>)}
+        {error ? <p className="text-sm text-slate-500">Schedule unavailable.</p> : !loading && !occurrences.length && <p className="text-sm text-slate-500">No classes this week.</p>}
+      </div><div className="this-week-summary-card"><span className="this-week-label">SELECTED WEEK</span><strong className="this-week-number">{loading ? "..." : error ? "—" : occurrences.length}</strong><p className="this-week-subtext">classes scheduled</p></div></aside>
+    </div>
+  </div>;
 }

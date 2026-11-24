@@ -1,6 +1,7 @@
 import type { ClassScheduleItem } from "@/lib/types/class";
+import type { ScheduleDefinition } from "@/lib/schedules";
 import { fetchApi } from "@/lib/api";
-import type { LearningResource, ScheduleItem, StudentInvoice, StudentProfile, UpdateStudentProfilePayload } from "@/lib/types/student";
+import type { LearningResource, StudentProfile, UpdateStudentProfilePayload } from "@/lib/types/student";
 
 export interface AnnouncementItem {
   id?: string;
@@ -22,8 +23,8 @@ export async function updateStudentProfile(payload: UpdateStudentProfilePayload)
   });
 }
 
-export async function getUpcomingClasses(): Promise<ScheduleItem[]> {
-  return fetchApi<ScheduleItem[]>("/schedules/upcoming");
+export async function getUpcomingClasses(): Promise<ScheduleDefinition[]> {
+  return fetchApi<ScheduleDefinition[]>("/schedules/upcoming");
 }
 
 export async function getBatchSchedules(batchId: string): Promise<ClassScheduleItem[]> {
@@ -32,10 +33,6 @@ export async function getBatchSchedules(batchId: string): Promise<ClassScheduleI
 
 export async function getRecentMaterials(): Promise<LearningResource[]> {
   return fetchApi<LearningResource[]>("/materials/recent");
-}
-
-export async function getStudentInvoices(): Promise<StudentInvoice[]> {
-  return fetchApi<StudentInvoice[]>("/invoices/my-invoices");
 }
 
 export async function getAnnouncements(): Promise<AnnouncementItem[]> {

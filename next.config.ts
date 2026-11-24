@@ -33,6 +33,9 @@ const nextConfig: NextConfig = {
         { key: "X-DNS-Prefetch-Control", value: "off" },
         { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
       ],
+    }, {
+      source: "/:path(forgot-password|reset-password)",
+      headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "no-store" }],
     }];
   },
 };

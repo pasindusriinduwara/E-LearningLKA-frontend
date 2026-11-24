@@ -37,6 +37,8 @@ export interface CreateScheduleData {
 
 // Model returned by backend for schedules
 export interface ClassScheduleItem {
+  effectiveDate?: string;
+  recurrence?: RepeatInterval;
   id: string;
   batchId: string;
   title: string;

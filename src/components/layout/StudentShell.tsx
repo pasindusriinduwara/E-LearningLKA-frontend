@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
-import { Bell, BookOpen, CalendarDays, Check, ChevronRight, CircleAlert, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, Settings, WalletCards, X } from "lucide-react";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { BookOpen, CalendarDays, ChevronRight, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +12,6 @@ const navItems = [
   { label: "My Classes", href: "/classes", icon: GraduationCap },
   { label: "Assessments", href: "/assessments", icon: ClipboardCheck },
   { label: "Materials", href: "/materials", icon: BookOpen },
-  { label: "Fees & payments", href: "/fees", icon: WalletCards },
 ];
 
 const supportItems = [
@@ -100,52 +100,11 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
         <header className="topbar">
           <div className="topbar-left"><button className="icon-button mobile-menu" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu size={22} /></button><div className="breadcrumb"><span>Student portal</span><ChevronRight size={15} /><strong>{activeLabel}</strong></div></div>
           <div className="topbar-actions">
-            <div className="popover-wrap">
-              <button
-                className={`icon-button notification-button ${notificationsOpen ? "is-open" : ""}`}
-                type="button"
-                title="Notifications"
-                aria-label="Notifications"
-                onClick={() => {
-                  setNotificationsOpen(!notificationsOpen);
-                  setProfileOpen(false);
-                }}
-              >
-                <Bell size={19} />
-                <span className="notification-dot" />
-              </button>
-              {notificationsOpen && (
-                <div className="popover notification-popover">
-                  <div className="popover-heading">
-                    <div>
-                      <strong>Notifications</strong>
-                      <span>2 unread updates</span>
-                    </div>
-                    <button className="text-button" type="button">
-                      Mark read <Check size={14} />
-                    </button>
-                  </div>
-                  <div className="notification-item">
-                    <div className="notification-symbol coral-symbol">
-                      <CircleAlert size={16} />
-                    </div>
-                    <div>
-                      <strong>Paper 02 submission</strong>
-                      <p>Due Friday, 29 August</p>
-                    </div>
-                  </div>
-                  <div className="notification-item">
-                    <div className="notification-symbol green-symbol">
-                      <CalendarDays size={16} />
-                    </div>
-                    <div>
-                      <strong>Class time changed</strong>
-                      <p>Tomorrow&apos;s class starts at 3:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <NotificationBell key={user?.userId ?? user?.id ?? user?.email ?? "signed-out"} enabled={!loading && user?.role === "STUDENT"}
+              open={notificationsOpen} onOpenChange={(next) => {
+                setNotificationsOpen(next);
+                if (next) setProfileOpen(false);
+              }} />
 
             <div className="popover-wrap">
               <button

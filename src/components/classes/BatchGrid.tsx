@@ -78,11 +78,7 @@ export function BatchGrid({
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] text-gray-400 font-medium">
-                  Monthly fee: LKR {batch.monthlyFee}
-                </p>
-
+              <div className="flex items-center justify-end">
                 <ArrowUpRight size={17} className="text-[#2D9F75]" />
               </div>
 

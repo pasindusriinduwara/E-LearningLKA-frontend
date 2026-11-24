@@ -30,7 +30,6 @@ export function CreateBatchForm({
   const [formData, setFormData] = useState({
     name: "",
     examYear: "",
-    monthlyFee: "",
     deliveryMode: "IN_PERSON" as CreateBatchData["deliveryMode"],
     subjectId: "",
   });
@@ -54,7 +53,6 @@ export function CreateBatchForm({
 
     const name = formData.name.trim();
     const examYear = formData.examYear.trim();
-    const monthlyFee = Number(formData.monthlyFee);
 
     if (!name) {
       setError("Batch name is required.");
@@ -63,11 +61,6 @@ export function CreateBatchForm({
 
     if (!/^\d{4}$/.test(examYear)) {
       setError("Exam year must contain exactly four digits.");
-      return;
-    }
-
-    if (!Number.isFinite(monthlyFee) || monthlyFee <= 0) {
-      setError("Monthly fee must be greater than zero.");
       return;
     }
 
@@ -82,7 +75,7 @@ export function CreateBatchForm({
       await onSubmit({
         name,
         examYear,
-        monthlyFee,
+        monthlyFee: 0,
         deliveryMode: formData.deliveryMode,
         subjectId: formData.subjectId,
       });
@@ -151,26 +144,6 @@ export function CreateBatchForm({
                 )
               }
               placeholder="e.g. 2027"
-              disabled={submitting}
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-              Monthly Fee (LKR)
-            </label>
-
-            <input
-              type="number"
-              min="1"
-              step="0.01"
-              required
-              value={formData.monthlyFee}
-              onChange={(event) =>
-                updateField("monthlyFee", event.target.value)
-              }
-              placeholder="e.g. 2500"
               disabled={submitting}
               className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-gray-900"
             />

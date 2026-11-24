@@ -1,4 +1,5 @@
 import { TeacherSettingsPage } from "@/components/teacher/TeacherSettingsPage";
+import { ChangePasswordForm } from "@/components/auth/ChangePasswordForm";
 
 export const metadata = {
   title: "Teacher Profile & Settings | Classroom",
@@ -6,5 +7,5 @@ export const metadata = {
 };
 
 export default function TeacherSettingsRoute() {
-  return <TeacherSettingsPage />;
+  return <><TeacherSettingsPage /><ChangePasswordForm /></>;
 }
