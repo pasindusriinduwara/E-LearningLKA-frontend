@@ -23,7 +23,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useAuth } from "@/context/AuthContext";
 import { AttachmentLink } from "@/components/common/AttachmentLink";
-import type { LearningResource, ScheduleItem, StudentProfile } from "@/lib/types/student";
+import type { ScheduleOccurrence } from "@/lib/schedules";
+import type { LearningResource, StudentProfile } from "@/lib/types/student";
 import type { AvailableBatch } from "@/services/batchService";
 import type { AnnouncementItem } from "@/services/studentService";
 import { loadStudentDashboard } from "@/services/dashboardService";
@@ -31,7 +32,7 @@ import { loadStudentDashboard } from "@/services/dashboardService";
 export function DashboardOverview() {
   const { user } = useAuth();
 
-  const [classes, setClasses] = useState<ScheduleItem[]>([]);
+  const [classes, setClasses] = useState<ScheduleOccurrence[]>([]);
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [materialsCount, setMaterialsCount] = useState(0);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
@@ -289,12 +290,10 @@ export function DashboardOverview() {
                 const dateNum = dateParts[0] || String(index + 1);
                 const dateMonth = dateParts[1] || "SESSION";
 
-                const isOnline =
-                  cls.mode?.toLowerCase() === "online" ||
-                  cls.deliveryMode?.toLowerCase() === "online";
+                const isOnline = cls.mode === "Online";
 
                 return (
-                  <article key={cls.id || index} className="class-card-item">
+                  <article key={cls.occurrenceId} className="class-card-item">
                     <div className="class-date-badge">
                       <span className="date-badge-day">{dayLabel}</span>
                       <strong className="date-badge-number">{dateNum}</strong>
