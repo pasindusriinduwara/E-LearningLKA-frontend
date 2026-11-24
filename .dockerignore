@@ -1,0 +1,16 @@
+node_modules
+.next
+.env*
+.git
+test-results
+playwright-report
+*.log
+*.tsbuildinfo
+coverage
+e2e
+scripts
+.github
+.vscode
+playwright.config.ts
+AGENTS.md
+README.md
