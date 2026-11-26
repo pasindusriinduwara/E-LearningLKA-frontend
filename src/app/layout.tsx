@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Newsreader } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import "./globals.css";
 
 const sansFont = Plus_Jakarta_Sans({
@@ -19,8 +20,8 @@ const serifFont = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: "Classroom | Learning portal",
-  description: "Classes, learning materials, assessments, and updates for students and teachers.",
+  title: `${SITE_NAME} | Learning for students and teachers`,
+  description: SITE_DESCRIPTION,
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

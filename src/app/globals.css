@@ -58,7 +58,9 @@ button {
   display: flex;
   flex-direction: column;
   width: 270px;
-  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 24px 16px 18px;
   background: #0c1322;
   color: #e5ecf6;
@@ -104,7 +106,10 @@ button {
   display: none !important;
   margin-left: auto;
   color: #8896ac !important;
+  flex-shrink: 0;
 }
+
+.drawer-scrim { display: none; }
 
 .student-chip {
   display: flex;
@@ -1658,12 +1663,22 @@ button {
     width: 270px;
     box-shadow: 17px 0 30px rgba(12, 19, 34, 0.25);
     transition: left 0.22s ease;
+    visibility: hidden;
   }
   .sidebar-open {
     left: 0;
+    visibility: visible;
   }
   .sidebar-close {
     display: inline-grid !important;
+    min-width: 40px;
+    min-height: 40px;
+    transition-property: background-color, border-color, color;
+  }
+  .mobile-menu {
+    display: inline-grid !important;
+    min-width: 40px;
+    min-height: 40px;
   }
   .drawer-scrim {
     position: fixed;

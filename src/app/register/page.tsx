@@ -171,7 +171,9 @@ export default function MultiStepRegister() {
 
             <div className="flex-1 bg-[#FAFAFA] flex flex-col justify-center items-center p-8">
                 <div className="w-full max-w-md">
-
+                    <Link href="/" className="inline-flex mb-8 text-sm font-semibold text-[#4F46E5] hover:underline">
+                        Back to home
+                    </Link>
                     <div className="flex justify-between items-center mb-2 text-xs font-bold text-gray-400 tracking-widest uppercase">
                         <span>Step {step} of 4 — {stepName}</span>
                         <span className="text-[#4F46E5]">{progress}</span>

@@ -2,6 +2,13 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Completion features and verification
 
+The public homepage is `/`, with a developer profile at `/developer`. Edit
+`src/lib/developer.ts` to update the displayed name, introduction, biography,
+and optional public contact links. Empty contact fields are hidden. Both pages
+share navigation and a footer; authentication is required only for the classroom
+workspaces. Public-page browser checks can run independently of the backend with
+`npx playwright test e2e/landing.spec.ts e2e/developer.spec.ts`.
+
 Student schedules use the current Sri Lankan calendar week, including Sunday, with
 previous/next week navigation and correctly anchored weekly, biweekly and single
 occurrences. Dashboard and schedule failures have visible retry states.

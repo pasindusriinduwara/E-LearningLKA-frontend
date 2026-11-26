@@ -83,7 +83,9 @@ export default function LoginPage() {
 
             <div className="flex-1 bg-[#FAFAFA] flex flex-col justify-center items-center p-8 relative">
                 <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
-
+                    <Link href="/" className="inline-flex mb-8 text-sm font-semibold text-[#4F46E5] hover:underline">
+                        Back to home
+                    </Link>
                     <h2 className="text-3xl font-extrabold text-gray-900 mb-2 font-serif">Welcome back</h2>
                     <p className="text-gray-500 text-sm mb-8">Sign in to your account to continue</p>
 

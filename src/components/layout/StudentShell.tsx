@@ -1,6 +1,7 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useSidebarDrawer } from "./useSidebarDrawer";
 import { BookOpen, CalendarDays, ChevronRight, ClipboardCheck, GraduationCap, LayoutDashboard, LogOut, Menu, Settings, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,13 +31,13 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const { user, loading, signOut } = useAuth();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const { isOpen: mobileOpen, isMobile, open: openSidebar, close: closeSidebar, sidebarRef, triggerRef, closeButtonRef } = useSidebarDrawer("(max-width: 768px)");
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const activeLabel = [...navItems, ...supportItems].find((item) => isActivePath(pathname, item.href))?.label ?? "Dashboard";
 
   function closeMenus() {
-    setMobileOpen(false);
+    closeSidebar();
     setNotificationsOpen(false);
     setProfileOpen(false);
   }
@@ -52,9 +53,9 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="app-shell">
-      {mobileOpen && <button className="drawer-scrim" type="button" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
-      <aside className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} aria-label="Student navigation">
-        <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => setMobileOpen(false)}><X size={19} /></button></div>
+      {mobileOpen && <button className="drawer-scrim" type="button" aria-label="Close navigation overlay" tabIndex={-1} onClick={closeSidebar} />}
+      <aside ref={sidebarRef} id="student-sidebar" className={`sidebar ${mobileOpen ? "sidebar-open" : ""}`} role={isMobile ? "dialog" : undefined} aria-modal={mobileOpen || undefined} aria-label="Student navigation" aria-hidden={isMobile && !mobileOpen || undefined} inert={isMobile && !mobileOpen}>
+        <div className="brand-row"><Link className="brand-link" href="/dashboard" onClick={closeMenus}><span className="brand-mark"><GraduationCap size={21} /></span><span className="brand-name">classroom<span>.</span></span></Link><button ref={closeButtonRef} className="icon-button sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={closeSidebar}><X size={21} /></button></div>
         <Link
           className={`student-chip ${isActivePath(pathname, "/settings") ? "student-chip-active" : ""}`}
           href="/settings"
@@ -96,9 +97,9 @@ export function StudentShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <div className="main-area">
+      <div className="main-area" inert={mobileOpen}>
         <header className="topbar">
-          <div className="topbar-left"><button className="icon-button mobile-menu" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => setMobileOpen(true)}><Menu size={22} /></button><div className="breadcrumb"><span>Student portal</span><ChevronRight size={15} /><strong>{activeLabel}</strong></div></div>
+          <div className="topbar-left"><button ref={triggerRef} className="icon-button mobile-menu" type="button" title="Open navigation" aria-label="Open navigation" aria-controls="student-sidebar" aria-expanded={mobileOpen} onClick={() => { setNotificationsOpen(false); setProfileOpen(false); openSidebar(); }}><Menu size={22} /></button><div className="breadcrumb"><span>Student portal</span><ChevronRight size={15} /><strong>{activeLabel}</strong></div></div>
           <div className="topbar-actions">
             <NotificationBell key={user?.userId ?? user?.id ?? user?.email ?? "signed-out"} enabled={!loading && user?.role === "STUDENT"}
               open={notificationsOpen} onOpenChange={(next) => {
